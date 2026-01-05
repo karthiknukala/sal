@@ -51,16 +51,20 @@
     (if (or (>= (verbosity-level) vl) (and key-name (status-messages-enabled?)))
       (begin
         (initialize-runtime)
-        (let ((result (proc))
-              (elapsed-time (collect-runtime)))
-          (cond
-           ((<fl elapsed-time 0.0)
-            (status-message key-name 'not-available)
-            (verbose-message vl msg "- (not available)"))
-           (else
-            (status-message key-name elapsed-time)
-            (verbose-message vl msg elapsed-time)))
-          result))
+        ;; Use call-with-values to properly handle multiple return values
+        (call-with-values
+            proc
+            (lambda results
+              (let ((elapsed-time (collect-runtime)))
+                (cond
+                 ((<fl elapsed-time 0.0)
+                  (status-message key-name 'not-available)
+                  (verbose-message vl msg "- (not available)"))
+                 (else
+                  (status-message key-name elapsed-time)
+                  (verbose-message vl msg elapsed-time)))
+                ;; Return all values
+                (apply values results)))))
       (proc))))
 
     

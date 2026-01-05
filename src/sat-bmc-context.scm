@@ -550,7 +550,7 @@
                 (values #f counter-example))
                (else
                 (loop (+ i 1)))))
-            (values #t #unspecified)))))))
+            (values #t #unspecified))))))))
 
 (define (liveness-core module-models depth make-ctx-proc)
   (verbose-message 2 "  BMC depth: ~a..." depth)
