@@ -1,0 +1,40 @@
+SAL -> BerkMin interface
+-----------------------
+
+BerkMin is an  efficient boolean SAT solver. BerkMin  is *not* part of
+the  SAL distribution  package.  BerkMin can  be  downloaded from  the
+following website:
+
+http://eigold.tripod.com/BerkMin.html
+
+In SAL, BerkMin is used in the sal-bmc tool, when the option '-s berkmin' is
+provided. 
+
+SAL was tested using BerkMin561, this is the only publicly available
+version of BerkMin, and it was released at the beginning of 2003.
+
+Remark: The first time you execute BerkMin, it produces a license file
+('license.txt').  This file should be in the current directory,
+otherwise BerkMin will try to generate it again, and it will not
+process the input CNF file. So, you should copy the license.txt to your
+current directory before starting sal-bmc.
+
+Examples: 
+ 
+1) Checks the property 'mutex' in the context 'peterson' using BerkMin.
+
+   % sal-bmc -v 10 -s berkmin peterson mutex
+
+2) Produces a counterexample for the property 'invalid' in the context 
+   'peterson' using BerkMin.
+
+   % sal-bmc -v 10 -s berkmin peterson invalid
+
+
+The default behavior of SAL is to look for an executable called `BerkMin561-linux'. 
+The command used to execute BerkMin can be changed using the statement:
+
+(sal/set-berkmin-command! "<path-to-berkmin>/<berkmin-executable>")
+
+This statement should be included in your `.salrc' file in your home directory.
+

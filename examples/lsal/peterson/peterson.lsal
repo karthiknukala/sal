@@ -1,0 +1,59 @@
+(context peterson () ()
+
+	(define-type PC (scalar sleeping trying critical))
+		
+  (define-module (process tval::bool)
+    (begin
+      (input pc2::PC x2::bool)
+      (output pc1::PC x1::bool)
+      (initialization
+       (= pc1 sleeping))
+      (transition
+       ([]
+        (label wakening
+          ((= pc1 sleeping)
+           -->
+           (= pc1' trying)
+					 (= x1' (= x2 tval))))
+        (label entering-critical
+          ((and (= pc1 trying) (or (= pc2 sleeping) (= x1 (/= x2 tval))))
+           -->
+           (= pc1' critical)))
+        (label leaving-critical
+          ((= pc1 critical)
+           -->
+           (= pc1' sleeping)
+           (= x1' (= x2 tval))))
+				))))
+
+	(define-module system
+		([] (process false)
+				(rename ((pc2 pc1) (pc1 pc2)
+								 (x2 x1) (x1 x2))
+					(process true))))
+
+	(theorem mutex
+    (|- system (G (not (and (= pc1 critical) (= pc2 critical))))))
+		 
+	(theorem invalid
+    (|- system (G (not (and (= pc1 trying) (= pc2 critical))))))
+
+  (theorem livenessbug1 
+    (|- system (G (F (= pc1 critical)))))
+
+  (theorem livenessbug2
+    (|- system (G (F (= pc2 critical)))))
+
+  (theorem liveness1
+    (|- system (G (implies (= pc2 trying) (F (= pc2 critical))))))
+
+  (theorem liveness2
+    (|- system (G (implies (= pc1 trying) (F (= pc1 critical))))))
+
+  (theorem liveness3
+    (|- system (implies (G (F (= pc1 trying))) (G (F (= pc1 critical))))))
+
+  (theorem liveness4
+    (|- system (implies (G (F (= pc2 trying))) (G (F (= pc2 critical))))))
+	
+	)	

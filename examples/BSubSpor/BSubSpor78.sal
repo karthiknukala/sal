@@ -1,0 +1,280 @@
+%%% ------------------------------------------------------------------
+%%% B.Sub sporulation initiation network model in SAL.
+%%% ------------------------------------------------------------------
+BSubSpor78 : CONTEXT = 
+BEGIN
+
+ %% ------------------------------------------------------------------
+ %% Notation:
+ %% Var---REAL variables, var?---BOOLEAN variables
+ %% ------------------------------------------------------------------
+
+ %% ------------------------------------------------------------------
+ %% Model consists of 6 components:
+ %% 1. Phosphorelay: Spo0FP, Spo0BP, Spo0A, Spo0AP, Spo0AP2, RapA
+ %%    This is the main pathway that causes spo initiation
+ %% 2. SinIR: SinI, SinR (R+R4)
+ %%    Influences transcription of Spo0A etc.
+ %% 3. Hpr: Hpr
+ %%    Influences transcription of various things in phosphorelay
+ %% 4. AbrB: AbrB
+ %%    Influences transcription of various things in SinIR and sigmaH
+ %% 5. SigmaH: SigmaH
+ %%    Influences transcription of various things in phosphorelay
+ %% 6. Environment: sigmaA, Pep5i + comAP, KinAP
+ %%    KinAP: captures "stress". KinB transmembrane, stress signals
+ %%    like low O_2; KinA: cytoplasmic, metabolic stress (like protein
+ %%    starvation, or ionic stress)--through KipA, KipI. Don't model that.
+ %%    Pep5i: cell-dentisy & quorum sensing: Pep5i=RapA*density;
+ %%    NOTE: PhrA and RapA are an operon. Hence, both high/low simully.
+ %%    And this is influenced by competence comAP
+ %%    sigmaA: sigma factor, assumed present.
+ %% Ignoring: Soj-Spo0J oscillation; PhrA; KipI-KipA
+ %% ------------------------------------------------------------------
+
+ %% ------------------------------------------------------------------
+ %% The main sensors, KinA, KinB, gets phosphorylated under stress 
+ %% conditions and pass the P to spo0A through a relay of other spo0*.
+ %% Proteins: Spo0AP, KinA
+ %% ------------------------------------------------------------------
+ phosphorelay: MODULE =
+ BEGIN
+  LOCAL KinAP, Pep5i: REAL	%% Concentration of KinAP+KinBP (combined)
+  LOCAL Spo0FP, Spo0FPdot: REAL	%% Concentration of Spo0FP
+  LOCAL Spo0BP, Spo0BPdot: REAL	%% Concentration of Spo0FP
+  LOCAL Spo0A, Spo0Adot: REAL	%% Concentration of Spo0A
+  LOCAL Spo0AP, Spo0APdot: REAL	%% Concentration of Spo0AP
+  LOCAL RapA, RapAdot : REAL	%% Concentration of RapA
+  LOCAL Spo0E, Spo0Edot : REAL	%% Concentration of Spo0E
+  LOCAL DSpo0A, LSpo0A: REAL
+  LOCAL DSpo0E, LSpo0E: REAL
+  LOCAL DRapA, LRapA: REAL
+  LOCAL FO, BO: REAL		%% Total Spo0F+P, Spo0B+P
+  LOCAL b, d, Vbm, Vba, v7, k12: REAL	%% k23, k32, 
+  LOCAL Vbmp, Vbap: REAL
+  %% LOCAL Spo0AP2, Spo0AP2dot:REAL%% Concentration of Spo0AP2
+
+  %% Sigma factors and global regulators influence the
+  %% transcription and translation of spo0A and RapA proteins.
+  INPUT sigmaA?,sigmaH?:BOOLEAN	%% Sigma factors, sigmaA?=TRUE 
+  INPUT sinR4?, hpr?: BOOLEAN	%% Transcription regulators
+  INPUT abrB6?, comAP?: BOOLEAN		%% Competence
+  INPUT stress?, density?:BOOLEAN
+
+  OUTPUT spo0AP2zero?, spo0AP2low?, spo0AP2med?: BOOLEAN %% Spo0AP2 is zero, low, med, high?
+  OUTPUT rapA?: BOOLEAN
+
+  INVARIANT Spo0A >= 0 AND Spo0AP >= 0 AND 	%% Spo0AP2 >= 0 AND
+	Spo0A <= 1 AND Spo0AP <= 1 AND 		%% Spo0AP2 <= 1 AND
+	Spo0FP >= 0 AND Spo0FP <= 1 AND
+	Spo0BP >= 0 AND Spo0BP <= 1 AND
+	RapA >= 0 AND RapA <= 1 AND
+	Spo0E >= 0 AND Spo0E <= 1 AND
+	k12 > 0  AND v7 > 0 AND b > 0 AND Vbm > 0 AND Vba > 0 AND d > 0 AND
+	%% Vbmp > 0 AND Vbap > 0 AND k23 > 0 AND k32 > 0 AND
+	3*Vba > 16*v7 + 16*Vbap AND	%% Required to encode that spo0E only removes background Spo0AP!
+	3*Vba < 2 AND	%% Spo0A cannot drop below some threshold
+	b > Vbm	AND 	%% Spo0FP is increasing whenever it is less than 1/2
+	2*b - d + 2*Vbmp <= 0 AND
+	2*Vbm = Vba + 2*Vbmp	%% Spo0BP is increasing whenver it is < 1/2 and Spo0FP is atleast 1/2
+  %% Assumptions: 
+  %% 1. spo0E is spo0E+YnzD+YisI (effects clubbed together).
+  INITFORMULA
+	4*Spo0A < 1 AND %% 3*Spo0AP2 < 1 AND 
+	2*Spo0BP < 1 AND
+	2*Spo0FP < 1 AND
+	2*Spo0E < 1 AND
+	Spo0E = 0 AND
+	RapA = 0 AND Spo0FP = 0 AND Spo0BP = 0 AND 
+	Spo0AP = 0 AND Spo0A = 0 			%% AND Spo0AP2 = 0 AND
+	%% AND Vba*Spo0BP*Spo0A = v7*Spo0E*Spo0AP		%% 1st derivative added explicitly
+	%% AND 1/3-Spo0A-Vba*Spo0BP*Spo0A+v7*Spo0E*Spo0AP = 0 	%% 1st derivative added explicitly
+	%% AND b*(1-Spo0FP) - Vbm*(1-Spo0BP)*Spo0FP - d*RapA*Spo0FP = 0
+	%% AND Vbm*(1-Spo0BP)*Spo0FP - Vba*Spo0A*Spo0BP = 0
+  DEFINITION spo0AP2zero? = (Spo0AP = 0); spo0AP2low? = (Spo0AP < 1/3); spo0AP2med? = (Spo0AP < 2/3);
+	rapA? = (RapA > 1/2)
+  TRANSITION
+	DSpo0A = IF (sigmaA? AND sigmaH? AND sinR4? = FALSE AND spo0AP2med? AND spo0AP2low? = FALSE)  %% medium
+		THEN 1
+		ELSIF (sigmaA? AND sigmaH? AND sinR4? = FALSE AND spo0AP2low?)  %% low
+		THEN 2/3
+		ELSIF (sigmaA? AND sigmaH? AND sinR4? = FALSE AND spo0AP2med? = FALSE)	 %% high
+		THEN 1/3
+		ELSIF (sigmaA? AND sigmaH? AND sinR4? AND spo0AP2low?)	 %% low
+		THEN 1/3
+		ELSE 0 ENDIF;
+	DRapA = IF (NOT sigmaA?) THEN 0
+		ELSIF (comAP?) THEN 1
+		ELSIF (NOT spo0AP2med?) THEN 0	%% high
+		ELSIF (hpr?)  THEN 0 ELSE 1/2 ENDIF;
+	DSpo0E = IF abrB6? THEN 0 ELSE 1 ENDIF;		%% 0 should be 1/10?
+ 	KinAP = IF (stress?) THEN 1 ELSE 0 ENDIF;
+	Pep5i = IF (rapA? AND density?) THEN 1 ELSE 0 ENDIF;	%% Pep5i = RapA*Density*??
+	LSpo0E = 1; 			%% proteolysis-decay rate+phosphorylation
+	LRapA = 1;
+	LSpo0A = 1;
+	FO = 1; BO = 1;
+	[
+	TRUE -->
+		Spo0FPdot' = b*KinAP*(FO - Spo0FP) - Vbm*(BO - Spo0BP)*Spo0FP - d*RapA*Spo0FP + Vbmp*Spo0BP*(FO - Spo0FP);
+		Spo0BPdot' = Vbm*(BO - Spo0BP)*Spo0FP - Vba*Spo0A*Spo0BP - Vbmp*Spo0BP*(FO - Spo0FP) + Vbap*(BO - Spo0BP)*Spo0AP;
+		Spo0Adot'  = DSpo0A - LSpo0A*Spo0A - Vba*Spo0BP*Spo0A + v7*Spo0E*Spo0AP + Vbap*(BO - Spo0BP)*Spo0AP;
+		Spo0APdot' = Vba*Spo0BP*Spo0A - v7*Spo0E*Spo0AP - Vbap*(BO - Spo0BP)*Spo0AP;
+				%%% Dimerization assumed FAST:: - k23*Spo0AP*Spo0AP + k32*Spo0AP2;
+		%%% Spo0AP2dot' = k23*Spo0AP*Spo0AP - k32*Spo0AP2;
+		RapAdot' = DRapA - LRapA*RapA - k12*Pep5i*RapA;
+		Spo0Edot' = DSpo0E - LSpo0E * Spo0E - v7 * Spo0E * Spo0AP
+	]
+ END;
+ %% ------------------------------------------------------------------
+
+ %% ------------------------------------------------------------------
+ %% Global Switch.
+ %% SinI inactivates SinR by binding to it. They are part of an operon
+ %% but seem to have different regulators.
+ %% Assumptions:
+ %% 1. SinR <-- SinR + SinR4; SinIR <-- SinR-SinI + SinR4-SinI
+ %% 2. Rates are all assumed to be "normalized" to 1.
+ %% ------------------------------------------------------------------
+ SinIR: MODULE =
+ BEGIN
+  LOCAL  SinI, SinR: REAL		%% SinI and SinR!
+  LOCAL  SinIdot, SinRdot: REAL
+  LOCAL  DSinI, LSinI, DSinR, LSinR, k28: REAL
+  INPUT spo0AP2med?, sigmaA?, hpr?, abrB6?: BOOLEAN	%% Transcription Regulators
+  OUTPUT sinR4?: BOOLEAN		%% Global regulator
+  INVARIANT SinI >= 0 AND SinR >= 0 AND
+	SinI <= 1 AND SinR <= 1
+  INITFORMULA
+	2*SinI < 1 AND 2*SinR < 1
+  DEFINITION sinR4? = (SinR > SinI) 	%% sinR4? = (SinR > 1/2)
+  TRANSITION
+	DSinI = IF (NOT sigmaA?) THEN 0
+		ELSIF (NOT spo0AP2med?) THEN 1
+		ELSIF sinR4? THEN 0
+		ELSIF hpr? THEN 0
+		ELSIF abrB6? THEN 0
+		ELSE 1/2 ENDIF;
+	DSinR = 1;				%% 1/2 CHECK CHECK ??
+	LSinR = 1;
+	k28 = 1;
+	LSinI = 1;
+	[
+	TRUE -->
+		SinRdot' = DSinR - LSinR*SinR - k28*SinR*SinI;	%% SinR + SinR4
+		SinIdot' = DSinI - LSinI*SinI - k28*SinR*SinI
+	] 
+ END;
+ %% ------------------------------------------------------------------
+
+ %% ------------------------------------------------------------------
+ %% Global Regulators
+ %% ------------------------------------------------------------------
+ AbrB: MODULE =
+ BEGIN
+  INPUT sigmaA?, spo0AP2zero?, spo0AP2low?, spo0AP2med?: BOOLEAN
+  LOCAL AbrB: REAL
+  LOCAL AbrBdot: REAL
+  LOCAL DAbrB, LAbrB: REAL
+  OUTPUT abrB6?: BOOLEAN
+  INVARIANT
+	AbrB >= 0 AND AbrB <= 1
+  INITFORMULA
+	AbrB >= 0 AND AbrB <= 1 AND 
+	2*AbrB < 1
+  DEFINITION abrB6? = (AbrB > 1/2)
+  TRANSITION
+	DAbrB = IF (NOT sigmaA?) THEN 0
+		ELSIF (spo0AP2zero?) THEN 1
+		ELSIF (spo0AP2low?) THEN 1
+		ELSIF (NOT spo0AP2med?) THEN 0
+		ELSIF abrB6? THEN 0
+		ELSE 1/2 ENDIF;
+	LAbrB = 1;					%% CHECK CHECK
+	[
+	TRUE -->
+		AbrBdot' = DAbrB - LAbrB*AbrB		%% AbrB + AbrB6
+	]
+ END;
+
+ %% ------------------------------------------------------------------
+ %% Global Regulators
+ %% ------------------------------------------------------------------
+ Hpr: MODULE =
+ BEGIN
+  INPUT abrB6?: BOOLEAN
+  LOCAL Hpr: REAL
+  LOCAL Hprdot: REAL
+  LOCAL DHpr, LHpr: REAL
+  OUTPUT hpr?: BOOLEAN
+  INVARIANT
+	Hpr >= 0 AND Hpr <= 1
+  INITFORMULA
+	Hpr >= 0 AND Hpr <= 1 AND 
+	2*Hpr < 1
+  DEFINITION hpr? = (Hpr > 1/2)
+  TRANSITION
+	DHpr = IF (abrB6?) THEN 1 ELSE 0 ENDIF;
+	LHpr = 1;		%% CHECK CHECK
+	[
+	TRUE -->
+		Hprdot' = DHpr - LHpr*Hpr
+	]
+ END;
+ %% ------------------------------------------------------------------
+
+ %% ------------------------------------------------------------------
+ %% Sigma Factor H
+ %% ------------------------------------------------------------------
+ SigmaH: MODULE =
+ BEGIN
+  INPUT sigmaA?, abrB6?: BOOLEAN
+  LOCAL SigmaH, SigmaHdot: REAL
+  LOCAL SigmaH, DSigmaH, LSigmaH: REAL
+  OUTPUT sigmaH?: BOOLEAN
+  INVARIANT
+	SigmaH >= 0 AND SigmaH <= 1
+  INITFORMULA
+	SigmaH >= 0 AND SigmaH <= 1 AND 
+	2*SigmaH < 1
+  DEFINITION sigmaH? = (SigmaH > 1/2)
+  TRANSITION
+	DSigmaH = IF (sigmaA? AND abrB6? = FALSE) THEN 1 ELSE 0 ENDIF;
+	LSigmaH = 1;					%% CHECK CHECK
+	[
+	TRUE -->
+		SigmaHdot' = DSigmaH - LSigmaH*SigmaH
+	]
+ END;
+ %% ------------------------------------------------------------------
+
+ %% ------------------------------------------------------------------
+ %% Finally, sigmaA is assumed to be high/present (constant).
+ %% The final model has 4 (unresolved) inputs: 
+ %% comAP?
+ %% Equate and comAP
+ %% ------------------------------------------------------------------
+ Environment: MODULE =
+ BEGIN
+  OUTPUT sigmaA?, comAP?, stress?, density?: BOOLEAN
+  INITFORMULA sigmaA? = TRUE AND  comAP? = TRUE
+  TRANSITION
+	sigmaA?' = TRUE;
+	comAP?' = TRUE;		%% cell-density high//other ways too.
+	stress?' = TRUE;
+	density?' = TRUE
+ END;
+ %% ------------------------------------------------------------------
+
+ %% ------------------------------------------------------------------
+ %% Full Sporulation Network
+ %% ------------------------------------------------------------------
+ Sporulation: MODULE = 
+  Environment []
+  phosphorelay [] 
+  SinIR [] 
+  AbrB [] 
+  Hpr []
+  SigmaH;
+ %% ------------------------------------------------------------------
+END

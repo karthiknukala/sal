@@ -1,0 +1,668 @@
+;; -*- Mode: Scheme -*- 
+
+;;
+;; SAL 3.1, Copyright (C) 2006, 2011, SRI International.  All Rights Reserved.
+;;
+;; SAL is free software; you can redistribute it and/or 
+;; modify it under the terms of the GNU General Public License 
+;; as published by the Free Software Foundation; either version 2
+;; of the License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of 
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+;; GNU General Public License for more details. 
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program; if not, write to the Free Software 
+;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. 
+;;
+
+
+;; -------------------------------------------------------------
+;; Auxiliary macros
+;;
+;; -------------------------------------------------------------
+(define-macro (set-slot-values! instance . svsv)
+  (unless (= (modulo (length svsv) 2) 0)
+    (error 'set-slot-values! "Illegal set-slot-values!" svsv))
+  (if (null? svsv)
+    #unspecified
+    `(begin
+       ,@(let loop ((svsv svsv)
+                    (assignments '()))
+           (if (null? svsv)
+             (reverse! assignments)
+             (let ((curr-key (car svsv))
+                   (curr-val (cadr svsv)))
+               (loop (cddr svsv)
+                     (cons `(set-slot-value! ,instance ,curr-key ,curr-val) assignments))))))))
+  
+(define-macro (copy-instance instance . svsv)
+  (unless (= (modulo (length svsv) 2) 0)
+    (error 'copy-instance "Illegal copy-instance" svsv))
+  `(let ((%result (shallow-copy ,instance)))
+     (set-slot-values! %result ,@svsv)
+     %result))
+
+(define-macro (update-slots instance . svsv)
+  (unless (= (modulo (length svsv) 2) 0)
+    (error 'copy-instance "Illegal update-slots" svsv))
+  (if (null? svsv)
+    instance
+    (let ((instance-var (gensym 'instance)))
+      (multiple-value-bind
+          (new-let-decls new-svsv tests)
+          (let loop ((svsv svsv)
+                     (new-let-decls '())
+                     (new-svsv '())
+                     (tests '()))
+            (if (null? svsv)
+              (values (reverse! new-let-decls) (reverse! new-svsv) (reverse! tests))
+              (let ((curr-key (car svsv))
+                    (curr-val (cadr svsv))
+                    (aux-var (gensym 'aux)))
+                (loop (cddr svsv)
+                      (cons `(,aux-var ,curr-val) new-let-decls)
+                      (cons* aux-var curr-key new-svsv)
+                      (cons `(eq? (slot-value ,instance-var ,curr-key) ,aux-var) tests)))))
+        `(let* ((,instance-var ,instance)
+                ,@new-let-decls)
+           (if (and ,@tests)
+             ,instance-var
+             (copy-instance ,instance-var ,@new-svsv)))))))
+
+;; -------------------------------------------------------------
+;; Compilation time support procedures
+;;
+;; -------------------------------------------------------------
+
+;; Define any? for both macro and eval environments
+;; This is equivalent to SRFI-1's any function
+;;
+;; In Bigloo 4.x, we need this in both the macro environment AND the
+;; eval environment. We force the eval definition early, before any
+;; scm:compile-define calls that might need it.
+(define (any? pred lst)
+  (let loop ((lst lst))
+    (cond ((null? lst) #f)
+          ((pred (car lst)) #t)
+          (else (loop (cdr lst))))))
+
+;; Force any? into the eval environment unconditionally
+;; This MUST happen before any scm:compile-define calls below
+;; Use try/catch for better error handling in Bigloo
+(try 
+ (eval '(define (any? pred lst)
+          (let loop ((lst lst))
+            (cond ((null? lst) #f)
+                  ((pred (car lst)) #t)
+                  (else (loop (cdr lst)))))))
+ (lambda (escape proc msg obj)
+   ;; Suppress any errors (especially "read-only variable" on reload)
+   #unspecified))
+
+(define-macro (scm:compile-define header . body)
+  ;; In Bigloo 4.x, eval'd definitions become read-only, so we need to check
+  ;; if already defined to avoid "set! on read-only variable" errors when
+  ;; the macro file is loaded multiple times during compilation
+  (let ((name (if (pair? header) (car header) header)))
+    (with-handler
+     (lambda (e) 
+       ;; If already defined (or other error), just ignore
+       #unspecified)
+     (eval `(define ,header ,@body))))
+  #unspecified)
+
+;; Return #t if sexpr shadows a variable in the list vars
+;; remark: assumes that the macros in sexpr were already expanded
+;; Note: Bigloo 4.x compatibility - inline the any? logic to avoid eval environment issues
+[scm:compile-define (scm:shadows-vars? sexpr vars)
+  (letrec ((list-any? (lambda (pred lst)
+                        (let loop ((lst lst))
+                          (cond ((null? lst) #f)
+                                ((pred (car lst)) #t)
+                                (else (loop (cdr lst)))))))
+           (shadow? (lambda (sexpr)
+                      (match-case sexpr
+                        ((lambda ?new-vars . ?rest)
+                         (or (if (list? new-vars)
+                               (list-any? (lambda (new-var) (memq new-var vars)) new-vars)
+                               (memq new-vars vars))
+                             (list-any? shadow? rest)))
+                        (((or let let* letrec) ?decls . ?rest)
+                         (or (list-any? (lambda (decl)
+                                          (let ((new-var (car decl)))
+                                            (memq new-var vars)))
+                                        decls)
+                             (list-any? shadow? rest)))
+                        ;; Remark: multiple-value-bind is a macro, so I don't need to consider it.
+                        (else
+                         (if (list? sexpr)
+                           (list-any? shadow? sexpr)
+                           #f))))))
+    (shadow? sexpr))]
+
+;; Return #t if sexpr uses next-method? or call-next-method
+;; Note: Bigloo 4.x compatibility - inline the any? logic to avoid eval environment issues
+[scm:compile-define (scm:use-next-method? sexpr)
+  (letrec ((list-any? (lambda (pred lst)
+                        (let loop ((lst lst))
+                          (cond ((null? lst) #f)
+                                ((pred (car lst)) #t)
+                                (else (loop (cdr lst)))))))
+           (check-sexpr (lambda (sexpr)
+                          (cond
+                           ((or (eq? sexpr 'call-next-method)
+                                (eq? sexpr 'next-method?))
+                            #t)
+                           ((list? sexpr)
+                            (list-any? check-sexpr sexpr))
+                           (else
+                            #f)))))
+    (check-sexpr sexpr))]
+ 
+;; -------------------------------------------------------------
+;; ensure macro
+;;
+;; This macro transform set-slot-value! and slot-value
+;; call to vector-set! and vector-ref. This optimization
+;; is based on the information collected by the program
+;; code-analyzer.
+;;
+;; Example: 
+;;    (ensure ((p1 <point>)
+;;             (p2 <point>))
+;;      (set-slot-value! p1 :x 10)
+;;      (set-slot-value! p2 :y 20))
+;; 
+;; when code-analyzer states that :x is always stored in position 2
+;; and :y in position 3 for instances of the class <point> and its
+;; subclasses. The sexpr above is expanded to:
+;;
+;;    (begin
+;;      (vector-set! p1 2 10)
+;;      (vector-set! p2 3 20))
+;;
+;; -------------------------------------------------------------      
+(define-macro (ensure var-class-entries . body)
+  (let* ((body (map expand body))
+         (var-info-pairs (map (lambda (var-class-entry)
+                                (let ((var (car var-class-entry))
+                                      (class (cadr var-class-entry)))
+                                  (unless (and (symbol? var) (symbol? class))
+                                    (error 'ensure "Invalid use of the ensure macro" var-class-entry))
+                                  (cons var (opt-info/class-info class))))
+                              var-class-entries))
+         (slot-name->idx (lambda (var-name slot-name)
+                           (cond
+                            ((assq var-name var-info-pairs) =>
+                             (lambda (entry)
+                               (let ((info (cdr entry)))
+                                 (if info
+                                   (opt-class-info/slot->idx info slot-name)
+                                   #f))))
+                            (else 
+                             #f))))
+         (let-decls->new-binds (lambda (let-decls) (map car let-decls))))
+    (letrec ([proc-sexpr 
+              (lambda (sexpr bounded-vars)
+                (match-case sexpr
+                  ;; SLOT-VALUE
+                  ((slot-value ?var ?slot)
+                   (cond
+                    ((and (not (memq var bounded-vars)) ;; var was not shadowed
+                          (slot-name->idx var slot)) =>
+                     (lambda (idx)
+                       `(vector-ref ,var ,idx)))
+                    (else
+                     (default-proc-sexpr sexpr bounded-vars))))
+                  ;; SET-SLOT-VALUE!
+                  ((set-slot-value! ?var ?slot ?new-value)
+                   (cond
+                    ((and (not (memq var bounded-vars)) ;; var was not shadowed
+                          (slot-name->idx var slot)) =>
+                     (lambda (idx)
+                       `(vector-set! ,var ,idx ,(proc-sexpr new-value bounded-vars))))
+                    (else
+                     (default-proc-sexpr sexpr bounded-vars))))
+                  ;; LET
+                  ((let ?decls . ?body)
+                   (let* ((new-decls (default-proc-sexpr decls bounded-vars))
+                          (new-binds (let-decls->new-binds decls))
+                          (new-body (default-proc-sexpr body (append new-binds bounded-vars))))
+                     `(let ,new-decls ,@new-body)))
+                  ;; LETREC
+                  ((letrec ?decls . ?body)
+                   (let* ((new-binds (let-decls->new-binds decls))
+                          (new-bounded-vars (append new-binds bounded-vars))
+                          (new-decls (default-proc-sexpr decls new-bounded-vars))
+                          (new-body (default-proc-sexpr body new-bounded-vars)))
+                     `(letrec ,new-decls ,@new-body)))
+                  ;; LET*
+                  ((let* ?decls . ?body)
+                   (let loop ((decls decls)
+                              (bounded-vars bounded-vars)
+                              (new-decls '()))
+                     (if (null? decls)
+                       `(let* ,(reverse! new-decls) ,@(default-proc-sexpr body bounded-vars))
+                       (let* ((curr-decl (car decls))
+                              (curr-var (car curr-decl)))
+                         (loop (cdr decls)
+                               (cons curr-var bounded-vars)
+                               (cons (default-proc-sexpr curr-decl bounded-vars) new-decls))))))
+                  ;; LAMBDA 
+                  ((lambda ?vars . ?rest)
+                   (let ((new-rest (default-proc-sexpr rest (if (list? vars)
+                                                              (append vars bounded-vars)
+                                                              (cons vars bounded-vars)))))
+                     `(,(car sexpr) ,vars ,@rest)))
+                  ;; Remark: multiple-value-bind is a macro, so I don't need to consider it.
+                  (else
+                   (default-proc-sexpr sexpr bounded-vars))))]
+             [default-proc-sexpr
+               (lambda (sexpr bounded-vars)
+                 (if (list? sexpr)
+                   (map (lambda (sexpr) (proc-sexpr sexpr bounded-vars)) sexpr)
+                   sexpr))])
+      `(begin
+         ,@(map (lambda (sexpr) (proc-sexpr sexpr '())) body)))))
+
+;; -------------------------------------------------------------
+;; (and-instance-of? ((var class)) . conds)
+;;
+;; ==>
+;;
+;; (and (instance-of? var class)
+;;      (ensure ((var class))
+;;        (and ,@conds)))
+;;
+;; -------------------------------------------------------------
+(define-macro (and-instance-of? var-class-list . conds)
+  `(and ,@(map (lambda (var-class)
+                 `(instance-of? ,(car var-class) ,(cadr var-class)))
+               var-class-list)
+        (ensure ,var-class-list
+          (and ,@conds))))
+
+;; -------------------------------------------------------------
+;; tlet (typed let)
+;;
+;; A version of let that automatically inserts an ensure
+;; macro
+;; 
+;; Example:
+;;
+;; (tlet ((x <point> val1)
+;;        (y <primitive> val2)
+;;        (z <line> val2))
+;;   ...)
+;;
+;; =>
+;; is translated to
+;;
+;; (let ((x val1)
+;;       (y val2)
+;;       (z val2))
+;;    (ensure ((x <point>)
+;;             (z <line>))
+;;       ...))
+;;
+;; -------------------------------------------------------------
+(define-macro (tlet decls . body)
+  (let loop ((decls decls)
+              (new-decls '())
+              (var-class-entries '()))
+     (if (null? decls)
+       (let ((result `(let ,(reverse! new-decls) 
+                        ,(if (null? var-class-entries)
+                           `(begin ,@body)
+                           `(ensure ,(reverse! var-class-entries) ,@body)))))
+         ;; (print "TLET: ")
+         ;; (pp result)
+         result)
+       (let ((curr-decl (car decls)))
+         (match-case curr-decl
+           ((?var ?class ?value)
+            (unless (symbol? class)
+              (error 'tlet "Invalid tlet declaration" curr-decl))
+            (loop (cdr decls)
+                  (cons `(,var ,value) new-decls)
+                  (if (opt-info/class-info class)
+                    (cons `(,var ,class) var-class-entries)
+                    var-class-entries)))
+           (else
+            (error 'tlet "Invalid tlet declaration" curr-decl)))))))
+
+;; -------------------------------------------------------------
+;; tlet* (typed let*)
+;;
+;; See: tlet
+;; -------------------------------------------------------------
+(define-macro (tlet* decls . body)
+  (let loop ((decls decls))
+    (if (null? decls)
+      `(begin ,@body)
+      `(tlet (,(car decls))
+         ,(loop (cdr decls))))))     
+
+;; -------------------------------------------------------------
+;; make-instance
+;;
+;; -------------------------------------------------------------
+(define-macro (make-instance class . svsv)
+  (let ((ensure? (opt-info/class-info class)))
+    (if ensure?
+      `(let ((%result (make-instance-core ,class)))
+         (ensure ((%result ,class)) 
+           (set-slot-values! %result ,@svsv))
+         %result)
+      `(let ((%result (make-instance-core ,class)))
+         (set-slot-values! %result ,@svsv)
+         %result))))
+
+;; -------------------------------------------------------------
+;; Class definition
+;;
+;; -------------------------------------------------------------
+(define-macro (define-class name super-classes slots . svsv)
+  (let ((definition `(define ,name (scm:make-class (quote ,name) (list ,@super-classes) (list ,@slots)))))
+    (if (null? svsv)
+      definition
+      `(begin
+         ,definition
+         (insert-api-named-entry! (make-instance <api-class-entry>
+                                                 :name (quote ,name)
+                                                 :header (object->string (quote (define-class ,name ,super-classes ,slots)))
+                                                 :file-name (FILE-NAME)
+                                                 ,@svsv))))))
+
+;; -------------------------------------------------------------
+;; Generic procedures
+;;
+;; -------------------------------------------------------------
+(define-macro (define-generic header . svsv)
+  (let* ((name (car header))
+         (gen-info (opt-info/generic-info name))
+         (definition (if gen-info
+                       (let* ((discriminator-pos-list (opt-generic-info/discriminator-pos-list gen-info))
+                              (discriminator-pos-list-size (length discriminator-pos-list)))
+                         ;; (print "discriminator-pos-list: " discriminator-pos-list)
+                         (case discriminator-pos-list-size
+                           ((0)
+                            ;; TODO: specialize this case
+                            `(define-single-dispatch-generic 0 ,header))
+                           ((1)
+                            `(define-single-dispatch-generic ,(car discriminator-pos-list) ,header))
+                           (else
+                            `(define-multi-dispatch-generic ,discriminator-pos-list ,header))))
+                       (let* ((args (cdr header)))
+                         `(define-multi-dispatch-generic ,(list-tabulate (length args) values) ,header)))))
+    (if (null? svsv)
+      definition
+      `(begin
+         ,definition
+         (insert-api-named-entry! (make-instance <api-generic-entry>
+                                                 :name (quote ,name)
+                                                 :header (object->string (quote ,header))
+                                                 :file-name (FILE-NAME)
+                                                 ,@svsv))))))
+    
+(define-macro (define-single-dispatch-generic discriminator-pos header)
+  (let* ((name (car header))
+         (args (cdr header))
+         (discriminator-arg (list-ref args discriminator-pos))
+         (cache-table (symbol-append name '-cache-table))
+         (primary-method-table (gensym 'primary-method-table))
+         (around-method-table (gensym 'around-method-table))
+         (add-primary-proc! (gensym 'add-primary-proc!))
+         (add-around-proc! (gensym 'add-around-proc!))
+         (empty-cache-table? (gensym 'empty-table?))
+         (reset-cache-proc! (gensym 'reset-cache-proc!))
+         (num-classes (opt-info/num-classes))
+         ;; Hack: I allow the dynamic creation of a bounded number of new classes.
+         ;; If the limit is reached, a runtime error will be produced.
+         ;; The problem can be fixed by increasing the following constant 
+         (table-size (+ num-classes 50)))
+    ;; (print "SINGLE dispatch: " name " discriminator-arg: " discriminator-arg)
+    `(begin
+       (define ,empty-cache-table? #t)
+       (define ,cache-table (make-vector ,table-size #f))
+       (define ,primary-method-table '())
+       (define ,around-method-table '())
+       (define (,reset-cache-proc!)
+         (unless ,empty-cache-table?
+           (set! ,cache-table (make-vector ,table-size #f))
+           (set! ,empty-cache-table? #t)))
+       (define (,add-primary-proc! class-list method-proc)
+         (set! ,primary-method-table (scm:update-method-table ,primary-method-table class-list method-proc))
+         (,reset-cache-proc!))
+       (define (,add-around-proc! class-list method-proc)
+         (set! ,around-method-table (scm:update-method-table ,around-method-table class-list method-proc))
+         (,reset-cache-proc!))
+       (scm:register-generic-procedure! (quote ,name) ,add-primary-proc! ,add-around-proc!)
+       (define (,name ,@args)
+         (let ((%applicable-methods (vector-ref ,cache-table (instance-class-idx ,discriminator-arg))))
+           (unless %applicable-methods
+             (let* ((%classes (list ,@(map (lambda (arg) 
+                                             `(class-of ,arg))
+                                           args))))
+               (set! %applicable-methods (scm:compute-all-applicable-methods %classes
+                                                                             ,around-method-table ,primary-method-table))
+               (when (null? %applicable-methods)
+                 (sal-assert "define-generic" ,args #f)
+                 (sign-no-method-defined (quote 'name)))
+               (vector-set! ,cache-table (instance-class-idx ,discriminator-arg) %applicable-methods)
+               (set! ,empty-cache-table? #f)))
+           ((car %applicable-methods) (cdr %applicable-methods) ,@args))))))
+
+;; Failed optimization
+;; -------------------
+;; Generic procedure calls have one indirection level (i.e., a call to the dispatch function).
+;; So, I tried to inline the dispatch function for local generic procedure calls. A call
+;; is said to be local when it is located in the same file where the generic procedure is defined.
+;; To perform the inline, I defined a macro with the same name of the dispatch function.
+;; Unfortunately, this optimization didn't make any difference in the performance.
+;; The following code implements this trick:
+;;
+;;       (define (,name-core ,@args)
+;;         (let* ((%classes (list ,@(map (lambda (arg) 
+;;                                         `(class-of ,arg))
+;;                                       args)))
+;;                (%applicable-methods (scm:compute-all-applicable-methods %classes
+;;                                                                         ,around-method-table ,primary-method-table)))
+;;           (when (null? %applicable-methods)
+;;             (sal-assert "define-generic" ,args #f)
+;;             (sign-no-method-defined (quote 'name)))
+;;           (vector-set! ,cache-table (instance-class-idx ,discriminator-arg) %applicable-methods)
+;;           (set! ,empty-cache-table? #f)
+;;           ((car %applicable-methods) (cdr %applicable-methods) ,@args)))
+;;       (define (,name ,@args)
+;;         (let ((%applicable-methods (vector-ref ,cache-table (instance-class-idx ,discriminator-arg))))
+;;           (if %applicable-methods
+;;             ((car %applicable-methods) (cdr %applicable-methods) ,@args)
+;;             (,name-core ,@args))))
+;;       (define-macro (,name ,@args)
+;;         (let ((result (list 'let*  (list ,@(map (lambda (aux-arg arg)
+;;                                                   `(list (quote ,aux-arg) ,arg))
+;;                                                 aux-args
+;;                                                 args)
+;;                                          (list '%applicable-methods (list 'vector-ref 
+;;                                                                           (quote ,cache-table)
+;;                                                                           (list 'instance-class-idx (quote ,aux-discriminator-arg)))))
+;;                             (list 'if '%applicable-methods
+;;                                   (list (list 'car '%applicable-methods) 
+;;                                         (list 'cdr '%applicable-methods)
+;;                                         ,@quoted-aux-args)
+;;                                   (list (quote ,name-core) ,@quoted-aux-args)))))
+;;           result)))))
+
+
+(define-macro (define-multi-dispatch-generic discriminator-pos-list header)
+  (let* ((name (car header))
+         (args (cdr header))
+         (num-args (length args))
+         (num-discriminators (length discriminator-pos-list))
+         (cache-table (gensym 'cache-table))
+         (arg-class-idxs (gensym 'arg-class-idxs))
+         (primary-method-table (gensym 'primary-method-table))
+         (around-method-table (gensym 'around-method-table))
+         (add-primary-proc! (gensym 'add-primary-proc!))
+         (add-around-proc! (gensym 'add-around-proc!)))
+    `(begin
+       (define ,cache-table (make-multi-dispatch-table ,num-discriminators))
+       (define ,arg-class-idxs (make-vector ,num-discriminators #f))
+       (define ,primary-method-table '())
+       (define ,around-method-table '())
+       (define (,add-primary-proc! class-list method-proc)
+         (set! ,primary-method-table (scm:update-method-table ,primary-method-table class-list method-proc))
+         (multi-dispatch-table/reset! ,cache-table))
+       (define (,add-around-proc! class-list method-proc)
+         (set! ,around-method-table (scm:update-method-table ,around-method-table class-list method-proc))
+         (multi-dispatch-table/reset! ,cache-table))
+       (scm:register-generic-procedure! (quote ,name) ,add-primary-proc! ,add-around-proc!)
+       (define (,name ,@args)
+         ;; fill arg-class-idxs array
+         ,@(let loop ((i 0)
+                      (j 0)
+                      (args args)
+                      (assignments '()))
+             (if (null? args)
+               (reverse! assignments)
+               (let ((discriminator? (memq i discriminator-pos-list)))
+                 (loop (+ i 1)
+                       (if discriminator? (+ j 1) j)
+                       (cdr args)
+                       (if discriminator?
+                         (cons `(vector-set! ,arg-class-idxs ,j (class-idx (class-of ,(car args)))) assignments)
+                         assignments)))))
+         (let ((%applicable-methods (multi-dispatch-table/applicable-methods-in-cache ,cache-table ,arg-class-idxs)))
+           (unless %applicable-methods
+             (set! %applicable-methods (multi-dispatch-table/applicable-methods ,cache-table 
+                                                                                (list ,@(map (lambda (arg)
+                                                                                               `(class-of ,arg))
+                                                                                             args))
+                                                                                ,arg-class-idxs 
+                                                                                ,around-method-table
+                                                                                ,primary-method-table))
+             (when (null? %applicable-methods)
+               (sal-assert "define-generic" ,args #f)
+               (sign-no-method-defined (quote 'name))))
+           ((car %applicable-methods) (cdr %applicable-methods) ,@args))))))
+
+;; -------------------------------------------------------------
+;; Method definition
+;;
+;; -------------------------------------------------------------
+(define-macro (define-method header . body)
+    (let ((name (car header)))
+      (multiple-value-bind
+          (kind arg-class-list)
+          (let ((rest-header (cdr header)))
+            (cond 
+             ((null? rest-header)
+              (values :primary '()))
+             ((keyword? (car rest-header))
+              (values (car rest-header) (cdr rest-header)))
+             (else
+              (values :primary rest-header))))
+        (let* ((arg-list (map car arg-class-list))
+               (class-list (map cadr arg-class-list))
+               (method-name (gensym (let loop ((curr (symbol-append name '- (string->symbol (keyword->string kind))))
+                                               (class-list class-list))
+                                      (if (null? class-list)
+                                        curr
+                                        (let ((elem (car class-list)))
+                                          (if (symbol? elem)
+                                            (loop (symbol-append curr '- elem) (cdr class-list))
+                                            (loop curr (cdr class-list))))))))
+               (expanded-body (map expand body))
+               ;; Inline any? logic for Bigloo 4.x compatibility
+               (use-next-method? (let loop ((lst expanded-body))
+                                   (cond ((null? lst) #f)
+                                         ((scm:use-next-method? (car lst)) #t)
+                                         (else (loop (cdr lst))))))
+               (shadow-arg? (let loop ((lst expanded-body))
+                              (cond ((null? lst) #f)
+                                    ((scm:shadows-vars? (car lst) arg-list) #t)
+                                    (else (loop (cdr lst))))))
+               ;; If call-next-method is used and the arguments can be shadowed, then
+               ;; I create new unique variables to store the value of the arguments.
+               (saved-arg-list (if (and use-next-method? shadow-arg?)
+                                 (map (lambda (arg) (gensym arg)) arg-list)
+                                 arg-list))
+               ;; Expand the procedure calls and references to next-method? and call-next-method
+               ;; Remark: closures are not going to be created if next-method? and call-next-method
+               ;; are not used as values (e.g., passed as arguments to another procedure).
+               [expand-next-methods 
+                (lambda (sexpr)
+                  (let loop ((sexpr sexpr))
+                    (match-case sexpr
+                      ((next-method?)
+                       `(not (null? %applicable-methods)))
+                      (next-method?
+                       `(lambda () (not (null? %applicable-methods))))
+                      ((call-next-method)
+                       `((car %applicable-methods) (cdr %applicable-methods) ,@saved-arg-list))
+                      (call-next-method
+                       `(lambda ()
+                          ((car %applicable-methods) (cdr %applicable-methods) ,@saved-arg-list)))
+                      (else
+                       (if (list? sexpr)
+                         (map loop sexpr)
+                         sexpr)))))]
+               (method-body `(ensure ,arg-class-list
+                                     ,@(if use-next-method?
+                                         (map expand-next-methods expanded-body)
+                                         expanded-body)))
+               (method-definition (if (and use-next-method? shadow-arg?)
+                                    `(define (,method-name %applicable-methods ,@arg-list)
+                                       (let ,(map (lambda (saved-arg arg)
+                                                    `(,saved-arg ,arg))
+                                                  saved-arg-list
+                                                  arg-list)
+                                         ,method-body))
+                                    `(define (,method-name %applicable-methods ,@arg-list)
+                                       ,method-body))))
+          ;; (print "method-definition: ")
+          ;; (pp method-definition)
+          ;; (print "expanded method-definition: ")
+          ;; (pp (expand method-definition))
+          `(begin
+             ,method-definition
+             (compile-if (sal-collect-info)
+               (when (collect-class-info?)          
+                 (with-output-to-port *sal-class-info-file*
+                   (lambda ()
+                     (print "(method " (quote ,header) ")")))))
+             (insert-method-api-entry! (quote ,name) (object->string (quote ,header)))
+             (scm:add-method! (quote ,name) ,kind (list ,@class-list) ,method-name))))))
+
+;; -------------------------------------------------------------
+;; Debugging support
+;;
+;; -------------------------------------------------------------
+(define-macro (instance-check fun-name instance class)
+  (if (sal-check-mode)
+    `(unless (instance-of? ,instance ,class)
+       (sign-error "function \"~a\": argument \"~a\" is not an instance of the class ~a, but an instace of ~a" (quote ,fun-name) (quote ,instance) (quote ,class) (instance-class-name ,instance)))
+    `[assert (,instance) (instance-of? ,instance ,class)]))
+
+;; -------------------------------------------------------------
+;; Slot tagging macros
+;;
+;; -------------------------------------------------------------
+(define-macro (kind-slot-def? slot-def kind)
+  `(and (list? ,slot-def) (keyword? (car ,slot-def)) (eq? (cadr ,slot-def) ,kind)))
+
+(define-macro (optional-slot-def? slot-def)
+  `(kind-slot-def? ,slot-def 'optional))
+
+(define-macro (list-slot-def? slot-def)
+  `(kind-slot-def? ,slot-def 'list))
+
+(define-macro (table-slot-def? slot-def)
+  `(kind-slot-def? ,slot-def 'table))
+
+(define-macro (queue-slot-def? slot-def)
+  `(kind-slot-def? ,slot-def 'queue))

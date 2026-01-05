@@ -1,0 +1,59 @@
+%
+% Models the Pathfinder scheduling algorithm and explains the
+% cause of the recurring reset problem during the mission on Mars
+%
+% there is a high priority process, that consumes
+% data produced by a low priority process.
+% data consumption and production happens under
+% the protection of a mutex lock
+% the mutex lock conflicts with the scheduling priorities
+% which can deadlock the system if high_priority_process starts up
+% while low_priority_process has the lock set
+%
+%
+pathfinder : CONTEXT =
+BEGIN
+	MUTEX_STATE : TYPE = {busy, free};
+	PROCESS_STATE : TYPE = {waiting, running, idle};
+  PROCESS_ID : TYPE = {low, high};
+
+  process [id : PROCESS_ID]: MODULE =
+  BEGIN
+		OUTPUT pc : PROCESS_STATE
+    GLOBAL mutex : MUTEX_STATE
+    INPUT  turn : PROCESS_ID
+	  INITIALIZATION
+			pc = idle
+		TRANSITION
+      [
+				turn' = id AND pc = idle --> pc' = waiting
+        []
+        turn' = id AND pc = waiting AND mutex = free --> pc' = running; mutex' = busy
+        []
+        turn' = id AND pc = running --> pc' = idle; mutex' = free
+      ]
+  END;
+
+  scheduler : MODULE =
+	BEGIN
+    INPUT pc_high_priority : PROCESS_STATE
+	  OUTPUT turn : PROCESS_ID
+		INITIALIZATION
+		  turn IN {low, high}
+    TRANSITION
+	    [
+        pc_high_priority = idle --> turn' IN {low, high}  
+        []
+        pc_high_priority = waiting OR pc_high_priority = running --> turn' = high
+      ]
+  END;
+
+  low_priority_process : MODULE = RENAME pc TO pc_low_priority 
+                                  IN process[low];
+
+  high_priority_process : MODULE = RENAME pc TO pc_high_priority
+                                   IN process[high];
+                                
+  system : MODULE = scheduler || (high_priority_process [] low_priority_process);
+
+END

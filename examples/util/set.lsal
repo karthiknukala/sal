@@ -1,0 +1,36 @@
+(context set (T) ()
+  
+  (define-type Set (-> T bool))
+
+  (define empty-set::Set (lambda (e::T) false))
+  
+  (define full-set::Set (lambda (e::T) true))
+  
+  (define (insert::Set a-set::Set e::T)
+    (lambda (e1::T) 
+      (or (= e e1) (a-set e1))))
+
+  (define (remove::Set a-set::Set e::T)
+    (lambda (e1::T)
+      (and (/= e e1) (a-set e1))))
+
+  (define (contains?::bool a-set::Set e::T)
+    (a-set e))
+
+  (define (empty?::bool a-set::Set)
+    (for-all (e::T) (not (contains? a-set e))))
+
+  (define (full?::bool a-set::Set)
+    (for-all (e::T) (contains? a-set e)))
+
+  (define (union::Set a-set1::Set a-set2::Set)
+    (lambda (e::T) (or (a-set1 e) (a-set2 e))))
+
+  (define (intersection::Set a-set1::Set a-set2::Set)
+    (lambda (e::T) (and (a-set1 e) (a-set2 e))))
+  
+  (define (difference::Set a-set1::Set a-set2::Set)
+    (lambda (e::T) (and (a-set1 e) (not (a-set2 e)))))
+
+  )
+  

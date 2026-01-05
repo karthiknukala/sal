@@ -1,0 +1,87 @@
+SAL 3.1, Copyright (C) 2006, 2011, SRI International.  All Rights Reserved.
+
+SAL is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2 of the License, or (at your
+option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of 
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+GNU General Public License for more details. 
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software 
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. 
+
+
+SALenv: SAL environment
+=======================
+
+SALenv is a set of verification tools for the SAL specification
+language. 
+
+For installation instructions, see the file INSTALL.
+
+1. Web Resources
+================
+
+The SAL's home page is at:
+
+  http://sal.csl.sri.com/
+
+Please be sure to visit this site for information, documentation,
+tutorials, news, etc.  All things SAL-ish are available from there.
+
+2. Mailing Lists
+================
+
+sal@csl.sri.com : SAL mailing list, it is intended for general
+discussions involving SAL, as well as announcements of new tools,
+language changes, etc. Subscribe by sending a message with 'subscribe'
+in the body to sal-request@csl.sri.com.
+
+sal-announce@csl.sri.com : Used only for announcing new versions,
+critical bugs. Subscribe by sending a message with 'subscribe' in the
+body to sal-announce-request@csl.sri.com.
+
+sal-devel@csl.sri.com : SAL developer mailing list, it is intended for
+discussions involving SAL development. Subscribe by sending a message
+with 'subscribe' in the body to sal-devel-request@csl.sri.com.
+
+sal-help@csl.sri.com : Used to request help from a community of SAL
+volunteers. To volunteer, send a message with 'subscribe' in the body
+to sal-help-request@csl.sri.com.
+
+The four lists above are all moderated at SRI.
+
+sal-bugs@csl.sri.com : Bug report list (you can also send suggestions
+here).
+
+sal-sri@csl.sri.com : This is how to reach the SRI team for general
+questions about SAL.
+
+
+
+3. Customizing
+==============
+
+The behavior of SALenv can be customized by editing the 
+~/.salrc file. Check the manual to learn about the customization
+options.
+
+4. Documentation
+================
+
+Check the `doc' subdirectory.
+
+5. Bugs
+=======
+Please report problems to sal-bugs@csl.sri.com. 
+Before reporting a problem, you may want to see if someone else
+did already - check http://sal.csl.sri.com
+
+
+Have fun,
+
+Bruno Dutertre

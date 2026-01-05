@@ -1,0 +1,86 @@
+Examples of linear hybrid systems in SAL
+
+Author: Maria Sorea
+Date: August 9, 2003
+----------------------------------------
+
+1. A water-level monitor
+   
+From: Alur, Courcoubetis, Halbwachs, Henzinger, Ho, Nicollin, Olivero, Sifakis, Yovine.
+      The Algorithmic Analysis of Hybrid Systems.
+      Theoretical Computer Science 138:3-34, 1995.
+
+The water level monitor in a tank is controlled through a monitor, which continuously senses the
+water level and turns a pump on and off. The water level changes as a piecewise-linear function over
+time. When the pump is off, the water level (denoted by the variable y) falls by 2 inches per second;
+when the pump is on, the water level rises by 1 inch per second. Initially the water level is 1 inch
+and the pump is turned on. The water level has to be kept between 1 and 12 inches. But from the
+time that the monitor signals to change the status of the pump to the time that the change becomes
+effective, there is a delay of 2 seconds. Thus the monitor must signal to turn the pump on before
+the water level falls to 1 inch, and it must signal to turn the pump off before the water level
+reaches 12 inches.
+
+The system has four states. In state s0 and s1 the pump is is on; in s2 and s3 the pump is off. 
+The variable x is a clock, used to specify delays. The variable y specifies the water level.
+
+The following command checks the property prop
+
+ > sal-inf-bmc -v 10 waterlevel prop
+
+--------------------------------------------------------------------------------------------------
+
+2. A leaking gas burner
+
+From: Alur, Courcoubetis, Halbwachs, Henzinger, Ho, Nicollin, Olivero, Sifakis, Yovine.
+      The Algorithmic Analysis of Hybrid Systems.
+      Theoretical Computer Science 138:3-34, 1995.
+
+Given a gas burner, which is assumed that (1) any leakage can be detected and stopped within
+1 second, and (2) the gas burner will not leak for 30 seconds after a leakage has been
+stopped. The property (3) to be proven is that the accumulated time of leakage is at most
+one twentieth of the time in any interval of at least 60 seconds, that is
+y >= 60 ==> 20z <= y, where the clock y records the total elapse of time, and
+the integrator z records the cumulative leakage time.
+
+The system has two states, in l1 the gas burner leaks, while l2 is the nonleaking state.
+
+The following command checks the property (3)
+
+ > sal-inf-bmc -v 10 gasburner prop3
+
+---------------------------------------------------------------------------------------------------
+
+3. A pursuit game
+
+From: Alur, Henzinger, Wong-Toi.
+      Symbolic Analysis of Hybrid Systems.
+
+A pursuer in a golf cart is chasing an evader on a circular track that is 40 meters long. The
+cart can travel up to 6 meters per second in the clockwise direction, but only 1/2 meters per 
+second going counterclockwise, since it must use its reverse gear to travel in this direction.
+The evader is on a bicycle, and travels at 5 meters per second in either direction. However, it
+makes the decision whether to change its direction only at fixed points in time, separately by
+exactly 2 seconds. The goal of the evader is to avoid the pursuer. The evader has the advantage
+that there is a rescue helicopter at a fixed position on the track. The evader uses a very
+simple strategy. It determines whether it will win the race to the helicopter if both parties
+proceed clockwise at full speed. If so, it heads clockwise, otherwise counterclockwise. A
+linear hybrid automaton is used to models the above scenario. There are three operating modes
+for the evader: going clockwise (state "clockwise" in SAL model), going counterclockwise
+(state "counter"), and rescued (state "rescued"). Three real-valued variables are used. The
+variable p models the position of the pursuer on the track, measured in meters in a clockwise
+direction, relative to the helicopter at position 0. The evader position is modeled using the
+variable e. The clock t measures the delay between the choices made by the evader. The 
+variables evolve in state clockwise according to the differential equations edot=5, tdot=1,
+pdot in [-1/2, 6]. All equalities and inequalities are modulo 40, since the track is circular
+and 40 meters long. The switches to the mode rescued model the evader's successful escape
+to the helicopter. The other switches model the decision of the evader. These switches are
+only enabled when the clock reaches the value 2. The time for the evader (resp. pursuer)
+to reach the helicopter is calculated as (40-e)/5 (resp. (40-p)/6). The evader is initially
+at position 20 directly opposite the track from the helicopter, and the pursuer between 
+them at position 10.
+
+The property to prove is that the evader always can avoid the pursuer.
+
+The following command checks this property
+
+ > sal-inf-bmc -v 10 pursuit safety

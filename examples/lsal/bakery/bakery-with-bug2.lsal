@@ -1,0 +1,111 @@
+(context bakery-with-bug2 () (N::nznat B::nznat)
+	
+	(define-type Job-Idx (subrange 1 N))
+
+	(define-type Ticket-Idx (subrange 0 B))
+	
+	(define-type Next-Ticket-Idx (subrange 1 (+ B 1)))
+
+	;; RSRC models the system resources
+	(define-type RSRC (record data::(array Job-Idx Ticket-Idx)
+														next-ticket::Next-Ticket-Idx))
+
+	;; min-non-zero-ticket returns
+	;; 0 - if the ticket of each job is 0
+	;; n, where n is the minimal non zero ticket
+	;; min-non-zero-ticket-aux is a recursive auxiliary function used
+	;; by min-non-zero-ticket
+	(define (min-non-zero-ticket-aux::Ticket-Idx rsrc::RSRC idx::Job-Idx)
+		(if (= idx N)
+			rsrc.data[idx]
+			(let ((curr::Ticket-Idx rsrc.data[idx])
+						(rest::Ticket-Idx (min-non-zero-ticket-aux rsrc (+ idx 1))))
+				(cond
+				 ((= curr 0)
+					rest)
+				 ((= rest 0)
+					curr)
+				 (else
+					(min curr rest))))))
+
+	(define (min-non-zero-ticket::Ticket-Idx rsrc::RSRC)
+		(min-non-zero-ticket-aux rsrc 1))
+
+	;; return true if a job is allowed to enter the critical section
+	(define (can-enter-critical?::bool rsrc::RSRC job-idx::Job-Idx)
+		(let ((min-ticket::Ticket-Idx (min-non-zero-ticket rsrc))
+					(job-ticket::Ticket-Idx rsrc.data[job-idx]))
+			(<= job-idx min-ticket)))
+							
+	;; the number of tickets was exhausted
+	(define (saturated?::bool rsrc::RSRC)
+		(= rsrc.next-ticket (+ B 1)))
+
+	;; when next-ticket is called by job-idx:
+	;; - a new ticket is issued to job-idx, that is, the entry 
+	;;    rsrc.data[job-idx] is updated with the value rsrc.next-ticket
+	;; - the value of rsrc.next-ticket is incremented
+	;; Remark: if rsrc is saturated, then return rsrc
+	(define (next-ticket::RSRC rsrc::RSRC job-idx::Job-Idx)
+		(if (saturated? rsrc)
+			rsrc
+			(let ((tmp::RSRC (update rsrc .data[job-idx] rsrc.next-ticket)))
+				(update tmp .next-ticket (+ rsrc.next-ticket 1)))))
+
+	
+	;; reset a job ticket
+	(define (reset-job-ticket::RSRC rsrc::RSRC job-idx::Job-Idx)
+		(update rsrc .data[job-idx] 0))
+
+	;; the ticket counter can be reseted, if the ticket of
+	;; each job is zero
+	(define (can-reset-ticket-counter?::bool rsrc::RSRC)
+		(for-all (j::Job-Idx) (= rsrc.data[j] 0)))
+
+	(define (reset-ticket-counter::RSRC rsrc::RSRC)
+		(update rsrc .next-ticket 1))
+
+	(define-type Job-PC (scalar sleeping trying critical))
+
+	(define-module (job job-idx::Job-Idx)
+		(begin
+			(global rsrc::RSRC)
+			(local pc::Job-PC)
+			(initialization
+			 (= pc sleeping))
+			(transition
+			 ([]
+				(label wakening
+					((and (= pc sleeping) (not (saturated? rsrc)))
+					 -->
+					 (= pc' trying)
+					 (= rsrc' (next-ticket rsrc job-idx))))
+				(label entering-critical-section
+					((and (= pc trying) (can-enter-critical? rsrc job-idx))
+					 -->
+					 (= pc' critical)))
+				(label leaving-critical-section
+					((= pc critical)
+					 -->
+					 (= pc' sleeping)
+					 (= rsrc' (reset-job-ticket rsrc job-idx))))))))
+		
+	(define-module controller
+		(begin
+			(global rsrc::RSRC)
+			(initialization
+			 (= rsrc (mk-record data::(mk-array (_::Job-Idx) 0) next-ticket::1)))
+			(transition
+			 ([]
+				(label reseting-ticket-counter
+					((can-reset-ticket-counter? rsrc)
+					 -->
+					 (= rsrc' (reset-ticket-counter rsrc))))))))
+
+	(define-module system
+		([] controller ([] (job-idx::Job-Idx) (job job-idx))))
+
+	(theorem mutex
+		(|- system (G (not (exists (i::Job-Idx j::Job-Idx) (and (/= i j) (= pc[i] critical) (= pc[j] critical)))))))
+
+	)	 

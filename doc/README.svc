@@ -1,0 +1,30 @@
+SAL -> SVC interface
+--------------------
+
+The Stanford  Validity Checker (SVC for  short) is a  research tool to
+check the  validity of formulas  expressed in a subset  of first-order
+logic. SVC is  *not* part of the SAL distribution  package. SVC can be
+downloaded from the following website:
+
+http://verify.stanford.edu/SVC/
+
+The interface between SAL and SVC was tested using SVC 1.11.
+
+In SAL, SVC is used in the sal-inf-bmc tool, when the option '-s svc' is
+provided. 
+
+Example: Checks the property 'mutex' in the context 'inf-bakery' using SVC.
+
+   % sal-inf-bmc -v 10 -s svc inf-bakery mutex
+
+The current version of SAL does not produce counterexamples when SVC is used.
+
+The default behavior of SAL is to look for an executable called `svc'. 
+The command used to execute SVC can be changed using the statement:
+
+(sal/set-svc-command! "<path-to-svc>/svc")
+
+This statement should be included in your `.salrc' file in your home directory.
+
+
+

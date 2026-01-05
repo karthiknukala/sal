@@ -1,0 +1,49 @@
+;; -*- Mode: Scheme -*- 
+
+;;
+;; SAL 3.1, Copyright (C) 2006, 2011, SRI International.  All Rights Reserved.
+;;
+;; SAL is free software; you can redistribute it and/or 
+;; modify it under the terms of the GNU General Public License 
+;; as published by the Free Software Foundation; either version 2
+;; of the License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of 
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+;; GNU General Public License for more details. 
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program; if not, write to the Free Software 
+;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. 
+;;
+
+(define-macro (update-ast-slots ast . svsv)
+  `(let* ((%old-ast ,ast)
+          (%new-ast (update-slots %old-ast ,@svsv)))
+     (unless (eq? %old-ast %new-ast)
+       (sal-ast/reset-cache! %new-ast))
+     %new-ast))
+
+(define-macro (copy-ast ast . svsv)
+  `(let ((%new-ast (copy-instance ,ast ,@svsv)))
+     (sal-ast/reset-cache! %new-ast)
+     %new-ast))
+
+(define-macro (make-ast-instance class place-source . svsv)
+  `(let ((%place-source ,place-source))
+     (make-instance ,class
+                    :context (slot-value %place-source :context)
+                    :place (slot-value %place-source :place)
+                    ,@svsv)))
+
+(define-macro (make-sal-builtin-name class place-provider)
+  `(let* ((%place-provider ,place-provider)
+          (sal-env (sal-ast/sal-env %place-provider))
+          (decl (sal-env/builtin-decl-of-class sal-env ,class))
+          (prelude (sal-env/prelude sal-env)))
+     (make-ast-instance ,class %place-provider
+                        :decl decl
+                        :context-ref prelude
+                        :actuals '())))
+

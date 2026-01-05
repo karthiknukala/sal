@@ -1,0 +1,48 @@
+SAL -> CVC Lite interface
+-------------------------
+
+CVC Lite is an efficient decision procedure for quantifier-free first-order
+logic over several interpreted theories (linear arithmetic, uninterpreted
+functions, arrays, etc.). It is actively developed by the Formal Verification
+Group at Stanford University and the Analysis of Computer Systems (ACSys)
+group at New York University.
+
+The theoretical basis of CVC Lite is the framework for cooperating decision
+procedures developed by Clark Barrett. It is a complete rewrite of the 
+Cooperating Validity Checker (CVC), originally written by Aaron Stump. 
+CVC, in turn, was a rewrite of the Stanford Validity Checker (SVC).
+
+CVC Lite is *not* part of the SAL distribution package. CVC Lite
+can be downloaded from the following website:
+
+http://verify.stanford.edu/CVCL/
+
+In SAL, CVC Lite is used in the sal-inf-bmc tool, when the option '-s cvcl' 
+is provided. 
+
+Example: Checks the property 'mutex' in the context 'inf-bakery' using CVC Lite.
+
+   % sal-inf-bmc -v 10 -s cvcl inf-bakery mutex
+
+The current version of SAL does not produce counterexamples when CVC Lite
+is used.
+
+The default behavior of SAL is to look for an executable called `cvcl'. 
+The command used to execute CVC Lite can be changed using the statement:
+
+(sal/set-cvcl-command! "<path-to-cvcl>/cvcl")
+
+This statement should be included in your `.salrc' file in your home directory.
+This statement can also be used to provide extra arguments to CVC Lite. For
+instance, the following command forces SAL to call CVC Lite located at
+'/homes/demoura/code/bin' with the argument +dfs and +sat.
+
+(sal/set-cvcl-command! "/homes/demoura/code/bin/cvcl +sat +dfs")
+
+The most recent versions of CVC Lite support integer constraints. The following
+statement can be used not enable the generation of integer constraints with CVC
+Lite.
+
+(sal/enable-cvcl-integers? #t)
+
+

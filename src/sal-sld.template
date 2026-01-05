@@ -1,0 +1,68 @@
+#!/bin/sh
+
+#
+# SAL 3.1, Copyright (C) 2006, 2011, SRI International.  All Rights Reserved.
+#
+# SAL is free software; you can redistribute it and/or 
+# modify it under the terms of the GNU General Public License 
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of 
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+# GNU General Public License for more details. 
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software 
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. 
+#
+#
+
+#
+# SAL scheme linker front end
+#
+SALENV_DIR=__SALENV_DIR__;
+export SALENV_DIR;
+PATH=$SALENV_DIR/bin:$PATH
+export PATH
+BIGLOOLIB=__BIGLOO_LIB_DIR__
+export BIGLOOLIB;
+
+help()
+{
+  cat <<HELP
+SAL: BIGLOO linker front end
+usage: sal-sld [--safe] [-o <file>] [--shared] file1.o ... 
+
+-?, --help  Print this message
+--safe      Link with the safe version of libsal
+--shared    Generate a shared library
+-o <file>   Place the output into <file>
+HELP
+  exit 0
+}
+
+EXTRA_FLAGS="-unsafe"
+SHARED="no"
+while [ -n "$1" ]; do
+case $1 in
+    -\?) help;shift 1;; # function help is called
+    --help) help;shift 1;; # function help is called
+    --safe) EXTRA_FLAGS=""; shift 1;;
+		--shared) SHARED="yes"; shift 1;; 
+    -o) OUTPUT="-o $2"; shift 2;;
+    -*) echo "Error: no such option $1. -? for help";exit 1;;
+    *)  break;;
+esac
+done
+
+if [ $# -lt 1 ]; then
+		help
+fi
+
+if eval "test $SHARED = no"; then
+		exec bigloo $EXTRA_FLAGS -ldpostopt "__DOT_A_LIBS__" -ld-relative -static-bigloo $OUTPUT "$@"
+else
+		exec ld -shared $OUTPUT "$@" -lm -lc
+fi

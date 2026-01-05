@@ -1,0 +1,40 @@
+Ring
+----
+
+Description: Toy problem which uses parametric contexts and modules, with-modules,
+             renames, and quantifiers. The output variable ring-data is an array of
+             booleans, where one and only one element is true. 
+
+Commands:
+
+- Prove that only one element of the array is true in every step, for a ring of size 10.
+
+  % sal-smc -v 3 --assertion='ring{;10}!only_one_element_is_true'
+
+- Prove (using induction) that only one element of the array is true in every step,
+  for a ring of size 10.
+
+  % sal-bmc -v 3 --induction --assertion='ring{;10}!only_one_element_is_true'
+
+- Prove that only one element of the array is true in every step, for a ring of size 20.
+
+  % sal-smc -v 3 --assertion='ring{;10}!only_one_element_is_true'
+
+- Prove that every position of the array will be infinitely often assigned to true, for a
+  ring of size 20. 
+
+  % sal-smc -v 3 --assertion='ring{;20}!every_element_is_eventually_true'
+
+- Produce an execution trace up to depth 20, for a ring of size 5.
+
+  % sal-path-finder -v 3 --depth=20 --module='ring{;5}!ring'
+
+- Produce an execution trace up to depth 20, for a ring of size 5, but printing only the value
+  of modified variables
+
+  % sal-path-finder -v 3 --depth=20 --delta-path --module='ring{;5}!ring'
+
+
+
+
+

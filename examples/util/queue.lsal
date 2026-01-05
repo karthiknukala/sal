@@ -1,0 +1,63 @@
+(context queue (T) (N::nznat Default::T)
+  
+  (define-type Idx (subrange 0 (- N 1)))
+
+  (define-type Queue-Body (array Idx T))
+
+  (define-type Queue (datatype (mk-queue body::Queue-Body size::(subrange 0 N))))
+
+  (define empty-queue::Queue 
+    (let ((queue-body::Queue-Body (mk-array (_::Idx) Default)))
+      (mk-queue queue-body 0)))
+
+  (define (empty?::bool q::Queue)
+    (= (size q) 0))
+
+  (define (full?::bool q::Queue)
+    (= (size q) N))
+
+  (define-type Insert-Result (datatype (insert-ok insert-result::Queue)
+                                       insert-error-full))
+
+  (define (insert::Insert-Result q::Queue e::T)
+    (if (full? q)
+      insert-error-full
+      (let* ((queue-body::Queue-Body (body q))
+             (next-pos::nat (size q))
+             (new-queue-body::Queue-Body (update queue-body [next-pos] e))
+             (new-queue::Queue (mk-queue new-queue-body (+ next-pos 1))))
+        (insert-ok new-queue))))
+  
+  (define-type Get-First-Result (datatype (get-first-ok get-first-result::T)
+                                          get-first-error-empty))
+
+  (define (get-first::Get-First-Result q::Queue)
+    (if (empty? q)
+      get-first-error-empty
+      (let ((queue-body::Queue-Body (body q)))
+        (get-first-ok queue-body[0]))))
+
+  (define-type Remove-Result (datatype (remove-ok remove-result::Queue)
+                                       remove-error-empty))
+
+  (define (remove::Remove-Result q::Queue)
+    (if (empty? q)
+      remove-error-empty
+      (let* ((queue-body::Queue-Body (body q))
+             (new-queue-body::Queue-Body (mk-array (i::Idx) 
+                                                   (if (= i (- N 1))
+                                                     Default
+                                                     queue-body[(+ i 1)])))
+             (new-queue::Queue (mk-queue new-queue-body (- (size q) 1))))
+        (remove-ok new-queue))))
+
+  ;; low level function that breaks queue access policies
+  (define (update-body::Queue q::Queue i::Idx e::T)
+    (mk-queue (update (body q) [i] e) (size q)))
+
+
+
+  )
+             
+  
+  

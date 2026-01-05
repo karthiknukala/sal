@@ -1,0 +1,121 @@
+Fischer's Mutual Exclusion Protocol
+-----------------------------------
+
+Description
+-----------
+
+The protocol ensures mutual exclusion among N processes
+using real-time clocks and a shared variable 'lock'.
+
+Initially lock is 0.
+
+Every process is as follows:
+
+   loop
+      wait until lock = 0;
+      wait for a delay <= delta1;
+      set lock to process id;
+      wait for a delay >= delta2;
+      if lock = process id 
+        enter critical section
+   end
+
+The parameters delta1 and delta2 are two positive 
+constants that determine the length of the delays.
+Mutual exclusion is ensured provided delta1 < delta2.
+
+
+SAL Encoding
+------------
+
+The SAL model differs from timed automata in that it does not use
+clocks. Instead, a global variable 'time' keeps the current time and a
+variable 'time_out[i]' contains the time when the next discrete
+transition of process i is scheduled to occur.
+
+There are two types of transition:
+- if time < time_out[i] for all i, then time is advanced 
+  to the smallest of time_out[1],...,time_out[N] (time-progress transition) 
+- otherwise, a process i for which time_out[i] = time 
+  performs a discrete transition. This transition updates 
+  time_out[i] to a new value strictly larger than the current
+  time. Timing constraints are encoded into the update of 
+  time_out[i]. 
+
+
+Example verifications
+---------------------
+
+- If delta2 <= delta1, find a counterexample to mutual exclusion:
+
+    sal-inf-bmc -v 10 fischer mutual_exclusion
+
+  There is a counterexample at depth 10 if delta2 <= delta1.
+
+
+- If delta1 < delta2, prove mutual exclusion by induction
+
+  1) auxiliary invariants:
+
+    sal-inf-bmc -v 10 -i -d 1 fischer time_aux1
+
+    sal-inf-bmc -v 10 -i -d 1 fischer time_aux2
+
+  2) time_aux3 follows from time_aux2
+
+    sal-inf-bmc -v 10 -i -d 1 -l time_aux2 fischer time_aux3
+
+  3) logical_aux1 from time_aux1 and time_aux3
+
+    sal-inf-bmc -v 10 -i -d 1 -l time_aux3 -l time_aux1 fischer logical_aux1
+
+  4) logical_aux1 implies mutual exclusion
+
+    sal-inf-bmc -v 10 -i -d 0 -l logical_aux1 fischer mutual_exclusion
+
+
+
+- Variant proofs for N=2 using k-induction and with time_aux2 as a lemma.
+  These proofs do not work for N >= 3
+    
+  1) variant 1: prove logical_aux1 from time_aux2 with k=3
+
+     sal-inf-bmc -v 10 -i -d 3 -l time_aux2 fischer logical_aux1
+     sal-inf-bmc -v 10 -i -d 0 -l logical_aux1 fischer mutual_exclusion
+
+
+
+  2) variant 2: prove fischer_mutex from time_aux2 with k=5
+
+     sal-inf-bmc -v 10 -i -d 5 -l time_aux2 fischer mutex
+     sal-inf-bmc -v 10 -i -d 0 -l mutex fischer mutual_exclusion
+
+  3) variant 3: proved mutual_exclusion from time_aux2 with k=9
+
+     sal-inf-bmc -v 10 -i -d 9 -l time_aux2 fischer mutual_exclusion
+
+
+
+
+Variant Specifications
+----------------------
+
+The directory contains different SAL specifications of the protocol
+or of small variants of the protocol.
+
+1) fischer.sal: basic specifications as described above.
+
+2) fischer_revised.sal: same protocol but a recursive definition
+   of the function min is removed. This improves verification 
+   performance a lot. Also includes a new lemma, that appears
+   to accelerate the proof of lemma time_aux3.
+
+3) fischer2.sal: same as fischer_revised.sal, but with the two
+   parameters delta1 and delta2 left uninterpreted.
+
+4) fischer_var1.sal: variant of fischer_revised.sal, where mutual exclusion
+   holds iff delta1 <= delta2 (instead of delta1 < delta2).
+
+
+
+

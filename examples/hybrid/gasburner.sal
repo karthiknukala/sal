@@ -1,0 +1,85 @@
+%% Leaking gas burner 
+%% From: The algorithmic analysis of hybrid systems
+%% Alur, Courcoubetis, ... 1995
+
+gasburner: CONTEXT =
+BEGIN
+states: TYPE = {l1,l2};
+
+TransitionType : TYPE = {regular, elapse};
+
+% alternatively state transition step / elapse step
+
+next_trans_type(t: TransitionType): TransitionType =
+    IF t = regular THEN elapse ELSE regular ENDIF;
+
+transition_module: MODULE =
+BEGIN
+  OUTPUT
+    delta:  REAL,
+    trans:  TransitionType
+  TRANSITION
+    delta' IN { x : REAL | x >= 0 };
+    trans' = next_trans_type(trans)
+END;
+
+lgb: MODULE =
+BEGIN
+  INPUT
+    delta: REAL,
+    trans: TransitionType
+  OUTPUT
+    x: REAL,
+    y: REAL,
+    z: REAL,
+    state: states
+  INITIALIZATION
+    state = l1;
+    x = 0;
+    y = 0;
+    z = 0
+
+TRANSITION
+[
+    % l1 -> l2
+    trans = regular AND state = l1 -->
+      state' = l2;
+      x' = 0
+ 
+ [] % l2 -> l1
+    trans = regular AND state = l2 AND x >= 30 -->
+      state' = l1;
+      x' = 0
+
+ [] % delay  x and y are clocks, z is stopped in l2
+    trans = elapse AND delta >= 0 AND
+    (state = l1 => x + delta <= 1) -->
+       x' = x + delta;
+       y' = y + delta;
+       z' = IF state = l1 THEN z + delta ELSE z ENDIF
+]
+
+END;
+
+system: MODULE = 
+ transition_module || lgb;
+
+
+% Properties
+
+% The accumulated time of leakage is at most one twentieth of the time in 
+% any interval of at least 60 seconds.
+
+prop3: LEMMA system |- G(y >= 60 => 20 * z <= y);
+
+% Any leakage can be detected and stopped within 1 second.
+
+prop1: LEMMA system |- G(state = l1 => F(X(state = l2) AND x <= 1));
+
+% The gasburner will not leak for 30 seconds after a leakage has been stopped. ???
+
+prop2: LEMMA system |- G(state = l2 => NOT F(X(state = l1) AND x < 30));
+prop22: LEMMA system |- G(state = l2 => X(state = l1) AND x >= 30);
+prop21: LEMMA system |- G(state = l2 => F(X(state = l1) AND x >= 30));
+
+END

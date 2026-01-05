@@ -1,0 +1,100 @@
+;; -*- Mode: Scheme -*- 
+
+;;
+;; SAL 3.1, Copyright (C) 2006, 2011, SRI International.  All Rights Reserved.
+;;
+;; SAL is free software; you can redistribute it and/or 
+;; modify it under the terms of the GNU General Public License 
+;; as published by the Free Software Foundation; either version 2
+;; of the License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of 
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+;; GNU General Public License for more details. 
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program; if not, write to the Free Software 
+;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. 
+;;
+
+(define-macro (define-api header . body)
+  (let* ((name (car header))
+         (args (cdr header))
+         (arg-names (let loop ((args args))
+                      (cond
+                       ((pair? args)
+                        (let ((e (car args)))
+                          (cond
+                           ((symbol? e)
+                            (cons e (loop (cdr args))))
+                           ((and (list? e) (= (length e) 2) (symbol? (car e)))
+                            (cons (car e) (loop (cdr args))))
+                           (else
+                            (error 'define-api "Invalid argument declaration" e)))))
+                       ((null? args)
+                        args)
+                       ((symbol? args)
+                        args)
+                       (else 
+                        (error 'define-api "Invalid header" header)))))
+         (checks (if (sal-check-mode)
+                   (let loop ((args args))
+                     (cond
+                      ((pair? args)
+                       (let ((e (car args)))
+                         (cond 
+                          ((symbol? e)
+                           (loop (cdr args)))
+                          (else
+                           (let* ((arg-name (car e))
+                                  (arg-type-decl (cadr e))
+                                  (new-check
+                                   (cond
+                                    ((and (symbol? arg-type-decl)
+                                          (let* ((str (symbol->string arg-type-decl))
+                                                 (len (string-length str)))
+                                            (and (eq? (string-ref str 0) #\<)
+                                                 (eq? (string-ref str (- len 1)) #\>))))
+                                     ;; check if it is instance of
+                                     `(unless (instance-of? ,arg-name ,arg-type-decl)
+                                        (sign-invalid-instance-argument
+                                                    (quote ,name)
+                                                    (quote ,arg-name)
+                                                    (quote ,arg-type-decl))))
+                                    (else
+                                     `(unless (,arg-type-decl ,arg-name)
+                                        (sign-invalid-argument
+                                         (quote ,name)
+                                         (quote ,arg-name)
+                                         (quote ,arg-type-decl)))))))
+                             (cons new-check (loop (cdr args))))))))
+                      ((null? args)
+                       '())
+                      ((symbol? args)
+                       '())))
+                   '())))
+    (multiple-value-bind
+        (svsv body)
+        (let loop ((body body))
+          (cond
+           ((keyword? (car body))
+            (when (null? (cdr body))
+              (error 'define-api "Invalid function body attributes."))
+            (multiple-value-bind
+                (rest-svsv rest-body)
+                (loop (cddr body))
+              (values (cons* (car body) (cadr body) rest-svsv) rest-body)))
+           (else
+            (values '() body))))
+      (when (null? body)
+        (error 'define-api "Invalid empty function body." #unspecified))
+      `(begin
+         (define ,(cons name arg-names)
+           ,@(reverse checks)
+           ,@body)
+         (insert-api-named-entry! (make-instance <api-function-entry>
+                                         :name (quote ,name)
+                                         :header (object->string (quote ,header))
+                                         :file-name (FILE-NAME)
+                                         ,@svsv))))))

@@ -1,0 +1,30 @@
+SAL -> SIEGE interface
+-----------------------
+
+SIEGE is an efficient boolean SAT solver. SIEGE is *not* part of the SAL
+distribution package. SIEGE can be downloaded from the following website:
+
+http://www.cs.sfu.ca/~loryan/personal/
+
+In SAL, SIEGE is used in the sal-bmc tool, when the option '-s siege' is
+provided. 
+
+Examples: 
+ 
+1) Checks the property 'mutex' in the context 'peterson' using SIEGE.
+
+   % sal-bmc -v 10 -s siege peterson mutex
+
+2) Produces a counterexample for the property 'invalid' in the context 
+   'peterson' using SIEGE.
+
+   % sal-bmc -v 10 -s siege peterson invalid
+
+
+The default behavior of SAL is to look for an executable called `siege_v4'. 
+The command used to execute SIEGE can be changed using the statement:
+
+(sal/set-siege-command! "<path-to-siege>/<siege-executable>")
+
+This statement should be included in your `.salrc' file in your home directory.
+

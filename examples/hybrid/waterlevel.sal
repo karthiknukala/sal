@@ -1,0 +1,79 @@
+%% Water level monitor 
+%% From: The algorithmic analysis of hybrid systems
+%% Alur et al, TCS 1995
+
+waterlevel: CONTEXT =
+BEGIN
+states: TYPE = {l0,l1,l2,l3};
+
+TransitionType : TYPE = {regular, elapse};
+
+% alternatively state transition step / elapse step
+
+next_trans_type(t: TransitionType): TransitionType =
+    IF t = regular THEN elapse ELSE regular ENDIF;
+
+transition_module: MODULE =
+BEGIN
+  OUTPUT
+    delta:  REAL,
+    trans:  TransitionType
+  TRANSITION
+    delta' IN { x : REAL | x >= 0 };
+    trans' = next_trans_type(trans)
+END;
+
+wlm: MODULE =
+BEGIN
+  INPUT
+    delta: REAL,
+    trans: TransitionType
+  OUTPUT
+    x: REAL,
+    y: REAL,
+    state: states
+  INITIALIZATION
+    state = l0;
+    x = 0;
+    y = 1
+
+TRANSITION
+[
+    % l0 -> l1
+    trans = regular AND state = l0 AND y = 10 -->
+      state' = l1;
+      x' = 0;
+ 
+ [] % l1 -> l2
+    trans = regular AND state = l1 AND x = 2 AND y >= 5 -->
+      state' = l2
+
+ [] % l2 -> l3
+    trans = regular AND state = l2 AND y = 5 -->
+      state' = l3;
+      x' = 0
+
+ [] % l3 -> l0
+    trans = regular AND state = l3 AND x = 2 AND y <= 10 -->
+      state' = l0
+
+ [] % delay
+    trans = elapse AND delta >= 0 AND
+    (state = l0 => y + delta <= 10) AND
+    (state = l1 => x + delta <= 2) AND
+    (state = l2 => y + delta >= 5) AND
+    (state = l3 => x + delta <= 2) -->
+       x' = x + delta;
+       y' = IF (state = l0 OR state = l1) THEN y + delta ELSE y - 2 * delta ENDIF
+]
+
+END;
+
+system: MODULE = 
+ transition_module || wlm;
+
+
+% waterlevel is between 1 and 12 inches
+prop: LEMMA system |- G(y >= 1 AND y <= 12);
+
+END

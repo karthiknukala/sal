@@ -1,0 +1,129 @@
+Startup problem
+---------------
+
+Description:
+
+When first powered up, TTA controllers operate as autonomous,
+self-timed entities and their initial task is to synchronize themselves
+so that they function as a coordinated whole.  Each TTA controller has
+a mapping from its local time to the ``slots'' in the cyclic ``Time
+Division Multiple Access'' (TDMA) schedule of TTA; in particular, each
+controller i will know the local time at which the slot for
+controller p begins---we can denote this time by s_i(p).
+Synchronization simply means that for any two nonfaulty controllers
+i and j, the instants when i's local clock reads s_i(p) and
+when j's clock reads s_j(p) should occur very close together in
+real time (within the acceptable clock skew parameter Pi).  The
+startup problem is to establish values for the functions s_i
+(or, equivalently, for their local clocks) as the controllers first
+power up so that they quickly become synchronized.  The
+synchronization problem is to adjust the values of s_i (or,
+equivalently, their local clocks) so that the controllers remain
+synchronized despite the drift of their hardware clocks (due to their
+oscillators operating at slightly different rates).  The restart
+problem is to reestablish synchronization after transient faults have
+afflicted one or more (or all) controllers.
+
+The synchronization problem is well understood and many algorithms to
+solve it have been developed, analyzed, and formally verified.
+The algorithm employed in TTA belongs to the general class of
+averaging synchronization algorithms each controller i estimates
+its skew relative to each controller p by comparing the reading
+of its local clock at the instant when the message in slot p
+arrives against s_i(p) (adjusted for known transmission delays).
+It then adjusts s_i (or, equivalently, its local clock) by some
+fault-tolerant average of its estimates of its skews to all
+(or, in the case of TTA, some) other controllers.  This
+algorithm has been formally verified.
+
+One way to construct a startup algorithm is as a variation on a
+synchronization algorithm: even if the local clocks of various
+controllers are initially far apart, successive rounds of averaging
+should bring them into convergence.  This is plausible, but Miner
+presents scenarios in which the controllers do not converge to a
+single coordinated entity, but instead divide into two
+``cliques,'' each synchronized among themselves but unaware of the
+existence of the other clique.  It is possible that some startup
+algorithms of this kind are correct, and can be formally verified to
+be so, but the analysis seems difficult.
+
+An alternative approach uses a startup algorithm that is separate from
+the synchronization algorithm.  The basic idea is that each newly started
+controller p listens for at least one round to determine whether
+there is activity on the communications bus (a TTA cluster consists of
+controllers connected to a bus, or to a star network that functions as
+a bus).  If there is, it synchronizes to the ongoing traffic; if not,
+it sends out a ``cold start'' message bearing its own identity and
+adjusts s_p (or equivalently, its local clock) so that its current
+local time equals s_p(p).  Other controllers that receive this
+message synchronize to it (i.e., each controller j arranges that
+s_j(p) equals its local clock at the time the cold start message
+from p was received).  There is, of course, the possibility that two
+controllers p and q send out simultaneous or overlapping cold
+start messages.  The other controllers will see this as noise and will
+ignore it, but p and q (assuming they cannot listen while
+transmitting) will not know whether their messages were received or
+not.  They each therefore wait for a round or so to see if messages
+from other controllers indicate that their startup was
+successful (i.e., p checks for messages from controllers i 
+that arrive when p's clock reads close to s_p(i)).  If not, each
+sends another cold start message, but to avoid a second collision, it
+delays this for a time equal to its own slot position.
+
+The startup algorithm sketched in `startup.lsal' is essentially that which
+Paulitsch and Steiner have proposed for Next TTA. Paulitsch and Steiner
+suggest specific values for the various timeouts involved and argue
+that the system will synchronize after at most one collision. 
+They also examine scenarios in the presence of various faults
+and show that most of these can be controlled satisfactorily only
+in TTA architectures that employ a central star or hub.  Such a
+central hub not only must provide detection and masking of faults
+in its attached controllers, but must do so while itself attempting
+to synchronize with those controllers.
+
+The criticality and subtlety of TTA startup algorithm, and the
+importance of accurately identifying the fault detection and masking
+requirements on the central hub suggest that formal analysis
+and verification could be useful.  
+
+Commands:
+
+- Prove the property sync
+
+  % sal-smc -v 3 startup sync
+
+- Produce a counterexample for the property noflag
+
+  % sal-smc -v 3 startup noflag
+
+- Produce a counterexample for the property noflag using BMC
+
+  % sal-bmc -v 3 startup noflag
+
+- Prove the properties: fast, fairlyfast, ok, fsync, fok, collision, live
+
+  % sal-smc -v 3 startup fast
+
+  % sal-smc -v 3 startup fairlyfast
+
+  % sal-smc -v 3 startup ok
+
+  % sal-smc -v 3 startup fsync
+
+  % sal-smc -v 3 startup fok
+
+  % sal-smc -v 3 startup collision
+
+  % sal-smc -v 3 startup live 
+
+- Produce a counter example for the property optimism
+
+  % sal-smc -v 3 startup optimism
+
+  % sal-bmc -v 3 --iterative startup optimism
+
+- Produce a counter example for the property eh
+
+  % sal-smc -v 3 startup eh
+
+  % sal-bmc -v 3 --iterative startup eh

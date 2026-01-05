@@ -1,0 +1,30 @@
+SAL -> ZCHAFF interface
+-----------------------
+
+ZCHAFF is an efficient boolean SAT solver. ZCHAFF is *not* part of the SAL
+distribution package. ZCHAFF can be downloaded from the following website:
+
+http://www.ee.princeton.edu/~chaff/
+
+In SAL, ZCHAFF is used in the sal-bmc tool, when the option '-s zchaff' is
+provided. 
+
+Examples: 
+ 
+1) Checks the property 'mutex' in the context 'peterson' using ZCHAFF.
+
+   % sal-bmc -v 10 -s zchaff peterson mutex
+
+2) Produces a counterexample for the property 'invalid' in the context 
+   'peterson' using ZCHAFF.
+
+   % sal-bmc -v 10 -s zchaff peterson invalid
+
+
+The default behavior of SAL is to look for an executable called `zchaff'. 
+The command used to execute ZCHAFF can be changed using the statement:
+
+(sal/set-zchaff-command! "<path-to-zchaff>/zchaff")
+
+This statement should be included in your `.salrc' file in your home directory.
+

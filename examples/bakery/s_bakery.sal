@@ -1,0 +1,114 @@
+s_bakery{N : nznat, B : nznat}: context =
+begin
+  Job_Idx: type = scalarset(N);
+
+  Ticket_Idx: type = [0..B];
+
+  Next_Ticket_Idx: type = [1..(B + 1)];
+
+  %% RSRC models the system resources
+  RSRC: type =  [# next_ticket: Next_Ticket_Idx,
+									 data: array Job_Idx of Ticket_Idx
+                 #];
+
+  %% return true if a job is allowed to enter the critical section
+  can_enter_critical?(rsrc : RSRC, job_idx : Job_Idx): boolean =
+    (forall (other_idx : Job_Idx):
+       rsrc.data[other_idx] = 0 or rsrc.data[job_idx] <= rsrc.data[other_idx]);
+
+  %% the number of tickets was exhausted
+  saturated?(rsrc : RSRC): boolean =
+    rsrc.next_ticket = B + 1;
+
+  %% when next_ticket is called by job_idx:
+  %% - a new ticket is issued to job_idx, that is, the entry 
+  %%    rsrc.data[job_idx] is updated with the value rsrc.next_ticket
+  %% - the value of rsrc.next_ticket is incremented
+  %% Remark: if rsrc is saturated, then return rsrc
+  next_ticket(rsrc : RSRC, job_idx : Job_Idx): RSRC =
+    if saturated?(rsrc) then rsrc
+    else (rsrc with .data[job_idx] := rsrc.next_ticket)
+               with .next_ticket := rsrc.next_ticket + 1
+    endif;
+
+  %% reset a job ticket
+  reset_job_ticket(rsrc : RSRC, job_idx : Job_Idx): RSRC =
+    rsrc with .data[job_idx] := 0;
+
+  %% the ticket counter can be reseted, if the ticket of
+  %% each job is zero
+  can_reset_ticket_counter?(rsrc : RSRC): boolean  =
+    (forall (j : Job_Idx): rsrc.data[j] = 0);
+
+  reset_ticket_counter(rsrc : RSRC): RSRC =
+    rsrc WITH .next_ticket := 1;
+
+  Job_PC: type = {sleeping, trying, critical};
+
+
+  job [job_idx : Job_Idx]: module =
+    begin
+      global rsrc : RSRC
+      local pc : Job_PC 
+      initialization 
+        pc = sleeping
+      transition
+        [
+         wakening: 
+           (pc = sleeping) and NOT(saturated?(rsrc))
+           --> pc' = trying; 
+               rsrc' = next_ticket(rsrc, job_idx)
+         []
+         entering_critical_section: 
+           (pc = trying) and can_enter_critical?(rsrc, job_idx)
+           --> pc' = critical
+         []
+         leaving_critical_section: 
+           pc = critical --> pc' = sleeping; 
+                             rsrc' = reset_job_ticket(rsrc, job_idx)
+        ]
+    end;
+
+
+  controller: module =
+    begin
+      global rsrc : RSRC
+      initialization
+        rsrc = (# data := [[j : Job_Idx] 0], next_ticket := 1#)
+      transition
+        [
+          reseting_ticket_counter: 
+            can_reset_ticket_counter?(rsrc)
+            --> rsrc' = reset_ticket_counter(rsrc)
+        ]
+    end;
+
+  system: module =
+     controller 
+     [] 
+     ([] (job_idx : Job_Idx): job[job_idx]);
+
+  mutex: theorem system
+                 |- G(not (exists (i : Job_Idx, j : Job_Idx):
+                             i /= j and pc[i] = critical and pc[j] = critical));
+
+  invalid: theorem system
+                 |- G(not (exists (i : Job_Idx, j : Job_Idx, k : Job_Idx):
+                             i /= j and pc[i] = critical and pc[j] = trying and pc[k] = trying and k/=j));
+
+  %% invalid property
+  liveness_bug: theorem system
+                        |- (forall (i : Job_Idx): G(F(pc[i] = critical)));
+
+  liveness: theorem system
+                    |- (forall (i : Job_Idx):
+                         G(pc[i] = trying => F(pc[i] = critical)));
+
+  liveness2: theorem system
+                     |- (forall (i : Job_Idx):
+                          G(F(pc[i] = trying)) => G(F(pc[i] = critical)));
+
+  aux: theorem system
+               |- G((forall (i : Job_Idx):
+                      (pc[i] = trying) => rsrc.data[i] > 0));
+end

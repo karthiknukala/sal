@@ -1,0 +1,48 @@
+# Build artifacts
+/bin/arm-apple-darwin*/
+/lib/arm-apple-darwin*/
+/obj/arm-apple-darwin*/
+/obj-safe/arm-apple-darwin*/
+
+# Build artifacts for other platforms
+/bin/x86_64-*/
+/lib/x86_64-*/
+/obj/x86_64-*/
+/obj-safe/x86_64-*/
+
+# Autoconf generated files
+/config.log
+/config.status
+/autom4te.cache/
+
+# Generated configure script (keep configure.in as source)
+# /configure
+
+# OS file
+/os
+
+# Backup files
+*~
+*.bak
+*.orig
+
+# Emacs
+\#*\#
+.#*
+
+# macOS
+.DS_Store
+
+# Compiled files
+*.o
+*.a
+*.so
+*.dylib
+*.heap
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+

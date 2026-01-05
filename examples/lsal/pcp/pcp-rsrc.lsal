@@ -1,0 +1,73 @@
+(context pcp-rsrc (Semaphore) (NumberOfTasks::nat task-descriptors::(@ TaskDescriptors (pcp-task (Semaphore) (NumberOfTasks))))
+  
+  (import (pcp-task (Semaphore) (NumberOfTasks)))
+
+  (import (add-prefix sem- (set (Semaphore) ())))
+
+  (import (add-prefix job- (set (JobIdx) ())))
+
+  (define-type Job2SetOfSemaphores (array JobIdx sem-Set))
+
+  ;; r.alloc[j] is the set of semaphores owned by "j" in "r"
+  ;; r.request[j] is the set of semaphores that "j" requested but has not obtained.
+  (define-type RSRC (record alloc::Job2SetOfSemaphores request::Job2SetOfSemaphores))
+
+  (define initial-rsrc::RSRC (let ((empty-mapping::Job2SetOfSemaphores (mk-array (j::JobIdx) sem-empty-set)))
+                               (mk-record alloc::empty-mapping request::empty-mapping)))
+
+  (define ceiling-map::(array Semaphore nat)
+    (mk-array (s::Semaphore) (ceiling s task-descriptors)))
+
+  (define (ceiling::nat s::Semaphore)
+    ceiling-map[s])
+
+  (define (job-priority::nat j::JobIdx)
+    (priority j task-descriptors))
+
+  ;; returns the set of jobs other than "j" that own a semaphore of ceiling as high as "j"'s priority
+  (define (blk::job-Set r::RSRC j::JobIdx)
+    (lambda (k::JobIdx)
+      (and (/= k j)
+           (exists (s::Semaphore) 
+             (and (sem-contains? r.alloc[k] s)
+                  (>= (ceiling s) (job-priority j)))))))
+  
+  ;; A job "j" is blocked in "r" if both "blk(r,j)" and "r.request[j]" are nonempty.
+  (define (blocked?::bool r::RSRC j::JobIdx)
+    (and (not (job-empty? (blk r j)))
+         (not (sem-empty? r.request[j]))))
+
+  ;; alloc_step(r, j, s) executes command "P(s)" on behalf of "j". The semaphore
+  ;; "s" is allocated to "j" if "blk(r, j)" is empty; otherwise, "s" is stored in
+  ;; "r.request[j]" and "j" becomes blocked.
+  (define (alloc-step::RSRC r::RSRC j::JobIdx s::Semaphore)
+    (if (job-empty? (blk r j))
+      (update r .alloc[j]
+              (sem-insert r.alloc[j] s))
+      (update r .request[j]
+              (sem-insert r.request[j] s))))
+  
+  ;; release_step(r, j, s) executes command "V(s)" on behalf of "j". It simply removes
+  ;; "s" from the set of semaphores allocated to "j".
+  (define (release-step::RSRC r::RSRC j::JobIdx s::Semaphore)
+    (update r .alloc[j]
+            (sem-remove r.alloc[j] s)))
+
+  (define (release-all-step::RSRC r::RSRC j::JobIdx)
+    (update (update r .alloc[j] sem-empty-set) 
+            .request[j] sem-empty-set))
+
+
+  ;; wakeup(r, j) allocates to "j" all the semaphores "j" requested. This operation is intended
+  ;; for a job "j" that is reactivated after having been blocked.
+  (define (wakeup::RSRC r::RSRC j::JobIdx)
+    (if (/= r.request[j] sem-empty-set)
+      (update (update r .request[j] sem-empty-set)
+              .alloc[j] 
+              (sem-union r.alloc[j]
+                         r.request[j]))
+      r))
+
+  
+  
+  )

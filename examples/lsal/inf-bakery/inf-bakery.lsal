@@ -1,0 +1,50 @@
+(context inf-bakery () ()
+	
+	(define-type PC (scalar sleeping trying critical))
+
+	(define-module job
+		(begin
+			(input y2::nat)
+			(output y1::nat)
+			(local pc::PC)
+			(initialization
+			 (= pc sleeping)
+			 (= y1 0))
+			(transition
+			 ([]
+				((= pc sleeping)
+				 -->
+				 (= y1' (+ y2 1))
+				 (= pc' trying))
+				((and (= pc trying) (or (= y2 0) (< y1 y2)))
+				 -->
+				 (= pc' critical))
+				((= pc critical)
+				 -->
+				 (= y1' 0)
+				 (= pc' sleeping))))))
+
+	(define-module system 
+		([] 
+		 job
+		 (rename ((y2 y1) (y1 y2)) job)))
+
+	(theorem mutex
+		(|- system (G (not (and (= pc.1 critical)
+														(= pc.2 critical))))))
+	
+	(theorem invalid
+		(|- system (G (not (and (= pc.1 trying)
+														(= pc.2 critical))))))
+
+	(theorem aux1
+		(|- system (G (=> (= pc.1 trying)
+											(> y1 0)))))
+
+	(theorem aux2
+		(|- system (G (=> (= pc.2 trying)
+											(> y2 0)))))
+
+	)
+
+				 

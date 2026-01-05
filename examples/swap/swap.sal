@@ -1,0 +1,24 @@
+swap {n:nznat} : CONTEXT =
+BEGIN
+  Data : TYPE = [0..n-1];
+  Idx  : TYPE = Data;
+  
+  main : MODULE =
+  BEGIN
+    INPUT i : Idx
+    LOCAL adj_i : Idx
+    LOCAL bvs : ARRAY Idx OF Data
+    INITIALIZATION
+      bvs = [ [idx:Idx] idx ];
+    DEFINITION
+      adj_i = (i + 1) MOD n;
+    TRANSITION
+      bvs' = (bvs WITH [i] := bvs[adj_i]) WITH [adj_i] := bvs[i];
+  END;
+
+  diff : THEOREM main |- G(bvs[1] /= bvs[2]);
+
+  all_diff : THEOREM main |- G(FORALL (i1:[0..n-2]): (FORALL (i2:[i1+1..n-1]): bvs[i1] /= bvs[i2]));
+  
+END 
+	

@@ -1,0 +1,34 @@
+Bakery Protocol (unbounded version)
+-----------------------------------
+
+Description: The basic idea is that of a bakery, where customers (jobs) take numbers,
+             and whoever has the lowest number gets service next. Here, of course,
+             ``service'' means entry to the critical section. The file `inf-bakery.lsal'
+             models the protocol for two processes. 
+
+Commands:
+
+- Check if the property mutex is violated in the first 10 steps
+
+  % sal-inf-bmc -v 3 inf-bakery mutex
+
+- Generate a counterexample for the invalid property
+
+  % sal-inf-bmc -v 3 inf-bakery invalid
+
+- Prove property aux1 using 1-induction
+
+  % sal-inf-bmc -v 3 -d 1 -i inf-bakery aux1
+
+- Prove property aux2 using 1-induction
+
+  % sal-inf-bmc -v 3 -d 1 -i inf-bakery aux2
+
+- Prove property mutex using 3-induction and lemmas aux1 and aux2
+
+  % sal-inf-bmc -v 3 -d 3 -l aux1 -l aux2 -i inf-bakery mutex
+
+- Prove property mutex using 7-induction
+
+  % sal-inf-bmc -v 3 -d 7 -i inf-bakery mutex
+

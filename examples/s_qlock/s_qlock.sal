@@ -1,0 +1,100 @@
+%% N : the number of processes
+s_qlock{ N : nznat}: CONTEXT =
+BEGIN
+  Process_Id: TYPE = SCALARSET(N);
+
+  Queue_Idx: TYPE = RINGSET(N+1);
+
+  %%Queue_Idx: TYPE = [0..N];
+
+  %%rsucc(i:Queue_Idx):Queue_Idx = IF i = N THEN 0 ELSE i + 1 ENDIF;
+
+  %%rpred(i:Queue_Idx):Queue_Idx = IF i = 0 THEN N ELSE i - 1 ENDIF;
+
+  Lifted_Process_Id : TYPE = DATATYPE
+                               undef,
+                               lift(val:Process_Id)
+                             END; 
+
+  Queue: TYPE = [# data: ARRAY Queue_Idx OF Lifted_Process_Id,
+                   hd: Queue_Idx,
+                   tl: Queue_Idx #];
+  
+  saturated?(queue : Queue): BOOLEAN = queue.hd = queue.tl;
+
+  empty?(queue : Queue): BOOLEAN = queue.hd = rsucc(queue.tl);
+
+  reset(queue : Queue): Queue = queue WITH .hd := rsucc(queue.tl);
+
+  top(queue : Queue): Process_Id = val(queue.data[rsucc(queue.tl)]);
+
+  put(queue : Queue, i : Process_Id): Queue =
+    (queue WITH .hd := rsucc(queue.hd)) 
+           WITH .data[queue.hd] := lift(i);
+
+  pop(queue : Queue): Queue = 
+    queue WITH .tl := rsucc(queue.tl);
+    
+  Label: TYPE = {l1, l2, cs};
+
+  process [i : Process_Id]: MODULE =
+  BEGIN
+    LOCAL pc : Label
+    GLOBAL queue : Queue
+    INITIALIZATION
+      pc = l1;
+    TRANSITION
+    [
+      want:
+        (pc = l1) AND NOT(saturated?(queue))
+        --> pc' = l2;
+            queue' = put(queue, i)
+      []
+      try:
+        (pc = l2) AND (top(queue) = i)
+        --> pc' = cs
+      []
+      exit:
+        (pc = cs)
+        --> pc' = l1;
+            queue' = pop(queue)
+    ]
+  END;
+
+  setup: MODULE =
+  BEGIN
+    GLOBAL queue : Queue
+    INITIALIZATION
+      queue.data = [[j : Queue_Idx] undef];
+			queue.hd IN {i : Queue_Idx | TRUE};
+      queue.tl = rpred(queue.hd);
+    TRANSITION
+      [ FALSE --> ]
+  END;
+
+  processes : MODULE = ([] (i : Process_Id): process[i]);
+
+  system: MODULE = setup [] processes;
+
+%% mutual exclusion
+%%
+%% % sal-smc -v 3 --assertion='s_qlock{2,2}!mutex'
+%%
+  mutex: THEOREM
+    system |- G(FORALL (i : Process_Id, j : Process_Id):
+                 (pc[i] = cs AND pc[j] = cs) => (i = j));
+
+%% deadlock freedom
+%%
+%% % sal-deadlock-checker -v 3 --module='s_qlock{2,2}!system'
+%%
+
+%% lockout (starvation) freedom
+%%
+%% % sal-smc -v 3 --assertion='s_qlock{2,2}!lofree'
+%%
+  lofree: THEOREM
+    system |- (FORALL (i : Process_Id):
+                G(pc[i] = l2 => F(pc[i] = cs)));
+
+END

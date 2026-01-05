@@ -1,0 +1,237 @@
+Prioriy Ceiling Protocol
+------------------------
+
+Description:
+
+Only uniprocessor systems are considered. A real-time application is modeled as a
+finite set of tasks that run concurrently on a single processor. A task consists
+of a succession of jobs, each requiring a finite amount of computation. In other
+words, the computation associated with each job should terminate. Each task is
+characterized by its priority, period, and by the amount of processing it requires.  
+For example, a process sampling an input signal at frequency of 100 Hz can
+be modeled as a periodic task of period 10ms. The successive jobs of this task
+are released at time t_0, t_0 + 10ms, t_0 + 20ms, and so forth, and the
+length of each job is the amount of time required for processing a single sample.
+
+Other resources than the processor are shared by different jobs. For instance,
+the jobs may share common I/O channels or communicate with each other via
+shared variables. Access to these shared resources is controlled by binary
+semaphores which ensure mutual exclusion. The operations for requesting and
+releasing the lock on a semaphore S are denoted by lock(S) and 
+unlock(S), respectively.
+
+Each task and job has fixed priority; the priority of a job is the priority
+of the task to which it belongs. Jobs are executed in priority order: if two
+jobs of different priorities are ready to run at the same time, then the one
+with highest priority is allocated the processor. It is wise to note that
+different tasks may have the same priority, although priority assignment
+techniques such as the rate monotonic or the deadline monotonic approaches
+avoid this situation by giving different priorities to different tasks.
+
+When synchronization primitives, such as semaphores, are used, there is
+a problem called priority inversion which causes low priority jobs
+to prevent higher priority jobs from running. For instance, a job j can
+be blocked when trying to lock a semaphore S if a job k of lower priority
+has locked S before j was dispatched. As a result, a job j of top
+priority can be unable to execute and a job k of lower priority than j
+can become active. This phenomenon may block j for long periods of time,
+since other jobs, with priority greater than k, may prevent k to execute
+and consequently to unlock S. So, the high-priority job j can then be
+delayed by the low-priority job k that locks S but also by any job of
+intermediate priority that might preempt k. Since high-priority jobs are
+usually the most urgent and may have tight deadlines, such unrestricted 
+priority inversion can be disastrous. In the Priority Ceiling Protocol,
+the following approach is used to cope with this problem:
+
+- Each semaphore S is assigned a fixed ceiling which is equal
+to the highest priority among the jobs that need access to S.
+- A job j executing lock(S) is granted access to S if the 
+priority of j is strictly higher that the ceiling of any semaphore locked
+by a job other than j. Otherwise, j becomes blocked and S is not
+allocated to j.
+
+A set of SAL contexts defines the basic concepts used to build the protocol model.
+These contexts introduce types to represent tasks, jobs, semaphores, and priorities.
+The scheduler is modeled as a SAL module which represents a state machine. The protocol
+model is parametric, allowing us to experiment with different execution environments.
+
+*** Tasks ***
+
+The scheduler manipulates tasks that consists of a succession of jobs, each requiring a
+finite amount of computation. Tasks are modeled in the context `pcp-task'. This
+context contains two parameters:
+
+- Semaphore : TYPE - the representation of semaphores. The actual value of
+this parameter is usually a subrange type or a scalar type.
+- NumberOfTasks : nat - the number of tasks that run concurrently.
+
+The type TaskDescriptor describes the characteristics of a task that will be manipulated
+by the scheduler. The field semaphores contains the set of semaphores used by
+a task. It is important to notice that we are using the context `set'
+that specifies set of elements of a given type, and provide several functions to manipulate these 
+sets. The function (ceiling s t) computes the ceiling of the semaphore s. associated
+with the array of task descriptors t. The ceiling of the semaphore s is equal
+to the highest priority among the tasks that need access to S. 
+
+*** Resources ***
+
+Our model contains a resource management component that stores the set of semaphores
+allocated to or requested by each job. This component is a record of type RSRC.
+This type and associated functions is described in the context `pcp-rsrc'.
+This context contains three parameters:
+
+- Semaphore : TYPE - the representation of semaphores. The actual value of
+this parameter is usually a subrange type or a scalar type.
+- NumberOfTasks : nat - the number of tasks that run concurrently.
+- task-descriptors : TaskDescriptors - an array of TaskDescriptor, that is,
+a description of the tasks that will be processed by the scheduler. This information is
+necessary, since we need to know the priority of each task, and the ceiling associated with
+each semaphore to specify some functions in the context pcp-rsrc.
+
+Given a job j and a resource allocation object r, r.alloc[j] is the set
+of semaphores allocated by j in r, and r.request[j] is the set of
+semaphores that j requested but not obtained. This set is empty unless j has
+failed to aquire a lock on a semaphore.
+
+The function (blk r j) computes the set of jobs other than j that own 
+a semaphore of ceiling as high as j's priority. These jobs will block j if j
+ever tries to lock a semaphore.  As defined by function blocked, a job 
+j is then blocked in r if both (blk r j) and (request r j) are
+nonempty. This context also defines the function ceiling with only
+one parameter. This function is basically an alias to the ceiling function
+defined in the context pcp-task with the second parameter fixed.
+
+Four operations control semaphore allocation and deallocation:
+
+- (alloc-step r j s) executes command lock(s) on behalf of j.
+  The semaphore s is allocated to j if (blk r j) is empty; otherwise,
+  s is stored in r.request[j] and j becomes blocked.
+- (release-step r j s) execute command unlock(s) on behalf of j.
+  It simply removes s from the set of semaphores allocated to j. After this
+  operation, some jobs that were blocked by j may be no longer blocked. The 
+  operation has no effect if j does not own s.
+- (release-all-step r j s) releases all semaphores allocated to j. 
+  It simply makes r.alloc[j] equals to the empty set.
+- (wakeup r j) allocates to j all the semaphores j requested. This
+  operation is intended for a job j that is reactivated after having been
+  blocked.      
+
+As far as the priority ceiling protocol is concerned only two classes of commands
+are relevant, namely, the instructions lock(s) or unlock(s) for 
+requesting and releasing semaphores. The instruction unlock-all(s) is also
+considered in our model. We also use a fourth class of commands representing
+any other instruction performed in one step. These four classes of commands are
+represented in our model by the following functions: lock, unlock,
+unlock-all, and step. 
+
+*** Scheduler ***
+
+The scheduler, the user jobs and the idle job are represented as SAL modules.
+The user jobs and the idle job are composed by using the asynchronous composition
+operator. The resultant module is then composed with the scheduler module by using the
+synchronous composition operator. In this configuration, in every execution step:
+the scheduler selects one job to be executed based on the available
+resources, that is, a RSRC object, the status of each user job, and the dispatch table.
+The selected job may update the information in the RSRC object, when it
+executes a command. A job may also change its status. 
+
+The scheduler stores in which state each job is currently in. 
+Initially, a job is the sleeping state. If the time counter is equal to
+the dispatch time associated with the job, then the job goes to the starting state
+and stays there until it executes its first step and goes to the executing state. 
+From the executing state the job goes to the sleeping state when it finishes a period.
+It may also go to the starting state when it finishes a period and the time counter is equal
+to the next dispatch time. 
+
+The type JobState is a scalar type used by the scheduler to control job
+dispatch and activation. The JobStatus is a scalar type used by the user jobs
+to sign their status to the scheduler. As defined by the function ready-to-execute?,
+a job may be activated by the scheduler if it is the starting or executing
+state. A job j can be activated (i.e. it is eligible) if it is a ready to execute job of
+highest precedence and is not blocked or if it is currently blocking a job of highest 
+precedence, this condition is described by the function eligible?.
+
+The time counter should be incremented with every transition, but
+this approach will produce an infinite state space. However, it is
+easy to see that it is sufficient to keep the time counter in
+the interval [0, lcm], where lcm is least common
+multiple of the periods of each task. For instance, suppose that
+we have three tasks with periods: 5, 8, and 10; then it is sufficient
+to keep the time counter in the interval [0, 40). The function
+adjust is used to enforce this condition.  
+
+The Turn datatype is used by the scheduler to sign which process
+will execute in the current step. The function turn? basically
+checks if it is the turn of a given job.
+
+The scheduler is described in the context `pcp-scheduler'.
+The output variable dispatch stores the next dispatch time of each job. 
+The output variable job-state stores the (abstract) state associated with
+each job. As mentioned before, this information is used by the scheduler to
+decide which job should be activated. It is important to notice that such 
+information has nothing to do with the (real) state of a given job. 
+The input variable job-status is used by the scheduler to receive information 
+about the status of each user job. The output variable turn is used to select which
+job will be activated in a given step. The input variable rsrc allows the scheduler
+to access information about semaphore allocation and request. The initialization section
+simply sets the initial values of the output variables. The transition section executes
+the following commands:
+- Updates the time counter.
+- Updates the job-state array.
+- Updates the dispatch table if necessary. 
+- Chooses a job to be activated. A multi-command is used to perform a non-deterministic choice
+  from all eligible jobs. If there is not a eligible job, then the idle job is activated.
+
+In our model, the idle job is responsible to create the resource object (i.e. RSRC). 
+The idle job executes one step or not based on the next value of the variable turn.
+
+Every job module must contain the following variables: turn, status, and
+rsrc. The expression (turn? turn' id) may be used to check if the module
+is active in the current step, where id is the job's identifier. Each job
+must set the variable status to started in the first step, and to
+finished in the last step.
+
+Our model is parametric, and may be instantiated with different environments.
+For instance, we used some simple enviroments to develop the model, since
+it was much easier to detect mistakes on the specification by using a simpler
+environment. However, to check properties, we should consider an environment 
+where the jobs are non-deterministic. In other words, we built an environment which
+produces different possible behaviors. The context `pcp-generic' describes
+these non-deterministic jobs.
+
+The context 'tst-pcp-generic' instantiates our parametric module for a specific
+configuration.
+
+Commands:
+
+a) Configuration tst-pcp-generic: 3 processes and 3 semaphores
+
+- Produce an execution trace up to depth 10
+
+  % sal-path-finder -v 3 tst-pcp-generic tst-system
+
+- Prove the deadlock-free using induction 
+
+  % sal-bmc -v 3 --induction tst-pcp-generic deadlock-free
+
+- Prove the deadlock-free property using sal-smc (symbolic model checker)
+
+  % sal-smc -v 3 tst-pcp-generic deadlock-free
+
+- Prove the deadlock-free property using sal-smc and backward propagation
+
+  % sal-smc -v 3 --backward tst-pcp-generic deadlock-free
+
+b) Configuration tst-pcp-generic2: 5 processes and 3 semaphores
+
+- Prove the deadlock-free using induction 
+
+  % sal-bmc -v 3 --induction tst-pcp-generic2 deadlock-free
+
+- Prove the deadlock-free property using sal-smc 
+
+  % sal-smc -v 3 tst-pcp-generic2 deadlock-free
+
+- Prove the deadlock-free property using sal-smc and backward propagation
+
+  % sal-smc -v 3 --backward tst-pcp-generic2 deadlock-free

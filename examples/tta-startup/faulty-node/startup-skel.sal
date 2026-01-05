@@ -1,0 +1,1506 @@
+%--------------------------------------------------------
+%--------------------------------------------------------
+%Simulation of a TTA startup (c) Vienna University of Technology
+%skeleton for faulty node simulations
+%
+
+
+@par_filename: CONTEXT =
+
+BEGIN
+
+%--------------------------------------------------------------------------------------
+% System types and constants: 
+
+n: NATURAL = @par_nodes;                      % number of nodes 
+maxchannels: NATURAL = 2;             % number of channels
+index: TYPE = [0..n-1];               % node IDs
+channels: TYPE = [0..maxchannels-1];  % channel IDs
+maxcount: NATURAL = 20*n;             % value domain of the nodes' counters
+counts: TYPE = [0..maxcount];         % nodes' counters
+
+states: TYPE = {init, listen, start, active, faulty, faulty_lock0, faulty_lock1, faulty_lock01};  
+% a node's state
+
+hub_states: TYPE = { hub_init,  hub_listen,  hub_startup,  hub_tentative, hub_silence,
+                     hub_protected, hub_active};      % a channel's state
+
+msgs: TYPE = {quiet, noise, cs_frame, i_frame};        % types of messages
+
+
+LT_TO: ARRAY index OF NATURAL = [[j:index] 2*n+j];     % listen timeout definitions
+CS_TO: ARRAY index OF NATURAL = [[j:index] n+j];       % coldstart timeout definitions
+%--------------------------------------------------------------------------------------
+
+%--------------------------------------------------------------------------------------
+% Fault-injection types and constants:
+
+
+faulty_ID : NATURAL = 0;               % ID of the faulty node
+mask_ID: NATURAL = 2;
+
+faulty_node: ARRAY index OF BOOLEAN =  [[i:index] IF i = faulty_ID THEN TRUE ELSE FALSE ENDIF];
+
+feedback: BOOLEAN = @par_feedback;
+degree: NATURAL = @par_degree;
+% flag, to declare a node faulty or correct
+%--------------------------------------------------------------------------------------
+
+
+
+
+%--------------------------------------------------------------------------------------
+% Diagnosis types and constants:
+
+max_wcsup: TYPE = [0..1000];          % value domain of startup diagnosis counter
+%--------------------------------------------------------------------------------------
+
+
+
+
+%--------------------------------------------------------------------------------------
+% Use guardian functionality or not:
+
+guardian_on: BOOLEAN =  FALSE;
+%--------------------------------------------------------------------------------------
+
+
+%--------------------------------------------------------------------------------------
+%Functions
+
+incslot(r: index): index = IF r=n-1 THEN 0 ELSE r+1 ENDIF;
+%--------------------------------------------------------------------------------------
+
+
+%--------------------------------------------------------------------------------------
+%Node Module
+
+node[id:index]: MODULE =
+BEGIN
+INPUT
+  msg_in:  ARRAY channels OF msgs,                   % incomming message-type
+  time_in: ARRAY channels OF index,                  % incomming slot position
+  lock_in: ARRAY channels OF BOOLEAN
+
+OUTPUT
+  msg_out:  ARRAY channels OF msgs,                  % outgoing message-type
+  time_out: ARRAY channels OF index,                 % outgoing slot position
+  
+  state: states,                                     % current state of a node
+  counter: counts,                                   % counter of a node
+
+%Metadata: 
+  errorflag: BOOLEAN                                 % indicates model errors
+                            
+LOCAL       
+  startupdelay: counts,                              % max. power-on offset                                          
+  big_bang: BOOLEAN                                  % big bang flag 
+  
+DEFINITION
+  startupdelay = 8*n                     % power-on within 5 rounds
+
+
+INITIALIZATION
+  (FORALL (j: channels): msg_out[j] = quiet);        
+  (FORALL (j: channels): time_out[j] = 0);
+  state = init;
+  counter = 0;
+  errorflag = FALSE;
+  big_bang = TRUE;
+
+
+TRANSITION
+
+
+% node in INIT state:
+
+
+[  % 
+   state = init 
+  --> 
+    %state' = listen; 
+    state' = IF NOT faulty_node[id] THEN listen ELSE faulty ENDIF; 
+    counter' = 1;
+    msg_out' = msg_out;
+    time_out' = time_out;
+
+[] % let time advance
+   state = init AND counter < startupdelay 
+  --> 
+    state' = state;
+    counter' = counter+1;
+    msg_out' = msg_out;
+    time_out' = time_out;
+
+
+% correct node branch - if faulty_node[id] = FALSE
+
+% node in LISTEN state
+
+
+[] % 
+   state = listen AND ((FORALL (j:channels): msg_in[j] = quiet OR msg_in[j] = noise) OR 
+                       (EXISTS (i,j:channels): msg_in[i] = quiet AND msg_in[j]=noise)) 
+                  AND counter = LT_TO[id]
+  -->
+    state' = start;
+    counter' = 1;
+    msg_out' =  [[j:channels]  cs_frame]; 
+    time_out' = [[j:channels]  id];
+    big_bang' = FALSE;
+
+[]  %  
+([] (k: channels):
+
+   state = listen AND big_bang AND msg_in[k] = cs_frame 
+                  AND (NOT (EXISTS (j:channels): 
+                                    j/=k AND
+                                    (msg_in[j] = cs_frame OR msg_in[j] = i_frame)  AND 
+                        (time_in[k]/=time_in[j] OR msg_in[k]/=msg_in[j])))
+ -->
+    state' = start;  %listen;
+    counter' = 2;              
+    msg_out' = [[j:channels]  quiet];
+    time_out' = [[j:channels]  0];
+    big_bang' = FALSE; 
+)  
+
+
+[] % 
+   state = listen AND (%(FORALL (j:channels): msg_in[j] = noise) OR 
+                       (EXISTS (i,j:channels): 
+                               (msg_in[i]=cs_frame OR msg_in[i]=i_frame) AND
+                               (msg_in[j]=cs_frame OR msg_in[j]=i_frame) AND
+                               i/=j AND 
+                               (time_in[i]/=time_in[j] OR msg_in[i]/=msg_in[j])))                
+  --> 
+    state' = start;  
+    counter' = 2;              
+    msg_out' = [[j:channels]  quiet];
+    time_out' = [[j:channels]  0];
+    big_bang' = FALSE;
+   
+
+[]  % 
+([] (k: channels):
+
+   state = listen AND ((msg_in[k] = cs_frame AND NOT big_bang) OR msg_in[k] = i_frame)  
+                  AND (NOT (EXISTS (j:channels): 
+                                   j/=k AND
+                                   (msg_in[j] = cs_frame OR msg_in[j] = i_frame)  AND 
+                           (time_in[k]/=time_in[j] OR msg_in[k]/=msg_in[j])))
+ -->
+    state' = active;
+    counter' = 0;
+    msg_out' = [[j:channels] IF time_out'[0] = id THEN i_frame ELSE quiet ENDIF];
+    time_out' =[[j:channels] incslot(time_in[k])]; 
+)  
+
+
+[] % let time advance
+   state = listen AND ((FORALL (j:channels): msg_in[j] = quiet OR msg_in[j] = noise) OR 
+                       (EXISTS (i,j:channels): msg_in[i]=quiet AND msg_in[j]=noise))  
+                  AND counter < LT_TO[id]
+  -->
+    state' = state;
+    counter' = counter+1;
+    msg_out' = [[j:channels]  quiet];
+    time_out' =  time_out;
+
+
+
+% node in COLDSTART state:
+
+[] %
+   state = start AND ((FORALL (j:channels): msg_in[j] = quiet OR msg_in[j] = noise)  OR 
+                     (EXISTS (i,j:channels): msg_in[i]=quiet AND msg_in[j]=noise))  
+                 AND counter = CS_TO[id]
+  -->
+   state' = state;
+   counter' = 1;
+   msg_out' =  [[j:channels] cs_frame];
+   time_out' = [[j:channels] id]; 
+   
+
+[]  %  
+([] (k: channels):
+   state = start AND big_bang AND msg_in[k] = cs_frame 
+                 AND (NOT (EXISTS (j:channels): 
+                                  j/=k AND
+                                  (msg_in[j] = cs_frame OR msg_in[j] = i_frame)  AND 
+                                  (time_in[k]/=time_in[j] OR msg_in[k]/=msg_in[j]))) 
+                 AND counter > 1 
+ -->
+    state' = start;  %listen;
+    counter' = 2;              
+    msg_out' = [[j:channels]  quiet];
+    time_out' = [[j:channels]  0];
+    big_bang' = FALSE; 
+)  
+
+
+[] %  
+   state = start AND (%(FORALL (j:channels): msg_in[j] = noise) OR 
+                       (EXISTS (i,j:channels): 
+                               (msg_in[i]=cs_frame OR msg_in[i]=i_frame) AND
+                               (msg_in[j]=cs_frame OR msg_in[j]=i_frame) AND
+                               i/=j AND 
+                               (time_in[i]/=time_in[j] OR msg_in[i]/=msg_in[j])))
+                 AND counter > 1      
+  -->
+    state' = start; %listen;
+    counter' = 2;   
+    msg_out' =  [[j:channels] quiet];
+    time_out' = [[j:channels] 0]; 
+      
+  
+[]  %
+([] (k: channels):
+   state = start  AND ((msg_in[k] = cs_frame AND NOT big_bang) OR msg_in[k] = i_frame)  
+                  AND (NOT (EXISTS (j:channels): 
+                                   j/=k AND
+                                   (msg_in[j] = cs_frame OR msg_in[j] = i_frame)  AND 
+                       (time_in[k]/=time_in[j] OR msg_in[k]/=msg_in[j])))
+                 AND counter >1 
+ -->
+    state' = active;
+    counter' = 0;
+    msg_out' = [[j:channels] IF time_out'[0] = id THEN i_frame ELSE quiet ENDIF];
+    time_out' =[[j:channels] incslot(time_in[k])]; 
+)  
+
+
+[] % let time advance
+   state = start AND (((FORALL (j:channels): msg_in[j] = quiet OR msg_in[j] = noise) OR 
+                       (EXISTS (i,j:channels): msg_in[i]=quiet AND msg_in[j]=noise)) OR
+                       counter = 1) 
+           AND counter < CS_TO[id] 
+  -->
+    state' = state;
+    counter' = counter+1;
+    msg_out' =  [[j:channels] quiet]; 
+    time_out' = [[j:channels] incslot(time_out[j])];
+    
+   
+% node in ACTIVE state:
+
+ [] % 
+    state = active 
+   -->
+    state' = state;
+    counter' = 0;
+    msg_out' =  [[j:channels] IF time_out'[0] = id THEN i_frame ELSE quiet ENDIF];
+    time_out' = [[j:channels] incslot(time_out[j])];
+   
+
+
+% faulty node branch  - if faulty_node[id] = TRUE
+% includes: timing failure, value failure, asymmetric failure (regardind the different
+% channels) 
+
+
+
+%degree 1:
+
+[] % :
+    state = faulty AND degree >= 1 
+  -->  
+    msg_out' =  [[j:channels]   quiet];  
+    time_out' = [[j:channels]      0 ];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+             ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+             ELSIF lock_in[1] AND feedback THEN faulty_lock1
+             ELSE state ENDIF;
+
+
+%degree 2:
+
+[] % 
+    state = faulty AND degree >= 2 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN cs_frame   ELSE quiet ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN faulty_ID  ELSE 0     ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+             ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+             ELSIF lock_in[1] AND feedback THEN faulty_lock1
+             ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 2 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN cs_frame   ELSE quiet ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN faulty_ID  ELSE 0     ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+             ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+             ELSIF lock_in[1] AND feedback THEN faulty_lock1
+             ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 2 
+  -->  
+    msg_out' =  [[j:channels]   cs_frame];  
+    time_out' = [[j:channels]   faulty_ID];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+             ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+             ELSIF lock_in[1] AND feedback THEN faulty_lock1
+             ELSE state ENDIF;
+
+%degree 3:
+
+[] % :
+    state = faulty AND degree >= 3 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN i_frame    ELSE quiet ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN faulty_ID  ELSE 0     ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+             ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+             ELSIF lock_in[1] AND feedback THEN faulty_lock1
+             ELSE state ENDIF;
+
+
+[] % :
+    state = faulty AND degree >= 3 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN i_frame    ELSE cs_frame  ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN faulty_ID  ELSE faulty_ID  ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+             ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+             ELSIF lock_in[1] AND feedback THEN faulty_lock1
+             ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 3 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN i_frame    ELSE quiet  ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN faulty_ID  ELSE 0      ENDIF];
+    state' = IF lock_in[0] AND lock_in[1]  AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 3 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN i_frame    ELSE cs_frame  ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN faulty_ID  ELSE faulty_ID  ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 3 
+  -->  
+    msg_out' =  [[j:channels]  i_frame];  
+    time_out' = [[j:channels]  faulty_ID];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+%degree 4:
+[] % :
+    state = faulty AND degree >= 4
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN noise   ELSE quiet ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN 0       ELSE 0     ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 4 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN noise   ELSE cs_frame  ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN 0       ELSE faulty_ID ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 4 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN noise    ELSE i_frame ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN 0        ELSE faulty_ID ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty  AND degree >= 4 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN noise   ELSE quiet ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN 0       ELSE 0     ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 4 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN noise   ELSE cs_frame  ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN 0       ELSE faulty_ID ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 4
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN noise    ELSE i_frame ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN 0        ELSE faulty_ID ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 4 
+  -->  
+    msg_out' =  [[j:channels]   noise];  
+    time_out' = [[j:channels]      0 ];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+
+
+%degree 5:
+
+[] % :
+    state = faulty AND degree >= 5 AND (NOT lock_in[0] OR NOT feedback)
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN cs_frame   ELSE quiet ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN mask_ID    ELSE 0     ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 5 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN cs_frame    ELSE cs_frame ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN mask_ID    ELSE faulty_ID  ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 5 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN cs_frame    ELSE i_frame ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN mask_ID  ELSE faulty_ID  ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 5 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN cs_frame   ELSE noise ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN mask_ID    ELSE 0     ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 5 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN cs_frame   ELSE quiet ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN mask_ID    ELSE 0     ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 5 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN cs_frame    ELSE cs_frame ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN mask_ID    ELSE faulty_ID  ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 5 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN cs_frame    ELSE i_frame ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN mask_ID  ELSE faulty_ID  ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 5 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN cs_frame   ELSE noise ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN mask_ID    ELSE 0     ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 5 
+  -->  
+    msg_out' =  [[j:channels]   cs_frame];  
+    time_out' = [[j:channels]   mask_ID ];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+
+%degree 6:
+
+[] % :
+    state = faulty AND degree >= 6 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN i_frame    ELSE quiet ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN mask_ID    ELSE 0     ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 6 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN i_frame   ELSE cs_frame ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN mask_ID   ELSE faulty_ID  ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty  AND degree >= 6 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN i_frame  ELSE i_frame ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN mask_ID  ELSE faulty_ID  ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 6 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN i_frame    ELSE noise ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN mask_ID    ELSE 0     ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 6 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN i_frame    ELSE cs_frame ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN mask_ID    ELSE mask_ID  ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+
+[] % :
+    state = faulty AND degree >= 6 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN i_frame    ELSE quiet ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN mask_ID    ELSE 0     ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty  AND degree >= 6 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN i_frame   ELSE cs_frame ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN mask_ID   ELSE faulty_ID  ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty  AND degree >= 6 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN i_frame  ELSE i_frame ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN mask_ID  ELSE faulty_ID  ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % : 
+    state = faulty  AND degree >= 6
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN i_frame    ELSE noise ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN mask_ID    ELSE 0     ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+[] % :
+    state = faulty AND degree >= 6 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN i_frame    ELSE cs_frame ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN mask_ID    ELSE mask_ID  ENDIF];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+
+[] % :
+    state = faulty AND degree >= 6
+  -->  
+    msg_out' =  [[j:channels]   i_frame];  
+    time_out' = [[j:channels]   mask_ID];
+    state' = IF lock_in[0] AND lock_in[1] AND feedback THEN faulty_lock01
+            ELSIF lock_in[0] AND feedback THEN faulty_lock0 
+            ELSIF lock_in[1] AND feedback THEN faulty_lock1
+            ELSE state ENDIF;
+
+
+%---------------------------------
+% faulty_lock0
+
+%degree 1:
+
+[] % :
+    state = faulty_lock0 AND degree >= 1 
+  -->  
+    msg_out' =  [[j:channels]   quiet];  
+    time_out' = [[j:channels]      0 ];
+    state' = IF lock_in[1] THEN faulty_lock01 ELSE state ENDIF;
+
+%degree 2:
+
+[] % :
+    state = faulty_lock0 AND degree >= 2 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN cs_frame   ELSE quiet ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN faulty_ID  ELSE 0     ENDIF];
+    state' =  IF lock_in[1] THEN faulty_lock01 ELSE state ENDIF;
+
+%degree 3:
+
+[] % :
+    state = faulty_lock0 AND degree >= 3 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN i_frame    ELSE quiet  ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN faulty_ID  ELSE 0      ENDIF];
+    state' = IF lock_in[1] THEN faulty_lock01 ELSE state ENDIF;
+
+%degree 4:
+
+[] % :
+    state = faulty_lock0  AND degree >= 4 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN noise   ELSE quiet ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN 0       ELSE 0     ENDIF];
+    state' = IF lock_in[1] THEN faulty_lock01 ELSE state ENDIF;
+
+%degree 5:
+
+[] % :
+    state = faulty_lock0 AND degree >= 5 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN cs_frame   ELSE quiet ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN mask_ID    ELSE 0     ENDIF];
+    state' = IF lock_in[1] THEN faulty_lock01 ELSE state ENDIF;
+
+%degree 6: 
+
+[] % :
+    state = faulty_lock0 AND degree >= 6 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 1 THEN i_frame    ELSE quiet ENDIF];  
+    time_out' = [[j:channels]  IF j = 1 THEN mask_ID    ELSE 0     ENDIF];
+    state' = IF lock_in[1] THEN faulty_lock01 ELSE state ENDIF;
+
+
+
+%---------------------------------
+% faulty_lock1
+
+%degree 1:
+
+[] % :
+    state = faulty_lock1 AND degree >= 1 
+  -->  
+    msg_out' =  [[j:channels]   quiet];  
+    time_out' = [[j:channels]      0 ];
+    state' = IF lock_in[0] THEN faulty_lock01 ELSE state ENDIF;
+
+%degree 2:
+
+[] % :
+    state = faulty_lock1 AND degree >= 2 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN cs_frame   ELSE quiet ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN faulty_ID  ELSE 0     ENDIF];
+    state' =  IF lock_in[0] THEN faulty_lock01 ELSE state ENDIF;
+
+%degree 3:
+
+[] % :
+    state = faulty_lock1 AND degree >= 3 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN i_frame    ELSE quiet  ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN faulty_ID  ELSE 0      ENDIF];
+    state' = IF lock_in[0] THEN faulty_lock01 ELSE state ENDIF;
+
+%degree 4:
+
+[] % :
+    state = faulty_lock1  AND degree >= 4 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN noise   ELSE quiet ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN 0       ELSE 0     ENDIF];
+    state' = IF lock_in[0] THEN faulty_lock01 ELSE state ENDIF;
+
+%degree 5:
+
+[] % :
+    state = faulty_lock1 AND degree >= 5 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN cs_frame   ELSE quiet ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN mask_ID    ELSE 0     ENDIF];
+    state' = IF lock_in[0] THEN faulty_lock01 ELSE state ENDIF;
+
+%degree 6: 
+
+[] % :
+    state = faulty_lock1 AND degree >= 6 
+  -->  
+    msg_out' =  [[j:channels]  IF j = 0 THEN i_frame    ELSE quiet ENDIF];  
+    time_out' = [[j:channels]  IF j = 0 THEN mask_ID    ELSE 0     ENDIF];
+    state' = IF lock_in[0] THEN faulty_lock01 ELSE state ENDIF;
+
+
+
+%---------------------------------
+% faulty_lock01
+
+%degree 1:
+
+[] % :
+    state = faulty_lock01 AND degree >= 1 
+  -->  
+    msg_out' =  [[j:channels]   quiet];  
+    time_out' = [[j:channels]      0 ];
+    state' = state;
+
+
+
+
+%model complete ?
+
+ []
+   ELSE 
+  --> 
+    errorflag' = TRUE
+]
+END;
+
+
+
+%--------------------------------------------------------------------------------------
+%Channel module
+
+
+hub[c:channels]:MODULE =
+BEGIN
+INPUT
+  msg_in:  ARRAY index OF msgs,                    % incomming message-type
+  time_in: ARRAY index OF index,                   % incomming slot position
+  interlink_msg_in: msgs,                          % interlink incomming message-type
+  interlink_time_in: index                         % interlink incomming slot position
+
+OUTPUT
+  msg_out: ARRAY index OF msgs,                    % outgoing message-type
+  time_out: ARRAY index OF index,                  % outgoing slot position
+  interlink_msg_out: msgs,                         % interlink outgoing message-type
+  interlink_time_out: index,                       % interlink outgoing slot position
+  
+  state: hub_states,                               % current channel state
+  collisions: [0..10],                              % collisions counter
+  lock: ARRAY index OF BOOLEAN                     % lock faulty nodes from channel access 
+
+
+LOCAL
+  round_counter1: [0..n+1],                        % measurment o.t. 1st round after reception
+  round_counter2: [0..n+1],                        % measurment o.t. 2nd round after reception
+  round_counter_delay: [0..10*n],
+  slot_position: index,                            % keeps track of the slot positions
+%  lock: ARRAY index OF BOOLEAN,                    % lock faulty nodes from channel access                        
+  hub_error: BOOLEAN                               % indicates model errors
+
+
+INITIALIZATION
+  (FORALL (i:index): msg_out[i] = quiet);
+  (FORALL (i:index): time_out[i] = 0);
+  interlink_msg_out = quiet;
+  interlink_time_out = 0;
+  state =  hub_init;
+  collisions = 0;  
+
+  round_counter1=2;
+  round_counter2=1;
+  round_counter_delay=0;
+  slot_position = 0;
+  (FORALL (i: index): lock[i] = FALSE);
+  hub_error=FALSE;
+
+  
+TRANSITION
+
+
+[ 
+
+
+%hub in INIT state:
+
+
+   state = hub_init 
+  --> 
+   %state' = hub_startup;   %if no hub is delayed -> both startup synchronously
+   state'= IF c=0 THEN hub_listen ELSE hub_startup ENDIF; %hub 0 is delayed 
+   round_counter_delay'=0;
+
+
+%unomment the following transition for a delayed hub
+
+[] % let time advance
+   state = hub_init AND c=0  AND round_counter_delay < 8*n
+  --> 
+    state' = state;
+    round_counter_delay' = round_counter_delay +1;
+    
+
+
+%hub in LISTEN state:
+
+[]
+    state =  hub_listen AND (interlink_msg_in' = cs_frame OR interlink_msg_in' = i_frame) 
+   -->
+     msg_out' = [[j:index] quiet];
+     time_out' = [[j:index] 0];
+    
+     interlink_msg_out' = quiet;
+     interlink_time_out' = 0;   
+  
+     state' = IF interlink_msg_in' = cs_frame
+                 THEN  hub_tentative 
+              ELSE 
+                 hub_active 
+              ENDIF;
+
+     round_counter1'= 2;
+     round_counter2'= 1;
+
+     slot_position' = incslot(interlink_time_in');
+
+[]
+    state =  hub_listen AND NOT (interlink_msg_in' = cs_frame OR interlink_msg_in' = i_frame) 
+   -->
+     msg_out' = [[j:index] quiet];
+     time_out' = [[j:index] 0];
+    
+     interlink_msg_out' = quiet;
+     interlink_time_out' = 0;   
+  
+     state' = IF round_counter_delay = 2*n
+                 THEN hub_startup
+              ELSE 
+                 state
+              ENDIF;
+
+     round_counter_delay' = round_counter_delay+1;
+
+     round_counter1'= 2;
+     round_counter2'= 1;
+
+     slot_position' = incslot(interlink_time_in');
+
+
+
+%hub in STARTUP state:  
+
+[] 
+
+([] (i: index):
+   state =  hub_startup AND msg_in'[i] /= quiet AND NOT lock[i] 
+ -->
+   msg_out'  = [[j:index] IF msg_in'[i] = cs_frame AND time_in'[i] = i 
+                          THEN cs_frame ELSE noise ENDIF];
+   time_out' = [[j:index] time_in'[i]];
+   
+   interlink_msg_out' = msg_out'[0];
+   interlink_time_out' = time_out'[i];   
+
+   state' = IF   (msg_out'[i] = cs_frame 
+                  AND (
+                         (interlink_msg_in' = cs_frame AND interlink_time_in' = time_in'[i]) 
+                       OR
+                     (interlink_msg_in' /= cs_frame))) 
+               OR
+                 (msg_out'[i] /= cs_frame AND interlink_msg_in' = cs_frame)
+               THEN  hub_tentative 
+            ELSIF msg_out'[i] = cs_frame AND interlink_msg_in' = cs_frame 
+                  AND interlink_time_in' /= time_in'[i]
+               THEN hub_silence
+            ELSE 
+                hub_startup 
+            ENDIF;
+
+   round_counter1'= 2;
+   round_counter2'= 1;
+ 
+   slot_position' = IF     msg_out'[0] = cs_frame        
+                       THEN incslot(time_in'[i]) 
+                    ELSIF  interlink_msg_in' = cs_frame  
+                       THEN incslot(interlink_time_in')
+                    ELSE  0 ENDIF;
+
+   lock' = [[j: index] IF j=i AND msg_out'[0] /= cs_frame THEN TRUE ELSE lock[j] ENDIF]; 
+   
+   collisions' = IF (EXISTS (j: index): i/=j AND msg_in'[j] /=quiet AND NOT lock[j]) 
+                 THEN  
+                   IF collisions = 10 THEN 10 ELSE collisions+1 ENDIF
+             ELSE 
+                   collisions
+                 ENDIF;
+)  
+
+
+[]
+    state =  hub_startup AND (FORALL (i: index): (msg_in'[i] = quiet) OR
+                                                 (msg_in'[i] /= quiet AND lock[i]))
+   -->
+     msg_out' = [[j:index] quiet];
+     time_out' = [[j:index] 0];
+    
+     interlink_msg_out' = quiet;
+     interlink_time_out' = 0;   
+  
+     state' = IF interlink_msg_in' = cs_frame
+                 THEN  hub_tentative 
+              ELSE 
+                 hub_startup 
+              ENDIF;
+
+     round_counter1'= 2;
+     round_counter2'= 1;
+
+     slot_position' = IF interlink_msg_in' = cs_frame 
+                      THEN incslot(interlink_time_in') ELSE 0 ENDIF;
+     
+
+
+%hub in SILENCE state:
+
+[]
+     state = hub_silence
+   -->
+     msg_out' = [[j:index] quiet];
+     time_out' = [[j:index] 0];
+
+     interlink_msg_out' = quiet;
+     interlink_time_out' = 0;   
+
+     state' = IF round_counter1 < n THEN hub_silence 
+              ELSE hub_protected ENDIF;
+
+     round_counter1'= round_counter1+1;
+     round_counter2'= 1; 
+
+     slot_position' = 0;
+
+
+
+%hub in TENTATIVE state:
+
+[]
+
+([] (i: index):
+     state =  hub_tentative AND msg_in'[i] /= quiet AND i = slot_position AND NOT lock[i]      
+   -->
+     msg_out'  =  [[j:index] IF msg_in'[i] = i_frame AND time_in'[i] = i 
+                             THEN i_frame ELSE noise ENDIF];
+     time_out' =  [[j:index] time_in'[i]];
+  
+     interlink_msg_out' = msg_out'[0];
+     interlink_time_out' = time_out'[i];    
+
+     state' = IF round_counter1 <= n 
+                 AND (  
+                         msg_out'[0] = i_frame 
+                         AND  (
+                                    (interlink_msg_in' = i_frame  AND interlink_time_in' = time_in'[i]) 
+                                 OR 
+                                    (interlink_msg_in' /= i_frame)
+                              )
+                      OR
+                         (msg_out'[i] /= i_frame AND interlink_msg_in' = i_frame)
+                     )
+                 THEN  hub_active
+              ELSIF round_counter1 < n AND  msg_out'[0] /= i_frame AND interlink_msg_in' /= i_frame
+                 THEN  hub_tentative
+              ELSE
+                  hub_protected ENDIF;
+
+     round_counter1'= round_counter1+1;
+     round_counter2'= 1;
+ 
+     slot_position' = IF state'/= hub_protected THEN incslot(slot_position) ELSE 0 ENDIF;
+  
+     lock' = [[j: index] IF j=i AND msg_out'[0] /= i_frame THEN TRUE ELSE lock[j] ENDIF]; 
+
+     collisions' = IF (EXISTS (j: index): i/=j AND msg_in'[j] /= quiet AND  j /= faulty_ID)
+                   THEN  
+                     IF collisions = 10 THEN 10 ELSE collisions+1 ENDIF
+                   ELSE 
+                     collisions
+                   ENDIF;
+)
+
+
+[]
+([] (i: index):
+     state =  hub_tentative AND  i = slot_position AND (msg_in'[i] = quiet 
+                                                        OR (msg_in'[i] /= quiet AND lock[i]))
+   -->
+     msg_out' = [[j:index] quiet];
+     time_out' = [[j:index] 0];
+
+     interlink_msg_out' = quiet;
+     interlink_time_out' = 0;   
+     
+     state' = IF round_counter1 <= n AND interlink_msg_in' = i_frame 
+                THEN  hub_active
+              ELSIF round_counter1 < n AND  interlink_msg_in' /= i_frame
+                THEN  hub_tentative
+              ELSE
+                hub_protected ENDIF;
+
+     slot_position' = IF state'/= hub_protected THEN incslot(slot_position) ELSE 0 ENDIF;
+
+     round_counter1'= round_counter1+1;
+     round_counter2'= 1; 
+)
+
+
+%hub in Protected STARTUP state:
+
+[]
+
+([] (i: index):
+   state =  hub_protected AND msg_in'[i] /= quiet AND i = slot_position AND NOT lock[i]        
+ -->
+   msg_out' = [[j:index] IF msg_in'[i] = cs_frame AND time_in'[i] = i 
+                         THEN cs_frame ELSE noise ENDIF];
+   time_out' =  [[j:index]  time_in'[i]];
+ 
+   interlink_msg_out' = msg_out'[0];
+   interlink_time_out' = time_out'[i];   
+   
+   state' = IF round_counter2 <= n 
+               AND ( 
+                      msg_out'[0] = cs_frame 
+                      AND  (
+                                 (interlink_msg_in' = cs_frame  AND interlink_time_in' = time_in'[i])
+                              OR 
+                                 (interlink_msg_in' /= cs_frame))
+                   OR
+                      (msg_out'[i] /= cs_frame AND interlink_msg_in' = cs_frame)
+                   )                    
+              THEN  hub_tentative
+
+            ELSIF round_counter2 <= n AND  msg_out'[0] = cs_frame 
+          AND interlink_msg_in' = cs_frame AND interlink_time_in' /= time_in'[i]
+              THEN  hub_silence
+
+            ELSIF round_counter2 < n AND  msg_out'[0] /= cs_frame AND interlink_msg_in' /= cs_frame
+              THEN  hub_protected
+
+            ELSE
+                hub_startup
+            ENDIF;
+   
+   round_counter1'= 2;
+   round_counter2'= round_counter2+1;
+
+   slot_position' = incslot(slot_position);
+  
+   lock' = [[j: index] IF j=i AND msg_out'[0] /= cs_frame THEN TRUE ELSE lock[j] ENDIF]; 
+
+   collisions' = IF (EXISTS (j: index): i/=j AND msg_in'[j] /= quiet AND  j /= faulty_ID)
+                 THEN  
+                   IF collisions = 10 THEN 10 ELSE collisions+1 ENDIF
+             ELSE 
+                   collisions
+                 ENDIF;
+)
+
+
+[]
+([] (i: index):
+     state =  hub_protected AND  i = slot_position AND (msg_in'[i] = quiet 
+                                                   OR (msg_in'[i] /= quiet AND lock[i]))
+
+   -->
+     msg_out' = [[j:index] quiet];
+     time_out' = [[j:index] 0];
+
+     interlink_msg_out' = quiet;
+     interlink_time_out' = 0;   
+     
+     state' = IF round_counter2 <= n AND interlink_msg_in' = cs_frame 
+                 THEN  hub_tentative
+              ELSIF round_counter2 < n AND  interlink_msg_in' /= cs_frame
+                 THEN  hub_protected
+              ELSE
+                 hub_startup ENDIF;
+
+     round_counter1'= 2;   
+     round_counter2'= round_counter2+1 ;
+
+     slot_position' = incslot(slot_position);
+)
+
+
+
+%hub in ACTIVE state:
+
+[]
+
+([] (i: index):
+   state =  hub_active AND i = slot_position  AND msg_in'[i] /= quiet AND NOT lock[i]      
+ --> 
+   msg_out' = [[j:index] IF msg_in'[i] = i_frame AND time_in'[i] = i 
+                         THEN i_frame ELSE noise ENDIF];
+   time_out' =  [[j:index]  time_in'[i]];
+ 
+   interlink_msg_out' = msg_out'[0];
+   interlink_time_out' = time_in'[i];   
+
+   state' = state;
+
+   round_counter1'= 1;
+   round_counter2'= 1;
+  
+   slot_position' = incslot(slot_position);
+
+   collisions' = IF (EXISTS (j: index): i/=j AND msg_in'[j] /= quiet AND  j /= faulty_ID)
+                 THEN  
+                   IF collisions = 10 THEN 10 ELSE collisions+1 ENDIF
+             ELSE 
+                   collisions
+                 ENDIF; 
+)
+
+
+[]
+([] (i: index):
+     state =  hub_active  AND  i = slot_position AND (msg_in'[i] = quiet 
+                                                     OR (msg_in'[i] /= quiet AND lock[i]))
+   -->
+     msg_out' = [[j:index] quiet];
+     time_out' = [[j:index] 0];
+
+     interlink_msg_out' = quiet;
+     interlink_time_out' = 0;   
+      
+     state' =  state;
+
+     round_counter1'= 1;
+     round_counter2'= 1;
+   
+     slot_position' = incslot(slot_position);
+)
+
+
+
+%model complete ?
+
+ []
+   ELSE 
+  --> 
+    hub_error' = TRUE
+
+
+]
+
+END;
+
+
+
+%--------------------------------------------------------------------------------------
+%Interlink  module
+
+
+interlink: MODULE = 
+
+BEGIN
+
+INPUT
+msg_out: ARRAY channels OF msgs,
+time_out: ARRAY channels OF index
+
+OUTPUT
+msg_in: ARRAY channels OF msgs,
+time_in: ARRAY channels OF index
+
+DEFINITION
+
+
+   msg_in =  [ [j:channels]  IF j = 0  THEN msg_out[1] ELSE msg_out[0] ENDIF];
+   time_in = [ [j:channels]  IF j = 0  THEN time_out[1] ELSE time_out[0] ENDIF]
+
+
+END;
+
+
+
+%--------------------------------------------------------------------------------------
+%Switch  module
+
+switch: MODULE = 
+
+BEGIN
+
+INPUT
+
+node_msg_out:  ARRAY index OF ARRAY channels OF msgs,
+node_time_out: ARRAY index OF ARRAY channels OF index,
+hub_msg_out:  ARRAY channels OF ARRAY index OF msgs,
+hub_time_out: ARRAY channels OF ARRAY index OF index,
+hub_lock_out: ARRAY channels OF ARRAY index OF BOOLEAN
+
+OUTPUT
+
+node_msg_in:  ARRAY index OF ARRAY channels OF msgs,
+node_time_in: ARRAY index OF ARRAY channels OF index,
+node_lock_in: ARRAY index OF ARRAY channels OF BOOLEAN,
+hub_msg_in:  ARRAY channels OF ARRAY index OF msgs,
+hub_time_in: ARRAY channels OF ARRAY index OF index
+
+
+DEFINITION
+
+    hub_msg_in  = [[j:channels] [[i:index] node_msg_out[i][j]]];
+    hub_time_in = [[j:channels] [[i:index] node_time_out[i][j]]];  
+
+    node_msg_in  = [[i:index] [[j:channels] hub_msg_out[j][i]]];
+    node_time_in = [[i:index] [[j:channels] hub_time_out[j][i]]];
+    node_lock_in = [[i:index] [[j:channels] hub_lock_out[j][i]]]
+
+END;
+
+
+
+%--------------------------------------------------------------------------------------
+%diagnosis  module
+
+diagnosis: MODULE = 
+
+BEGIN
+
+INPUT
+lstates: ARRAY index OF states
+
+OUTPUT
+startup_time: max_wcsup
+
+
+INITIALIZATION
+startup_time=0;
+
+
+TRANSITION
+
+[
+  TRUE
+  -->
+   startup_time' = IF (EXISTS (i,j:index): i/=j AND (lstates[i] = listen OR lstates[i] = start) 
+                                                AND (lstates[j] = listen OR lstates[j] = start)) AND
+                         NOT (EXISTS (i:index): lstates[i] = active)
+                      %  NOT (EXISTS (i,j:index): i/=j AND lstates[i] = active AND lstates[j] = active)
+                   THEN startup_time+1
+                   ELSE startup_time
+                   ENDIF;
+]
+
+END;
+
+
+
+%--------------------------------------------------------------------------------------
+%System Composition
+
+
+system: MODULE =
+
+
+switch 
+
+|| 
+
+(WITH                         INPUT  node_msg_in:   ARRAY index OF ARRAY channels OF msgs;
+                              INPUT  node_time_in:  ARRAY index OF ARRAY channels OF index;
+                              INPUT  node_lock_in:  ARRAY index OF ARRAY channels OF BOOLEAN;
+                              OUTPUT node_msg_out:  ARRAY index OF ARRAY channels OF msgs;
+                              OUTPUT node_time_out: ARRAY index OF ARRAY channels OF index;
+                              OUTPUT lstates: ARRAY index OF states;                              
+                              OUTPUT lcounts: ARRAY index OF counts;
+                  OUTPUT lerrorflag:  ARRAY index OF BOOLEAN  
+
+                (|| (i: index):  RENAME msg_out  TO node_msg_out[i], 
+                                        time_out TO node_time_out[i],
+                                        msg_in   TO node_msg_in[i],
+                                        time_in  TO node_time_in[i],
+                                        state   TO lstates[i],
+                                        counter TO lcounts[i],
+                                        errorflag  TO lerrorflag[i],
+                                        lock_in TO node_lock_in[i]                                     
+                         IN  node[i]))
+||
+
+interlink
+
+||
+
+(WITH    OUTPUT hub_msg_out:  ARRAY channels OF ARRAY index OF msgs;
+         OUTPUT hub_time_out: ARRAY channels OF ARRAY index OF index;
+         INPUT  hub_msg_in:   ARRAY channels OF ARRAY index OF msgs;
+         INPUT  hub_time_in:  ARRAY channels OF ARRAY index OF index;
+         OUTPUT collision:   ARRAY channels OF [0..10];
+        
+         INPUT msg_in: ARRAY channels OF msgs;
+         INPUT time_in: ARRAY channels OF index;
+         OUTPUT msg_out: ARRAY channels OF msgs;
+         OUTPUT time_out: ARRAY channels OF index;
+         OUTPUT hstates: ARRAY channels OF hub_states;
+         OUTPUT hub_lock_out: ARRAY channels OF ARRAY index OF BOOLEAN
+       
+(|| (j: channels): 
+ 
+RENAME  msg_in TO hub_msg_in[j] , time_in TO hub_time_in[j],
+        msg_out TO hub_msg_out[j], time_out TO hub_time_out[j],
+        collisions TO collision[j],
+        interlink_msg_in TO msg_in[j], interlink_time_in TO time_in[j],
+        interlink_msg_out TO msg_out[j], interlink_time_out TO time_out[j],
+        state TO hstates[j], lock TO hub_lock_out[j]
+  IN hub[j]))
+
+
+||
+
+diagnosis
+
+;
+
+
+%--------------------------------------------------------------------------------------
+%timeliness property:
+startuptime: LEMMA system |- G(startup_time <= @par_startuptime);
+
+%liveness property
+ok: LEMMA system |- F( (FORALL (i:index): lstates[i] = active OR faulty_node[i]));
+
+%safety property
+safety: LEMMA system |- G( FORALL (i,j:index): (lstates[i] = active AND lstates[j] = active) =>
+                                               (node_time_out[i] = node_time_out[j]));
+
+
+
+%noflag: LEMMA system |- G(FORALL (i: index): NOT flags[i]);
+
+not_0: LEMMA system |- G(lstates[faulty_ID] /= faulty_lock0);
+
+fast: LEMMA system |- G(collision[0]<=1);
+
+fairlyfast0: LEMMA system |- G(collision[0]<=2);
+fairlyfast1: LEMMA system |- G(collision[0]<=2);
+
+
+fairlyfast2: LEMMA system |- G(collision[0]<=3);
+
+
+
+%fsync: LEMMA system |- G(FORALL (i, j: index): lstates[i] = active AND
+%lstates[j] = active AND NOT faults[i] AND NOT faults[j] => time_in[i] = time_in[j]);
+
+%fok: LEMMA system |- F( G (FORALL (i:index): NOT faults[i] => lstates[i] = active));
+
+optimism: LEMMA system |- G(collision[0] = 0);
+
+%collision: LEMMA system |- F(msg_out /= quiet);
+
+%live: LEMMA system |- F(lstates[0]=active);
+
+%eh: LEMMA system |- G(lstates[2]=init);
+
+
+noerror: LEMMA system |- G((FORALL (i: index): NOT lerrorflag[i] AND NOT hub_error[0]  AND NOT hub_error[1]));
+%AND NOT hub_error
+
+hub_sync: LEMMA system |- G((hstates[0] = hub_active) => (EXISTS (i: index): lstates[i]=start OR lstates[i]=active));
+
+hub_sync2: LEMMA system |- G((hstates[0] = hub_active) => (EXISTS (i: index): X(lstates[i]=active) OR lstates[i]=active ));
+
+hub_sync3: LEMMA system |- G(hstates[0] = hstates[1]);
+
+hub_sync4: LEMMA system |- G(((hstates[0] = hub_tentative) OR (hstates[0]= hub_active)) => (slot_position[0] = slot_position[1])); 
+
+%hub_sync: LEMMA system |- F(EXISTS (i: index): lstates[i]=active);
+
+%hub_sync: LEMMA system |- F(state=hub_tentative);
+
+hub_act: LEMMA system |- F(hstates[0]=hub_active);
+
+%open: LEMMA system |- G (FORALL (i:index):(lstates[i] = start AND msg_in[i]=normal) => 
+%                          allow_stub[i] = FALSE);
+
+%tent:  LEMMA system |- G (round_counter1<=4);
+
+
+%startup: LEMMA system |- G (startup_counter<=4);
+
+%counting: LEMMA system |- G (FORALL (i:index): counters[i] <= CS_TO[i]);
+
+%number_cs:  LEMMA system |- G (FORALL (i:index): lcs_counter[i] <= 5);
+
+%wcsup_max : LEMMA system |- G(FORALL (i: index): lwcsup[i] <= 24);
+%counterexample with 17 (no guardian) and 17 (with guardian) 
+
+weak_active2: LEMMA system |- F( (EXISTS (i,j: index): lstates[i] = active AND lstates[j] = active));
+
+weak_active: LEMMA system |- F( (EXISTS (i: index): lstates[i] = active));
+
+
+hub_syn: LEMMA system |-  G(FORALL (i:index): lstates[i]=active => (FORALL (j:channels): (hstates[j]=hub_tentative OR hstates[j]=hub_active)));
+
+
+
+
+END

@@ -1,0 +1,47 @@
+(context tst-pcp-generic3 () ()
+  (define NumberOfTasks::nat 3)
+  (define NumberOfSemaphores::nat 3)
+  
+  (define-type Semaphore (subrange 1 NumberOfSemaphores))
+
+  (import (set (Semaphore) ()))
+  ;;(import (set (bool) ()))
+  (import (pcp-task (Semaphore) (NumberOfTasks)))
+  
+
+  (define task1::TaskDescriptor (mk-record priority::50 period::7 semaphores::(remove full-set 2)))
+
+  (define task2::TaskDescriptor (mk-record priority::50 period::12 semaphores::(remove full-set 3)))
+
+  (define task3::TaskDescriptor (mk-record priority::50 period::20 semaphores::full-set))
+  
+  (define tasks::TaskDescriptors (mk-array (j::JobIdx)
+                                           (cond 
+                                            ((= j 1) task1)
+                                            ((= j 2) task2)
+                                            (else task3))))
+
+  (define budgets::(array JobIdx nat) (mk-array (j::JobIdx)
+                                                (cond 
+                                                 ((= j 1) 3)
+                                                 ((= j 2) 4)
+                                                 (else 5))))
+
+  (import (pcp-generic () (NumberOfTasks NumberOfSemaphores 8 tasks budgets)))
+
+  (import (pcp-scheduler (Semaphore) (NumberOfTasks tasks)))
+
+  (define val::nat max-period)
+
+  (define val2::(array Semaphore nat) (@ ceiling-map (pcp-rsrc (Semaphore) (NumberOfTasks tasks))))
+
+  (define-module tst-system system)
+
+  (define-type tst-type (@ RSRC (pcp-rsrc (Semaphore) (NumberOfTasks tasks))))
+  
+  (theorem deadlock-free (|- system (G (not (deadlock? job-state turn)))))
+
+  )
+    
+                                                  
+  

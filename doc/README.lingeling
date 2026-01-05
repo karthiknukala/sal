@@ -1,0 +1,79 @@
+SAL -> lingeling interface
+--------------------------
+
+The SAT solvers lingeling and plingeling can now be used as solvers
+for sal-bmc and sal-atg.  These two SAT solvers are developed by Armin
+Biere, at the Johanes Kepler University, Linz, Austria.
+
+The source code for these two solvers can be downloaded at 
+
+   http://fmv.jku.at/lingeling/
+
+
+To use them with SAL:
+
+1) Download the tarfile for Lingeling at the above URL,
+   then compile lingeling and plingeling (both solvers 
+   are included in the same tarfile).
+
+
+
+2) Tell SAL how to execute 'lingeling'.
+
+   When lingeling is selected as the SAT solver, SAL will search for 
+   an executable called 'lingeling'. This will work fine as long as the 
+   'lingeling' executable is in your PATH.
+
+   If you want to give special options to lingeling, or if lingeling
+   is not in your PATH, or if you want to use plingeling instead, you
+   can tell SAL how to execute 'lingeling' by adding a SAL command to 
+   your '.salrc' file. This '.salrc' file must be in your home directory.
+
+   To change the default command used by SAL when invoking lingeling,
+   add the following line to '.salrc'
+
+     (sal/set-lingeling-command! "<path-to-lingeling>/lingeling <options>")
+
+   Examples:
+
+   a) To invoke /homes/xxx/lingeling/lingeling with default options:
+
+      (sal/set-lingeling-command! "/homes/xxx/lingeling/lingeling")
+
+
+   b) To invoke lingeling with options '-w --hte=0 --elim=0':
+
+      (sal/set-lingeling-command! 
+            "/homes/xxx/lingeling/lingelint -w --hte=0 --elim=0")
+
+
+   c) To invoke plingeling instead of lingeling:
+
+      (sal/set-lingeling-command! "plingeling")
+
+
+
+3) To select lingeling or plingeling as the SAT solver, use the 
+   option '-s lingeling' when invoking 'sal-bmc' or 'sal-atg'
+
+   Examples:
+ 
+   a) To checks the property 'mutex' in the context 'peterson':
+ 
+      % sal-bmc -v 10 -s lingeling peterson mutex
+
+
+   b) To produce a counterexample for the property 'invalid' in the context 
+   'peterson':
+
+      % sal-bmc -v 10 -s lingeling peterson invalid
+
+
+   In both cases, the command specified in your ~/.salrc will be 
+   executed. If you don't have a ~/.salrc file, then SAL will use
+   the default command 'lingeling -w' (i.e., search for executable 
+   'lingeling' in your PATH).
+
+
+
+

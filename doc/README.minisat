@@ -1,0 +1,55 @@
+SAL -> Minisat interface
+--------------------------
+
+The SAT solver Minisat can now be used as solver for sal-bmc and sal-atg.
+Minisat is developed by Niklas Een and Niklas Sorensson. More information,
+including where to download the Minisat source, is available at 
+
+   http://minist.se/
+
+
+To use Minisat with SAL (Minisat 2.2.0 is recommended)
+
+1) Download the Minisast source then compile the solver.
+
+
+2) Tell SAL how to execute 'minisat'.
+
+   When minisat is selected as the SAT solver, SAL will search for 
+   an executable called 'minisat'. This will work fine as long as the 
+   'minisiat' executable is in your PATH.
+
+   Otherwise, you can tell SAL where to find 'minisat' by adding 
+   a command in your '.salrc' file. This '.salrc' file must be in 
+   your home directory.
+
+   To change the default command used by SAL when invoking lingeling,
+   add the following line to '.salrc'
+
+     (sal/set-minisat-command! "<path-to-minisat>/minisat <options>")
+
+
+3) To select Minisat as the SAT solver, use the option '-s minisat' 
+   when invoking 'sal-bmc' or 'sal-atg'
+
+   Examples:
+ 
+   a) To checks the property 'mutex' in the context 'peterson':
+ 
+      % sal-bmc -v 10 -s minisat peterson mutex
+
+
+   b) To produce a counterexample for the property 'invalid' in the context 
+   'peterson':
+
+      % sal-bmc -v 10 -s minisat peterson invalid
+
+
+   In both cases, the command specified in your ~/.salrc will be 
+   executed. If you don't have a ~/.salrc file, then SAL will use
+   the default command 'minisat' (i.e., search for executable 
+   'minisat' in your PATH).
+
+
+
+

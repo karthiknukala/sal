@@ -1,0 +1,92 @@
+(context stack () ()
+
+  (define-type optype (scalar pop push noop))
+  (define-type Data)
+
+  (define c0::(array nat Data))
+  (define trash::Data)
+
+  (define-module S
+    (begin
+      (input op::optype)
+      (input data::Data)
+      (local contents::(array nat Data))
+      (local top::nat)
+      (output first::Data)
+      (output invalid_pop::bool)
+      (definition
+			 (= first (if (> top 0) 
+									contents[(- top 1)]
+									trash)) ;; return "trash" since the stack is empty
+			 (= invalid_pop (and (= op pop)  ;; invalid_pop signs an invalid use of S
+													 (= top 0))))
+      (initialization 
+			 (= top 0)
+			 (= contents c0))
+      (transition
+        (= top'
+           (cond
+						((= op push) (+ top 1))
+						((and (= op pop) (> top 0)) (- top 1))
+						(else top)))
+        (= contents'
+           (if (= op push) 
+						 (update contents [top] data)
+						 contents)))))
+
+  (define d0::Data)
+  (define d1::Data)
+  (define d2::Data)
+  (define dummy::Data)
+  (define num_steps::nat 6)
+
+	(define op_seq::(array nat optype)
+		(mk-array (i::nat)
+							(cond ((<= i 2) push) ;; three pushes 
+										((<= i 5) pop)  ;; followed by three pops
+										(else noop))))  ;; send noop (no operation)  
+
+	(define data_seq::(array nat Data)
+		(mk-array (i::nat)
+							(cond ((= i 0) d0)    ;; send d0 in the first step
+										((= i 1) d1)    ;; send d1 in the second step
+										((= i 2) d2)    ;; send d2 in the third step
+										(else dummy))))
+		
+  (define-module test_bench1
+    (begin
+      (output op::optype)
+      (output data::Data)
+      (input first::Data)
+      (local step::nat)
+      (local first_seq::(array nat Data))
+      (definition
+        (= data data_seq[step])            ;; data to send in the current step
+        (= op op_seq[step]))               ;; op to execute in the current step
+      (initialization 
+			 (= step 0)                          ;; record the top of the stack in the initial step
+			 (= first_seq[0] first))
+      (transition
+        (= step' (+ step 1))
+        (= first_seq'[step'] first'))))    ;; record the top of the stack in the next step
+
+  (define-module system1 (|| S test_bench1))
+	
+  (theorem th1
+    (|- system1
+        (G (implies (>= step num_steps)
+										(and (= first_seq[3] d2)
+												 (= first_seq[4] d1)
+												 (= first_seq[5] d0))))))
+	
+  (theorem th2 (|- system1 (G (not invalid_pop))))
+
+  (theorem invalid
+    (|- system1
+        (G (implies (>= step num_steps)
+										(and (= first_seq[3] d0)
+												 (= first_seq[4] d1)
+												 (= first_seq[5] d2))))))
+
+
+	)

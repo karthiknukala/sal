@@ -1,0 +1,46 @@
+(context bag (T) (Max::nznat)
+  
+  (define-type Idx (subrange 0 Max))
+
+  (define-type Bag (-> T Idx))
+
+  (define empty-bag::Bag (lambda (e::T) 0))
+  
+  (define (insert::Bag b::Bag e::T)
+    (lambda (e1::T)
+      (if (and (= e e1) (< (b e1) Max))
+        (+ (b e1) 1)
+        (b e1))))
+
+  (define (remove::Bag b::Bag e::T)
+    (lambda (e1::T)
+      (if (and (= e e1) (> (b e1) 0))
+        (- (b e1) 1)
+        (b e1))))
+  
+  (define (purge::Bag b::Bag e::T)
+    (lambda (e1::T)
+      (if (= e e1) 0 (b e1))))
+  
+  (define (plus::Bag b1::Bag b2::Bag)
+    (lambda (e::T)
+      (+ (b1 e) (b2 e))))
+  
+  (define (union::Bag b1::Bag b2::Bag)
+    (lambda (e::T)
+      (max (b1 e) (b2 e))))
+
+  (define (intersection::Bag b1::Bag b2::Bag)
+    (lambda (e::T)
+      (min (b1 e) (b2 e))))
+  
+  (define (member::bool b::Bag e::T)
+    (> (b e) 0))
+  
+  (define (empty::bool b::Bag)
+    (for-all (e::T) (= (b e) 0)))
+
+  (define (multiplicity::Idx b::Bag e::T)
+    (b e))
+
+  )

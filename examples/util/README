@@ -1,0 +1,21 @@
+Useful data structures
+----------------------
+
+Description: the file `tst-queue.lsal' shows how to use the queue context to model
+             a producer/consumer system. This example uses the SAL lisp-like input language.
+
+Commands: 
+
+- Generate an execution trace up to depth 10, for the module `system' in the context `tst-queue'.
+
+  % sal-path-finder -v 3 tst-queue system
+
+- Generate a nicer trace using pretty-printer extensions.
+
+  % sal-path-finder -v 3 tst-queue system ../../etc/pp-extra.scm
+
+- Generate an execution trace up to depth 20
+
+  % sal-path-finder -v 3 --depth=20 tst-queue system ../../etc/pp-extra.scm
+
+

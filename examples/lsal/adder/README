@@ -1,0 +1,21 @@
+n-bit ADDER
+-----------
+
+Description: adder.lsal is a parametric context. The parameter 'N' specifies
+the number of bits of the n-bit ADDER. The n-bit adder is build using 
+the single-bit-adder module.
+
+Commands:
+
+- Generate an execution trace up to depth 10, for a 5-bit adder
+
+  % sal-path-finder -v 3 --module="(@ adder (adder () (5)))"
+
+- Generate an execution trace up to depth 20, for a 3-bit adder,
+  forcing sal-path-finder to print the value of every system
+  variable, and avoiding cycles.
+
+  % sal-path-finder -v 3 --depth=20 --acyclic --complete-path --module="(@ adder (adder () (3)))"
+
+
+  

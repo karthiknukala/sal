@@ -1,0 +1,74 @@
+md80: CONTEXT =
+BEGIN
+  pitch_modes: TYPE = {vert_speed, ias, alt_cap, alt_hold};
+  action: TYPE = {VSPD, IAS, CAP, HLD, near, arrived};
+
+env: MODULE =
+BEGIN
+ OUTPUT event: action
+ INITIALIZATION
+  event = VSPD
+ TRANSITION
+   event' IN {VSPD, IAS, CAP, HLD, near, arrived}
+END;
+
+md80: MODULE =
+BEGIN
+ INPUT event: action
+ OUTPUT mode: pitch_modes
+ OUTPUT capture_mode: BOOLEAN
+
+INITIALIZATION
+   mode = ias;
+   capture_mode = FALSE
+
+TRANSITION
+  [
+   event = VSPD --> mode' = vert_speed
+   []
+   event = IAS --> mode' = ias
+   []
+   event = CAP --> capture_mode' = NOT capture_mode
+   []
+   event = HLD --> mode' = alt_hold
+   []
+   event = near AND capture_mode --> mode' = alt_cap; capture_mode' =
+  FALSE
+   []
+   event = arrived AND (mode' = alt_cap OR capture_mode) -->
+        mode' = alt_hold; capture_mode' = FALSE
+  ]
+END;
+
+mental: MODULE =
+BEGIN
+ INPUT event: action
+ OUTPUT mental_mode: pitch_modes
+ OUTPUT mental_capture: BOOLEAN
+
+INITIALIZATION
+   mental_mode = ias;
+   mental_capture = FALSE
+
+TRANSITION
+  [
+   event = VSPD --> mental_mode' = vert_speed
+   []
+   event = IAS --> mental_mode' = ias
+   []
+   event = CAP --> mental_capture' = NOT mental_capture
+   []
+   event = HLD --> mental_mode' = alt_hold
+   []
+   event = arrived AND mental_capture -->
+        mental_mode' = alt_hold; mental_capture' = FALSE
+  ]
+END;
+
+system: MODULE = env || (md80 || mental);
+
+no_surprise: THEOREM system |- 
+    G(mental_capture = (capture_mode OR mode = alt_cap));
+
+END
+

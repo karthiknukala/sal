@@ -1,0 +1,280 @@
+satsdefs : CONTEXT =
+BEGIN
+
+  N   : INTEGER = 5;
+
+  Index : TYPE    = [0 .. N];
+ 
+  NextIndex : TYPE = [0 .. N+1];
+
+  Side  : TYPE    = {left,right};
+
+  no_seq    : Index = 0;
+  first_seq : Index = 1; 
+
+  next_seq(i:Index): Index =
+    IF i<N THEN i+1
+    ELSE 1
+    ENDIF;
+
+  %% Aircraft
+  Aircraft : TYPE = [#
+    seq : Index, % Sequence number, which encodes the leader relationship.
+    mahf: Side   % Missed approach holding fix assignment.
+  #];    
+
+  %% Opposite side
+  opposite(ac:Aircraft) : Side = 
+    IF ac.mahf = right THEN left
+    ELSE right
+    ENDIF;
+
+  % For a departing aircraft mahf is the departure fix and seq is the distance 
+  % in miles from runway (0=0nm,3=3nm,4=10nm).
+
+  d0nm?(ac:Aircraft): BOOLEAN =
+    ac.seq = 0;
+
+  d3nm?(ac:Aircraft): BOOLEAN =
+    ac.seq >= 3;
+
+  d10nm?(ac:Aircraft): BOOLEAN =
+    ac.seq >= 4;
+
+  % Not an aircraft
+  none : Aircraft = (#
+    seq  := no_seq,
+    mahf := right
+  #);
+
+  none?(ac:Aircraft):BOOLEAN =
+    ac.seq = no_seq;
+
+  %% Is this the first aicraft in landing sequence ?
+  first_seq?(ac:Aircraft):BOOLEAN =
+    ac.seq = first_seq;
+
+  %% Landing sequence of leader aircraft
+  leader_seq(ac:Aircraft): Index = 
+    IF ac.seq = no_seq THEN no_seq
+    ELSE ac.seq - 1
+    ENDIF;
+
+  %% Is b the leader aircraft of a ?
+  leader?(ac,bc:Aircraft): BOOLEAN =
+    bc.seq = leader_seq(ac);
+
+  %% SCA Zones
+  Zone : TYPE = [# 
+    acs : ARRAY Index OF Aircraft,
+    n   : NextIndex
+  #];
+
+  %% Empty Zone
+  empty : Zone = (#
+    acs := [[i:Index] none],
+    n   := 0
+  #);
+
+  %% Is zone empty?
+  empty?(z:Zone) : BOOLEAN =
+    z.n = 0;
+ 
+  %% Is zone full?
+  full?(z:Zone) : BOOLEAN =
+    z.n = N;
+
+  %% Is there an overflow in the zone?
+  overflow?(z:Zone) : BOOLEAN =
+    z.n = N+1;
+
+  %% Add aircraft to the tail of a zone
+  add(z:Zone,ac:Aircraft) : Zone =
+    IF overflow?(z) THEN z	
+    ELSE
+       (z WITH .acs[z.n] := ac) WITH .n := z.n+1
+    ENDIF;
+
+  %% First aircraft in a zone
+  first(z:Zone): Aircraft =
+    IF empty?(z) THEN none
+    ELSE z.acs[0]
+    ENDIF;
+
+  %% Aircraft in a zone after removing the first aircraft
+  rest(z:Zone) : Zone =
+    IF empty?(z) THEN z
+    ELSE LET n : Index = z.n - 1 IN
+      (z WITH .acs := [[i:Index] IF i < N AND i < n THEN z.acs[i+1] 
+                                 ELSE none ENDIF])
+       WITH .n := n
+    ENDIF;
+
+  %% Move aircraft in the departure zone
+  move(z:Zone) : Zone =
+    IF empty?(z) THEN z
+    ELSE z WITH .acs[0].seq := IF d0nm?(z.acs[0]) THEN 3
+                               ELSE 4
+                               ENDIF
+    ENDIF;
+
+  %% Length of a zone
+  length(z:Zone) : Index =
+    z.n;
+
+  %% Decreases by one the sequence number of aircraft in zone z 
+  decrease(z:Zone) : Zone =
+    z WITH .acs := [[i:Index] LET ac : Aircraft = z.acs[i] IN
+				IF none?(ac) THEN ac 
+                                ELSE ac WITH .seq := ac.seq - 1
+                                ENDIF];
+
+  %% SCA State
+
+  %% One side of the SCA
+  SCASide : TYPE = [#
+    holding3  : Zone,  % Holding Pattern 3kft                
+    holding2  : Zone,  % Holding Pattern 2kft
+    lez       : Zone,  % Lateral Entry Zone
+    base      : Zone,  % Base segment
+    maz       : Zone,  % Missed Approach Zone 
+    departure : Zone   % Departure zone  
+  #];
+
+  %% Final approach segments (excluding base segments) and runway
+  SCAFinal : TYPE = [#
+    inter  : Zone, % Intermediate segment 
+    final  : Zone, % Final segment 
+    runway : Zone  % Runway
+  #];
+
+  %% AMM state
+  AMM : TYPE = [#
+    nextmahf    : Side,   % Next missed approach holding fix
+    nextseq     : Index   % Next sequence number
+  #];
+
+  State : TYPE = [#
+    thisside : SCASide,
+    opposite : SCASide,
+    finalseg : SCAFinal,	
+    ammstate : AMM 
+  #];
+
+  symm(s:State):State =
+    (s WITH .thisside := s.opposite) WITH .opposite := s.thisside;
+
+  new_state(this,opp:SCASide,fin:SCAFinal,amm:AMM):State = (#
+    thisside := this,
+    opposite := opp,
+    finalseg := fin,
+    ammstate := amm
+  #);
+
+  %% New aircraft 
+  new_aircraft(s:State,side:Side):Aircraft = (#
+    seq  := s.ammstate.nextseq,
+    mahf := IF s.ammstate.nextseq = first_seq THEN side 
+            ELSE s.ammstate.nextmahf ENDIF
+  #);
+
+  %% Number of aircraft in a zone assigned to one side
+  assigned_rec(z:Zone,side:Side,i:NextIndex,acum:NATURAL): NATURAL =
+    IF i > N OR i >= z.n THEN acum
+    ELSE
+      LET inc : NATURAL = IF z.acs[i].mahf = side THEN 1
+                          ELSE 0
+                          ENDIF
+      IN assigned_rec(z,side,i+1,inc+acum)
+    ENDIF;
+
+  assigned(z:Zone,side:Side): NATURAL =
+    assigned_rec(z,side,0,0);
+
+  %% Virtual number of aircraft at one fix 
+  virtual(s:State,side:Side): NATURAL =
+    length(s.thisside.holding3) + length(s.thisside.holding2)+
+    length(s.thisside.lez) + length(s.thisside.maz) +
+    assigned(s.opposite.holding3,side) +      
+    assigned(s.opposite.holding2,side) +      
+    assigned(s.opposite.lez,side) +      
+    assigned(s.opposite.maz,side) +      
+    assigned(s.thisside.base,side) +
+    assigned(s.opposite.base,side) +       
+    assigned(s.finalseg.inter,side) +
+    assigned(s.finalseg.final,side);
+
+  %% Is aircraft with sequence number n in zone z ?
+%  on_zone_rec?(z:Zone,seq:Index,i:NextIndex): BOOLEAN = 
+%    IF i > N OR i >= z.n THEN FALSE
+%    ELSIF z.acs[i].seq = seq THEN TRUE
+%    ELSE on_zone_rec?(z,seq,i+1)
+%    ENDIF;
+%    on_zone_rec?(z,seq,0);
+
+  on_zone?(z:Zone,seq:Index) : BOOLEAN =
+    EXISTS(i:Index): i < length(z) AND z.acs[i].seq = seq;
+
+  %% Is aircraft with sequence number n on the approach ?
+  on_approach_seq?(s:State,seq:Index): BOOLEAN =
+    on_zone?(s.thisside.base,seq) or on_zone?(s.opposite.base,seq) or 
+    on_zone?(s.finalseg.inter,seq) or on_zone?(s.finalseg.final,seq);
+
+  %% Is any aircraft in zone z assigned to the mahf side ?
+  assigned?(z:Zone,side:Side): BOOLEAN = 
+    assigned(z,side) /= 0;
+
+  on_approach?(s:State,side:Side):BOOLEAN =
+    assigned?(s.thisside.base,side) OR
+    assigned?(s.opposite.base,side) OR
+    assigned?(s.finalseg.inter,side) OR
+    assigned?(s.finalseg.final,side);
+
+  %% Acutal number of aircraft (excluding the approach and departure operations)
+  actual(scaside:SCASide):NATURAL =
+    length(scaside.holding3)+
+    length(scaside.holding2)+
+    length(scaside.lez)+
+    length(scaside.maz);
+
+  %% Number of aircraft assigned to a fix 
+  assigned2fix(s:State,side:Side):NATURAL = 
+    assigned(s.thisside.holding3,side) +      
+    assigned(s.opposite.holding3,side) +      
+    assigned(s.thisside.holding2,side) +      
+    assigned(s.opposite.holding2,side) +      
+    assigned(s.thisside.lez,side) +      
+    assigned(s.opposite.lez,side) +      
+    assigned(s.thisside.base,side) +
+    assigned(s.opposite.base,side) +
+    assigned(s.finalseg.inter,side) +
+    assigned(s.finalseg.final,side) +
+    assigned(s.thisside.maz,side) +
+    assigned(s.opposite.maz,side);       
+
+  %% Total number of simultaneous arrival operations
+  arrival_op(s:State):NATURAL =
+    actual(s.thisside) +
+    actual(s.opposite) +
+    length(s.thisside.base) + 
+    length(s.opposite.base) + 
+    length(s.finalseg.inter) + 
+    length(s.finalseg.final);
+
+  %% New aircraft for departure
+  new_departure(side:Side):Aircraft = (#
+    seq  := 0,
+    mahf := side
+  #);
+
+  %% Reassign aircraft
+  reassign(s:State,ac:Aircraft):Aircraft = 
+    IF s.ammstate.nextseq = no_seq THEN none
+    ELSE LET seq : Index = s.ammstate.nextseq - 1 IN
+      (ac WITH .seq  := seq) WITH .mahf :=
+        IF seq = first_seq THEN ac.mahf 
+        ELSE s.ammstate.nextmahf
+        ENDIF
+    ENDIF;
+
+END

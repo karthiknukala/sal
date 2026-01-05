@@ -1,0 +1,243 @@
+;; -*- Mode: Scheme -*- 
+
+;;
+;; SAL 3.1, Copyright (C) 2006, 2011, SRI International.  All Rights Reserved.
+;;
+;; SAL is free software; you can redistribute it and/or 
+;; modify it under the terms of the GNU General Public License 
+;; as published by the Free Software Foundation; either version 2
+;; of the License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of 
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+;; GNU General Public License for more details. 
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program; if not, write to the Free Software 
+;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. 
+;;
+
+;;
+;; ARTIFICIAL MACROS
+;; The following three macros could be inline functions, but Bigloo generated a crazy
+;; error message... so I decided to use macros
+;; 
+(define-macro (fast-hash-table/inc-size! htable)
+  `(vector-set! ,htable 1 (+ (vector-ref ,htable 1) 1)))
+
+(define-macro (fast-hash-table/dec-size! htable)
+  `(vector-set! ,htable 1 (- (vector-ref ,htable 1) 1)))
+
+(define-macro (fast-hash-table/inc-mod-count! htable)
+  `(vector-set! ,htable 4 (+ (fast-hash-table/mod-count ,htable) 1)))
+
+(define-macro (fast-hash-table/set-map! htable new-map)
+  `(vector-set! ,htable 0 ,new-map))
+
+(define-macro (fast-hash-table/set-threshold! htable new-threshold)
+  `(vector-set! ,htable 3 ,new-threshold))
+
+;;
+;; END OF ARTIFICIAL MACROS
+;;
+
+;;
+;; BD: the call (modulo x y) in bigloo is not guaranteed to return
+;; a :fixnum result even if y is a :fixum. It x is a :bignum, then
+;; the result is :bignum too. This causes errors and complaints
+;; from Bigloo since any index in
+;;     (vector-ref vv index) or (vector-set! vv index x)
+;; must be :fixnum 
+;;
+;; So we provide a replacement for modulo to use here
+;;
+(define-macro (fast-hash-table/hash-mod x n)
+   `(cond ((fixnum? ,x) (modulofx ,x ,n))
+	  ((bignum? ,x) (bignum->fixnum (modulo ,x ,n)))
+	  (else
+	   (error "fast-hash-table/hash-mod" " The argument is neither fixnum nor bignum" ,x))))
+   
+
+;================================
+; Fast Hash Tables
+; 
+
+;+++
+; Build a new set of hash table functions that are optimized to handle
+; a specific kind of key
+; @code{type-prefix} is a prefix used to name the functions produced by
+; this macro.
+; @code{hash-proc} is a function that receives an element and returns
+; a hashcode.
+; @code{equal-proc} is a function that receives two elements and returns
+; true if they are equal.
+; The following functions are produced:
+; @itemize @bullet
+; @item (make-<type-prefix> initial-size load-balance)
+; @item (<type-prefix>/rehash! htable)
+; @item (<type-prefix>/put! htable key value)
+; @item (<type-prefix>/contains? htable key)
+; @item (<type-prefix>/get htable key)
+; @item (<type-prefix>/delete! htable key)
+; @item (<type-prefix>/size htable)
+; @end itemize
+; @lisp
+; (make-fast-hash-table-type number-id-table (lambda (num) num) =)
+; (define ht (make-number-id-table 1024 0.8))
+; (number-id-table/put! ht 10 "aaa")
+; (number-id-table/get ht 10)
+;   @result{} (10 . "aaa")
+; (number-id-table/get ht 20)
+;   @result{} #f
+; (number-id-table/put! ht 20 "bbb")
+; (number-id-table/get ht 20)
+;   @result{} (20 . "bbb")
+; (number-id-table/size ht)
+;   @result{} 2
+; (number-id-table/put! ht 30 "ccc")
+; (number-id-table/size ht)
+;   @result{} 3
+; (number-id-table/for-each print ht)
+;   @result{} (10 . aaa)
+;   @result{} (20 . bbb)
+;   @result{} (30 . ccc)
+; (number-id-table/delete! ht 20)
+; (number-id-table/get ht 20)
+;   @result{} #f
+; (number-id-table/size ht)
+;   @result{} 2
+; @end lisp
+(define-macro (make-fast-hash-table-type type-prefix hash-proc equal-proc)
+  (let ((make-fun (symbol-append 'make- type-prefix))
+        (rehash-fun (symbol-append type-prefix '/rehash!))
+        (put-fun (symbol-append type-prefix '/put!))
+        (contains-fun (symbol-append type-prefix '/contains?))
+        (get-fun (symbol-append type-prefix '/get))
+        (delete-fun (symbol-append type-prefix '/delete!))
+        (delete-all-fun (symbol-append type-prefix '/delete-all!))
+        (foreachentry-fun (symbol-append type-prefix '/for-each-entry))
+        (foreach-fun (symbol-append type-prefix '/for-each))
+        (foreachkey-fun (symbol-append type-prefix '/for-each-key))
+        (foldkey-fun (symbol-append type-prefix '/fold-keys))
+        (existskey-fun (symbol-append type-prefix '/exists-key))
+        (forallkeys-fun (symbol-append type-prefix '/for-all-keys))
+        (findkey-fun (symbol-append type-prefix '/find-key))
+        (size-fun (symbol-append type-prefix '/size))
+        (statistics-fun (symbol-append type-prefix '/statistics)))
+    `(begin
+       (define (,make-fun . args)
+         (apply make-fast-hash-table args))
+       (define (,rehash-fun htable)
+         (let* ((old-capacity (fast-hash-table/capacity htable))
+                (old-map (fast-hash-table/map htable))
+                (new-capacity (+fx (*fx old-capacity 2) 1))
+                (new-map (make-vector new-capacity '())))
+           (fast-hash-table/inc-mod-count! htable)
+           (fast-hash-table/set-threshold! htable (flonum->fixnum (*fl (fixnum->flonum new-capacity) (fast-hash-table/load-factor htable))))
+           (fast-hash-table/set-map! htable new-map)
+           (let loop1 ((i 0))
+             (when (<fx i old-capacity)
+               (let loop2 ((entries (vector-ref old-map i)))
+                 (unless (null? entries)
+                   (let* ((entry (car entries))
+                          (key (car entry))
+                          (value (cdr entry))
+                          (index (fast-hash-table/hash-mod (,hash-proc key) new-capacity)))
+                     (vector-set! new-map index (cons entry (vector-ref new-map index))))
+                   (loop2 (cdr entries))))
+               (loop1 (+fx i 1))))))
+       (define (,put-fun htable key value)
+         (when (>fx (fast-hash-table/size htable) (fast-hash-table/threshold htable))
+           (,rehash-fun htable))
+         (let* ((capacity (fast-hash-table/capacity htable))
+                (mapping (fast-hash-table/map htable))
+                (index (fast-hash-table/hash-mod (,hash-proc key) capacity)))
+           ;; Check if the entry is not already in the table
+           (let loop ((entries (vector-ref mapping index)))
+             (cond
+              ((null? entries)
+               (fast-hash-table/inc-size! htable)
+               (vector-set! mapping index (cons (cons key value) (vector-ref mapping index))))
+              (else
+               (if (,equal-proc (car (car entries)) key)
+                 (set-cdr! (car entries) value)
+                 (loop (cdr entries))))))))
+       (define (,get-fun htable key)
+         (let* ((capacity (fast-hash-table/capacity htable))
+                (mapping (fast-hash-table/map htable))
+                (index (fast-hash-table/hash-mod (,hash-proc key) capacity)))
+           ;; Check if the entry is in the table
+           (let loop ((entries (vector-ref mapping index)))
+             (if (not (null? entries))
+               (if (,equal-proc (car (car entries)) key)
+                 (car entries)
+                 (loop (cdr entries)))
+               #f))))
+       (define (,contains-fun htable key)
+         (pair? (,get-fun htable key)))
+       (define (,delete-all-fun htable)
+         (reset-fast-hash-table! htable))
+       (define (,delete-fun htable key)
+         (let* ((capacity (fast-hash-table/capacity htable))
+                (mapping (fast-hash-table/map htable))
+                (index (fast-hash-table/hash-mod (,hash-proc key) capacity)))
+           ;; Check if the entry is in the table
+           (let loop ((prev-entries #f)
+                      (entries (vector-ref mapping index)))
+             (unless (null? entries)
+               (cond 
+                ((,equal-proc (car (car entries)) key)
+                 (if prev-entries
+                   (set-cdr! prev-entries (cdr entries))
+                   (vector-set! mapping index (cdr entries)))
+                 (fast-hash-table/dec-size! htable))
+                (else
+                 (loop entries
+                       (cdr entries))))))))
+       (define (,foreachentry-fun proc htable)
+         (fast-hash-table/for-each-entry proc htable))
+       (define (,foreach-fun proc htable)
+         (fast-hash-table/for-each proc htable))
+       (define (,foreachkey-fun proc htable)
+         (fast-hash-table/for-each-key proc htable))
+       (define (,foldkey-fun proc init table)
+         (fast-hash-table/fold-keys proc init table))
+       (define (,existskey-fun proc table)
+         (fast-hash-table/exists-key proc table))
+       (define (,forallkeys-fun proc table)
+         (fast-hash-table/for-all-keys proc table))
+       (define (,findkey-fun proc table)
+         (fast-hash-table/find-key proc table))
+       (define (,size-fun htable)
+         (fast-hash-table/size htable))
+       (define (,statistics-fun htable)
+         (fast-hash-table/statistics htable))
+       )))
+
+
+(define-macro (memoize-method-core header pred?)
+  (let* ((name (car header))
+         (args (cdr header))
+         (first-arg (car args))
+         (first-arg-name (car first-arg))
+         (cache-table (gensym 'cache)))
+    `(begin
+       (define ,cache-table (make-eq-hash-table))
+       (sal/add-memoized-method-cache-table! ,cache-table)
+       (define-method (,name :around ,@args)
+         (cond
+          ((eq-hash-table/get ,cache-table ,first-arg-name) =>
+           cdr)
+          (else
+           (let ((%result (call-next-method)))
+             (when (,pred? ,first-arg-name)
+               (eq-hash-table/put! ,cache-table ,first-arg-name %result))
+             %result))))))) 
+
+(define-macro (memoize-method header)
+  `(memoize-method-core ,header (lambda (_) #t)))
+
+
+;===
+

@@ -1,0 +1,4882 @@
+WARNING: Fast slot access is not supported by: <sat-bmc-context>
+REASON: the following subclass has a different slot prefix: <sat-yices2-bmc-context>
+class slots: (:step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+subclass slots: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+-----------------------------
+WARNING: Fast slot access is not supported by: <sat-bmc-context>
+REASON: the following subclass has a different slot prefix: <sat-yices-bmc-context>
+class slots: (:step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+subclass slots: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+-----------------------------
+WARNING: Fast slot access is not supported by: <sat-bmc-context>
+REASON: the following subclass has a different slot prefix: <sat-uclid-bmc-context>
+class slots: (:step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+subclass slots: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+-----------------------------
+WARNING: Fast slot access is not supported by: <sat-bmc-context>
+REASON: the following subclass has a different slot prefix: <sat-cvc-bmc-context>
+class slots: (:step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+subclass slots: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+-----------------------------
+WARNING: Fast slot access is not supported by: <sat-bmc-context>
+REASON: the following subclass has a different slot prefix: <sat-cvcl-bmc-context>
+class slots: (:step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+subclass slots: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+-----------------------------
+WARNING: Fast slot access is not supported by: <sat-bmc-context>
+REASON: the following subclass has a different slot prefix: <sat-svc-bmc-context>
+class slots: (:step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+subclass slots: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+-----------------------------
+WARNING: Fast slot access is not supported by: <sat-bmc-context>
+REASON: the following subclass has a different slot prefix: <sat-ics-bmc-context>
+class slots: (:step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+subclass slots: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+-----------------------------
+WARNING: Fast slot access is not supported by: <sat-bmc-context>
+REASON: the following subclass has a different slot prefix: <sat-generic-bmc-context>
+class slots: (:step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+subclass slots: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+-----------------------------
+WARNING: Fast slot access is not supported by: <sat-bmc-context>
+REASON: the following subclass has a different slot prefix: <sat-boolean-smt-bmc-context>
+class slots: (:step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+subclass slots: (:next-idx :file-name :num-parenthesis :num-asserts :vars :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+-----------------------------
+WARNING: Fast slot access is not supported by: <sat-bmc-context>
+REASON: the following subclass has a different slot prefix: <sat-boolean-cnf-bmc-context>
+class slots: (:step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+subclass slots: (:next-idx :file-name :num-clauses :solver-proc :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+-----------------------------
+WARNING: Fast slot access is not supported by: <sat-bmc-context>
+REASON: the following subclass has a different slot prefix: <sat-boolean-ics-bmc-context>
+class slots: (:step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+subclass slots: (:next-idx :file-name :top-level-args :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+-----------------------------
+WARNING: Fast slot access is not supported by: <sat-bmc-context>
+REASON: the following subclass has a different slot prefix: <sat-boolean-bmc-context>
+class slots: (:step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+subclass slots: (:next-idx :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+-----------------------------
+WARNING: Fast slot access is not supported by: <sat-boolean-bmc-context>
+REASON: the following subclass has a different slot prefix: <sat-boolean-smt-bmc-context>
+class slots: (:next-idx :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+subclass slots: (:next-idx :file-name :num-parenthesis :num-asserts :vars :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+-----------------------------
+WARNING: Fast slot access is not supported by: <sat-boolean-bmc-context>
+REASON: the following subclass has a different slot prefix: <sat-boolean-cnf-bmc-context>
+class slots: (:next-idx :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+subclass slots: (:next-idx :file-name :num-clauses :solver-proc :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+-----------------------------
+WARNING: Fast slot access is not supported by: <sat-boolean-bmc-context>
+REASON: the following subclass has a different slot prefix: <sat-boolean-ics-bmc-context>
+class slots: (:next-idx :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+subclass slots: (:next-idx :file-name :top-level-args :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+-----------------------------
+
+SUMMARY:
+CLASS: <api-entry>
+FAST SLOT ACCESS: #t
+IDX: 1
+SLOTS: (:doc :owner :file-name)
+SUBCLASSES: (<api-class-entry> <api-generic-entry> <api-function-entry> <api-entry-with-header> <api-group> <api-named-entry>)
+---------------------------
+CLASS: <api-named-entry>
+FAST SLOT ACCESS: #t
+IDX: 2
+SLOTS: (:doc :owner :file-name :name)
+SUBCLASSES: (<api-class-entry> <api-generic-entry> <api-function-entry> <api-entry-with-header> <api-group>)
+---------------------------
+CLASS: <api-group>
+FAST SLOT ACCESS: #t
+IDX: 3
+SLOTS: (:doc :owner :file-name :name :entries)
+SUBCLASSES: ()
+---------------------------
+CLASS: <api-entry-with-header>
+FAST SLOT ACCESS: #t
+IDX: 4
+SLOTS: (:doc :owner :file-name :name :header :examples)
+SUBCLASSES: (<api-class-entry> <api-generic-entry> <api-function-entry>)
+---------------------------
+CLASS: <api-function-entry>
+FAST SLOT ACCESS: #t
+IDX: 5
+SLOTS: (:doc :owner :file-name :name :header :examples)
+SUBCLASSES: (<api-generic-entry>)
+---------------------------
+CLASS: <api-generic-entry>
+FAST SLOT ACCESS: #t
+IDX: 6
+SLOTS: (:doc :owner :file-name :name :header :examples :methods)
+SUBCLASSES: ()
+---------------------------
+CLASS: <api-class-entry>
+FAST SLOT ACCESS: #t
+IDX: 7
+SLOTS: (:doc :owner :file-name :name :header :examples)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-cmd-line-option>
+FAST SLOT ACCESS: #t
+IDX: 8
+SLOTS: (:category :short-opt-name :long-opt-name :description :proc)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ast>
+FAST SLOT ACCESS: #t
+IDX: 9
+SLOTS: (:place :context :hash :internal-idx)
+SUBCLASSES: (<tvv-concat> <nat2tvv> <tvv2nat> <tvv-application> <sal-let-transition-step> <sal-nested-list-transition-step> <sal-module-instance-transition-step> <sal-module-transition-step> <sal-labeled-transition-step> <sal-nested-transition-step> <sal-else-transition-step> <sal-simple-transition-step> <sal-transition-step> <ics-term-false> <ics-term-true> <sat-ics-bool-aux-decl> <sat-step-decl> <sat-scalar-bit-aux-decl> <sat-scalar-bit-decl> <sat-type-constraint-aux-decl> <sat-ho-eq-aux-decl> <sat-ite-aux-decl> <sat-alias-aux-decl> <sat-skolem-aux-decl> <sat-lambda-aux-decl> <sal-cyclic-eq> <sat-let-aux-decl> <sat-aux-decl> <sal-var-eq-term> <sal-var-eq-ground> <sat-global-decl> <sat-decl> <sal-data-flat-esm-module> <sal-esm-module> <sal-esm-choice-assignment> <sal-esm-assignment> <sal-esm-guard> <sal-esm-leaf> <sal-esm-multi-choice> <sal-esm-multi-seq> <sal-esm-new-binds-statement> <sal-esm-when-undefined> <sal-esm-case-entry> <sal-esm-case> <sal-esm-monitor-seq> <sal-esm-seq> <sal-esm-choice> <sal-esm-composition-statement> <sal-esm-statement> <sal-esm-component> <sal-sequence-trace-info> <sal-choice-trace-info> <sal-nested-list-trace-info> <sal-multi-sequence-trace-info> <sal-multi-command-choice-trace-info> <sal-multi-choice-trace-info> <sal-multi-trace-info> <sal-labeled-trace-info> <sal-module-instance-trace-info> <sal-nested-trace-info> <sal-else-trace-info> <sal-transition-trace-info> <sal-trace-info> <sal-qualified-assertion-name> <sal-assertion-proposition> <sal-module-implements> <sal-module-models> <sal-assertion-expr> <sal-sliced-boolean-flat-module> <sal-boolean-flat-module> <sal-sliced-simple-data-flat-module> <sal-simple-data-flat-module> <sal-sliced-flat-module> <sal-derived-flat-module> <sal-composite-component-info> <sal-multi-component-info> <sal-base-component-info> <sal-component-info> <sal-flat-module> <sal-base-module> <sal-module-instance> <sal-qualified-module-name> <sal-module-name> <sal-with-module> <sal-new-output> <sal-hiding> <sal-org-module> <sal-rename> <sal-renaming> <sal-multi-synch-composition> <sal-multi-asynch-composition> <sal-multi-composition> <sal-observer> <sal-synch-composition> <sal-asynch-composition> <sal-module-composition> <sal-non-base-module> <sal-module> <sal-else-command> <sal-multi-command> <sal-labeled-command> <sal-guarded-command> <sal-command> <sal-command-section> <sal-for-all-definition> <sal-simple-selection-definition> <sal-simple-definition> <sal-definition> <sal-data-type> <sal-scalar-type> <sal-type-def> <sal-ring-set-type> <sal-scalar-set-type> <sal-symmetric-type> <sal-subrange> <sal-bounded-subtype> <sal-subtype> <sal-state-type> <sal-field> <sal-record-type> <sal-domain-tuple-type> <sal-tuple-type> <sal-array-type> <sal-function-type> <sal-string-type> <sal-nat-type> <sal-int-type> <sal-real-type> <sal-number-type> <sal-bool-type> <sal-any-type> <sal-qualified-type-name> <sal-type-param-name> <sal-type-name> <sal-type> <sal-pre-operator> <sal-debug-expr> <sal-debug-print> <sal-debug-application> <sal-ring-succ> <sal-ring-pre> <sal-ring-application> <sal-mod-trans> <sal-mod-init> <sal-string-expr> <sal-next-operator> <sal-conditional> <sal-tuple-update> <sal-record-update> <sal-array-update> <sal-function-update> <sal-update-expr> <sal-record-selection> <sal-tuple-selection> <sal-simple-selection> <sal-array-selection> <sal-selection> <sal-record-entry> <sal-state-record-literal> <sal-record-literal> <sal-arg-tuple-literal> <sal-tuple-literal> <sal-array-literal> <sal-collection-literal> <sal-let-expr> <sal-multi-choice-expr> <sal-exists-expr> <sal-for-all-expr> <sal-quantified-expr> <sal-set-list-expr> <sal-set-pred-expr> <sal-lambda> <sal-local-binds-expr> <sal-recognizer> <sal-accessor> <sal-constructor> <sal-false> <sal-true> <sal-scalar> <sal-qualified-name-expr> <sal-var-param-name-expr> <sal-name-expr> <sal-numeral> <sal-definition-expression> <sal-int-pred> <sal-real-pred> <sal-le> <sal-ge> <sal-gt> <sal-lt> <sal-inequality> <sal-arith-relation> <sal-min> <sal-max> <sal-mod> <sal-idiv> <sal-div> <sal-mul> <sal-sub> <sal-add> <sal-binary-infix-arith-op> <sal-binary-arith-op> <sal-infix-arith-op> <sal-arith-op> <sal-binary-arith-application> <sal-arith-application> <sal-weak-accepting> <sal-accepting> <sal-ctl-er> <sal-ctl-ar> <sal-ctl-eu> <sal-ctl-au> <sal-ctl-ef> <sal-ctl-af> <sal-ctl-eg> <sal-ctl-ag> <sal-ctl-ex> <sal-ctl-ax> <sal-binary-ctl-application> <sal-unary-ctl-application> <sal-ctl-application> <sal-ltl-m> <sal-ltl-w> <sal-ltl-r> <sal-ltl-u> <sal-ltl-f> <sal-ltl-g> <sal-ltl-x> <sal-binary-ltl-application> <sal-unary-ltl-application> <sal-ltl-application> <sal-temporal-application> <sal-implies> <sal-not> <sal-choice> <sal-or> <sal-and> <sal-xor> <sal-iff> <sal-unary-propositional-application> <sal-binary-propositional-application> <sal-propositional-application> <sal-diseq> <sal-assignment> <sal-eq> <sal-accessor-application> <sal-recognizer-application> <sal-constructor-application> <sal-builtin-application> <sal-unary-application> <sal-binary-infix-application> <sal-binary-application> <sal-in> <sal-infix-application> <sal-application> <sal-simple-expr> <sal-expr> <sal-qualified-name-ref> <sal-name-ref> <sal-assertion-decl> <sal-context-name-decl> <sal-scalar-element-decl> <sal-accessor-decl> <sal-recognizer-decl> <sal-constructor-decl> <sal-implicit-decl> <sal-constant-decl> <sal-parametric-module> <sal-module-decl> <sal-type-decl> <sal-recursive-decl> <sal-top-decl> <sal-let-decl> <sal-local-state-var-decl> <sal-global-state-var-decl> <sal-output-state-var-decl> <sal-choice-input-state-var-decl> <sal-input-state-var-decl> <sal-state-var-decl> <sal-idx-var-decl> <sal-var-param-decl> <sal-var-decl> <sal-type-param-decl> <sal-context> <sal-auxiliary-decl> <sal-const-decl> <sal-typed-decl> <sal-decl> <sal-local-binds-ast> <sal-new-binds-ast> <sal-identifier> <sal-ast-leaf>)
+---------------------------
+CLASS: <sal-ast-leaf>
+FAST SLOT ACCESS: #t
+IDX: 10
+SLOTS: (:place :context :hash :internal-idx)
+SUBCLASSES: (<ics-term-false> <ics-term-true> <sal-qualified-assertion-name> <sal-qualified-module-name> <sal-module-name> <sal-string-type> <sal-nat-type> <sal-int-type> <sal-real-type> <sal-number-type> <sal-bool-type> <sal-any-type> <sal-qualified-type-name> <sal-type-param-name> <sal-type-name> <sal-string-expr> <sal-recognizer> <sal-accessor> <sal-constructor> <sal-false> <sal-true> <sal-scalar> <sal-qualified-name-expr> <sal-var-param-name-expr> <sal-name-expr> <sal-numeral> <sal-qualified-name-ref> <sal-name-ref> <sal-identifier>)
+---------------------------
+CLASS: <sal-identifier>
+FAST SLOT ACCESS: #t
+IDX: 11
+SLOTS: (:place :context :hash :internal-idx :name)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-new-binds-ast>
+FAST SLOT ACCESS: #t
+IDX: 12
+SLOTS: (:place :context :hash :internal-idx)
+SUBCLASSES: (<sal-sliced-boolean-flat-module> <sal-boolean-flat-module> <sal-sliced-simple-data-flat-module> <sal-simple-data-flat-module> <sal-sliced-flat-module> <sal-derived-flat-module> <sal-multi-component-info> <sal-flat-module> <sal-base-module> <sal-with-module> <sal-multi-synch-composition> <sal-multi-asynch-composition> <sal-multi-composition> <sal-multi-command> <sal-for-all-definition> <sal-array-literal> <sal-let-expr> <sal-multi-choice-expr> <sal-exists-expr> <sal-for-all-expr> <sal-quantified-expr> <sal-set-list-expr> <sal-set-pred-expr> <sal-lambda> <sal-local-binds-expr> <sal-parametric-module> <sal-local-binds-ast>)
+---------------------------
+CLASS: <sal-local-binds-ast>
+FAST SLOT ACCESS: #t
+IDX: 13
+SLOTS: (:place :context :hash :internal-idx)
+SUBCLASSES: (<sal-multi-component-info> <sal-multi-synch-composition> <sal-multi-asynch-composition> <sal-multi-composition> <sal-multi-command> <sal-for-all-definition> <sal-array-literal> <sal-let-expr> <sal-multi-choice-expr> <sal-exists-expr> <sal-for-all-expr> <sal-quantified-expr> <sal-set-list-expr> <sal-set-pred-expr> <sal-lambda> <sal-local-binds-expr> <sal-parametric-module>)
+---------------------------
+CLASS: <sal-decl>
+FAST SLOT ACCESS: #t
+IDX: 14
+SLOTS: (:place :context :hash :internal-idx :id)
+SUBCLASSES: (<sat-ics-bool-aux-decl> <sat-step-decl> <sat-scalar-bit-aux-decl> <sat-scalar-bit-decl> <sat-type-constraint-aux-decl> <sat-ho-eq-aux-decl> <sat-ite-aux-decl> <sat-alias-aux-decl> <sat-skolem-aux-decl> <sat-lambda-aux-decl> <sat-let-aux-decl> <sat-aux-decl> <sat-global-decl> <sat-decl> <sal-assertion-decl> <sal-context-name-decl> <sal-scalar-element-decl> <sal-accessor-decl> <sal-recognizer-decl> <sal-constructor-decl> <sal-implicit-decl> <sal-constant-decl> <sal-module-decl> <sal-type-decl> <sal-recursive-decl> <sal-top-decl> <sal-let-decl> <sal-local-state-var-decl> <sal-global-state-var-decl> <sal-output-state-var-decl> <sal-choice-input-state-var-decl> <sal-input-state-var-decl> <sal-state-var-decl> <sal-idx-var-decl> <sal-var-param-decl> <sal-var-decl> <sal-type-param-decl> <sal-context> <sal-auxiliary-decl> <sal-const-decl> <sal-typed-decl>)
+---------------------------
+CLASS: <sal-typed-decl>
+FAST SLOT ACCESS: #t
+IDX: 15
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: (<sat-ics-bool-aux-decl> <sat-step-decl> <sat-scalar-bit-aux-decl> <sat-scalar-bit-decl> <sat-type-constraint-aux-decl> <sat-ho-eq-aux-decl> <sat-ite-aux-decl> <sat-alias-aux-decl> <sat-skolem-aux-decl> <sat-lambda-aux-decl> <sat-let-aux-decl> <sat-aux-decl> <sat-global-decl> <sat-decl> <sal-scalar-element-decl> <sal-accessor-decl> <sal-recognizer-decl> <sal-constructor-decl> <sal-implicit-decl> <sal-constant-decl> <sal-let-decl> <sal-local-state-var-decl> <sal-global-state-var-decl> <sal-output-state-var-decl> <sal-choice-input-state-var-decl> <sal-input-state-var-decl> <sal-state-var-decl> <sal-idx-var-decl> <sal-var-param-decl> <sal-var-decl> <sal-auxiliary-decl> <sal-const-decl>)
+---------------------------
+CLASS: <sal-const-decl>
+FAST SLOT ACCESS: #t
+IDX: 16
+SLOTS: (:place :context :hash :internal-idx :id :type :value)
+SUBCLASSES: (<sal-scalar-element-decl> <sal-accessor-decl> <sal-recognizer-decl> <sal-constructor-decl> <sal-implicit-decl> <sal-constant-decl> <sal-let-decl> <sal-auxiliary-decl>)
+---------------------------
+CLASS: <sal-auxiliary-decl>
+FAST SLOT ACCESS: #t
+IDX: 17
+SLOTS: (:place :context :hash :internal-idx :id :type :value)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-context>
+FAST SLOT ACCESS: #t
+IDX: 18
+SLOTS: (:place :context :hash :internal-idx :id :params :declarations :constant-declarations :type-declarations :module-declarations :assertion-declarations :context-name-declarations :sal-env :importers :internal-actuals :file-name)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-type-param-decl>
+FAST SLOT ACCESS: #t
+IDX: 19
+SLOTS: (:place :context :hash :internal-idx :id)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-var-decl>
+FAST SLOT ACCESS: #t
+IDX: 20
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: (<sat-ics-bool-aux-decl> <sat-step-decl> <sat-scalar-bit-aux-decl> <sat-scalar-bit-decl> <sat-type-constraint-aux-decl> <sat-ho-eq-aux-decl> <sat-ite-aux-decl> <sat-alias-aux-decl> <sat-skolem-aux-decl> <sat-lambda-aux-decl> <sat-let-aux-decl> <sat-aux-decl> <sat-global-decl> <sat-decl> <sal-local-state-var-decl> <sal-global-state-var-decl> <sal-output-state-var-decl> <sal-choice-input-state-var-decl> <sal-input-state-var-decl> <sal-state-var-decl> <sal-idx-var-decl> <sal-var-param-decl>)
+---------------------------
+CLASS: <sal-var-param-decl>
+FAST SLOT ACCESS: #t
+IDX: 21
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-idx-var-decl>
+FAST SLOT ACCESS: #t
+IDX: 22
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-state-var-decl>
+FAST SLOT ACCESS: #t
+IDX: 23
+SLOTS: (:place :context :hash :internal-idx :id :type :curr-node :next-node)
+SUBCLASSES: (<sal-local-state-var-decl> <sal-global-state-var-decl> <sal-output-state-var-decl> <sal-choice-input-state-var-decl> <sal-input-state-var-decl>)
+---------------------------
+CLASS: <sal-input-state-var-decl>
+FAST SLOT ACCESS: #t
+IDX: 24
+SLOTS: (:place :context :hash :internal-idx :id :type :curr-node :next-node)
+SUBCLASSES: (<sal-choice-input-state-var-decl>)
+---------------------------
+CLASS: <sal-choice-input-state-var-decl>
+FAST SLOT ACCESS: #t
+IDX: 25
+SLOTS: (:place :context :hash :internal-idx :id :type :curr-node :next-node)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-output-state-var-decl>
+FAST SLOT ACCESS: #t
+IDX: 26
+SLOTS: (:place :context :hash :internal-idx :id :type :curr-node :next-node)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-global-state-var-decl>
+FAST SLOT ACCESS: #t
+IDX: 27
+SLOTS: (:place :context :hash :internal-idx :id :type :curr-node :next-node)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-local-state-var-decl>
+FAST SLOT ACCESS: #t
+IDX: 28
+SLOTS: (:place :context :hash :internal-idx :id :type :curr-node :next-node)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-let-decl>
+FAST SLOT ACCESS: #t
+IDX: 29
+SLOTS: (:place :context :hash :internal-idx :id :type :value)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-top-decl>
+FAST SLOT ACCESS: #t
+IDX: 30
+SLOTS: (:place :context :hash :internal-idx :id)
+SUBCLASSES: (<sal-assertion-decl> <sal-context-name-decl> <sal-scalar-element-decl> <sal-accessor-decl> <sal-recognizer-decl> <sal-constructor-decl> <sal-implicit-decl> <sal-constant-decl> <sal-module-decl> <sal-type-decl> <sal-recursive-decl>)
+---------------------------
+CLASS: <sal-recursive-decl>
+FAST SLOT ACCESS: #t
+IDX: 31
+SLOTS: (:place :context :hash :internal-idx :id)
+SUBCLASSES: (<sal-scalar-element-decl> <sal-accessor-decl> <sal-recognizer-decl> <sal-constructor-decl> <sal-implicit-decl> <sal-constant-decl> <sal-type-decl>)
+---------------------------
+CLASS: <sal-type-decl>
+FAST SLOT ACCESS: #t
+IDX: 32
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-module-decl>
+FAST SLOT ACCESS: #t
+IDX: 33
+SLOTS: (:place :context :hash :internal-idx :id :parametric-module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-parametric-module>
+FAST SLOT ACCESS: #t
+IDX: 34
+SLOTS: (:place :context :hash :internal-idx :local-decls :module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-constant-decl>
+FAST SLOT ACCESS: #t
+IDX: 35
+SLOTS: (:place :context :hash :internal-idx :id :type :value :memoize?)
+SUBCLASSES: (<sal-scalar-element-decl> <sal-accessor-decl> <sal-recognizer-decl> <sal-constructor-decl> <sal-implicit-decl>)
+---------------------------
+CLASS: <sal-implicit-decl>
+FAST SLOT ACCESS: #t
+IDX: 36
+SLOTS: (:place :context :hash :internal-idx :id :type :value :memoize?)
+SUBCLASSES: (<sal-scalar-element-decl> <sal-accessor-decl> <sal-recognizer-decl> <sal-constructor-decl>)
+---------------------------
+CLASS: <sal-constructor-decl>
+FAST SLOT ACCESS: #t
+IDX: 37
+SLOTS: (:place :context :hash :internal-idx :id :type :value :memoize? :accessors :recognizer-decl :data-type-decl)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-recognizer-decl>
+FAST SLOT ACCESS: #t
+IDX: 38
+SLOTS: (:place :context :hash :internal-idx :id :type :value :memoize? :constructor-decl)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-accessor-decl>
+FAST SLOT ACCESS: #t
+IDX: 39
+SLOTS: (:place :context :hash :internal-idx :id :type :value :memoize? :constructor-decl)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-scalar-element-decl>
+FAST SLOT ACCESS: #t
+IDX: 40
+SLOTS: (:place :context :hash :internal-idx :id :type :value :memoize? :scalar-type-decl)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-context-name-decl>
+FAST SLOT ACCESS: #t
+IDX: 41
+SLOTS: (:place :context :hash :internal-idx :id :context-ref :actuals)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-assertion-decl>
+FAST SLOT ACCESS: #t
+IDX: 42
+SLOTS: (:place :context :hash :internal-idx :id :kind :assertion-expr)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-name-ref>
+FAST SLOT ACCESS: #t
+IDX: 43
+SLOTS: (:place :context :hash :internal-idx)
+SUBCLASSES: (<ics-term-false> <ics-term-true> <sal-qualified-assertion-name> <sal-qualified-module-name> <sal-module-name> <sal-string-type> <sal-nat-type> <sal-int-type> <sal-real-type> <sal-number-type> <sal-bool-type> <sal-any-type> <sal-qualified-type-name> <sal-type-param-name> <sal-type-name> <sal-recognizer> <sal-accessor> <sal-constructor> <sal-false> <sal-true> <sal-scalar> <sal-qualified-name-expr> <sal-var-param-name-expr> <sal-name-expr> <sal-qualified-name-ref>)
+---------------------------
+CLASS: <sal-qualified-name-ref>
+FAST SLOT ACCESS: #t
+IDX: 44
+SLOTS: (:place :context :hash :internal-idx)
+SUBCLASSES: (<ics-term-false> <ics-term-true> <sal-qualified-assertion-name> <sal-qualified-module-name> <sal-string-type> <sal-nat-type> <sal-int-type> <sal-real-type> <sal-number-type> <sal-bool-type> <sal-any-type> <sal-qualified-type-name> <sal-recognizer> <sal-accessor> <sal-constructor> <sal-false> <sal-true> <sal-scalar> <sal-qualified-name-expr>)
+---------------------------
+CLASS: <sal-expr>
+FAST SLOT ACCESS: #t
+IDX: 45
+SLOTS: (:place :context :hash :internal-idx :type)
+SUBCLASSES: (<tvv-concat> <nat2tvv> <tvv2nat> <tvv-application> <ics-term-false> <ics-term-true> <sal-cyclic-eq> <sal-var-eq-term> <sal-var-eq-ground> <sal-qualified-assertion-name> <sal-assertion-proposition> <sal-module-implements> <sal-module-models> <sal-assertion-expr> <sal-pre-operator> <sal-debug-expr> <sal-debug-print> <sal-debug-application> <sal-ring-succ> <sal-ring-pre> <sal-ring-application> <sal-mod-trans> <sal-mod-init> <sal-string-expr> <sal-next-operator> <sal-conditional> <sal-tuple-update> <sal-record-update> <sal-array-update> <sal-function-update> <sal-update-expr> <sal-record-selection> <sal-tuple-selection> <sal-simple-selection> <sal-array-selection> <sal-selection> <sal-state-record-literal> <sal-record-literal> <sal-arg-tuple-literal> <sal-tuple-literal> <sal-array-literal> <sal-collection-literal> <sal-let-expr> <sal-multi-choice-expr> <sal-exists-expr> <sal-for-all-expr> <sal-quantified-expr> <sal-set-list-expr> <sal-set-pred-expr> <sal-lambda> <sal-local-binds-expr> <sal-recognizer> <sal-accessor> <sal-constructor> <sal-false> <sal-true> <sal-scalar> <sal-qualified-name-expr> <sal-var-param-name-expr> <sal-name-expr> <sal-numeral> <sal-definition-expression> <sal-int-pred> <sal-real-pred> <sal-le> <sal-ge> <sal-gt> <sal-lt> <sal-inequality> <sal-arith-relation> <sal-min> <sal-max> <sal-mod> <sal-idiv> <sal-div> <sal-mul> <sal-sub> <sal-add> <sal-binary-infix-arith-op> <sal-binary-arith-op> <sal-infix-arith-op> <sal-arith-op> <sal-binary-arith-application> <sal-arith-application> <sal-weak-accepting> <sal-accepting> <sal-ctl-er> <sal-ctl-ar> <sal-ctl-eu> <sal-ctl-au> <sal-ctl-ef> <sal-ctl-af> <sal-ctl-eg> <sal-ctl-ag> <sal-ctl-ex> <sal-ctl-ax> <sal-binary-ctl-application> <sal-unary-ctl-application> <sal-ctl-application> <sal-ltl-m> <sal-ltl-w> <sal-ltl-r> <sal-ltl-u> <sal-ltl-f> <sal-ltl-g> <sal-ltl-x> <sal-binary-ltl-application> <sal-unary-ltl-application> <sal-ltl-application> <sal-temporal-application> <sal-implies> <sal-not> <sal-choice> <sal-or> <sal-and> <sal-xor> <sal-iff> <sal-unary-propositional-application> <sal-binary-propositional-application> <sal-propositional-application> <sal-diseq> <sal-assignment> <sal-eq> <sal-accessor-application> <sal-recognizer-application> <sal-constructor-application> <sal-builtin-application> <sal-unary-application> <sal-binary-infix-application> <sal-binary-application> <sal-in> <sal-infix-application> <sal-application> <sal-simple-expr>)
+---------------------------
+CLASS: <sal-simple-expr>
+FAST SLOT ACCESS: #t
+IDX: 46
+SLOTS: (:place :context :hash :internal-idx :type)
+SUBCLASSES: (<ics-term-false> <ics-term-true> <sal-string-expr> <sal-next-operator> <sal-recognizer> <sal-accessor> <sal-constructor> <sal-false> <sal-true> <sal-scalar> <sal-qualified-name-expr> <sal-var-param-name-expr> <sal-name-expr> <sal-numeral>)
+---------------------------
+CLASS: <sal-application>
+FAST SLOT ACCESS: #t
+IDX: 47
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<tvv-concat> <nat2tvv> <tvv2nat> <tvv-application> <sal-cyclic-eq> <sal-var-eq-term> <sal-var-eq-ground> <sal-debug-expr> <sal-debug-print> <sal-debug-application> <sal-ring-succ> <sal-ring-pre> <sal-ring-application> <sal-array-selection> <sal-int-pred> <sal-real-pred> <sal-le> <sal-ge> <sal-gt> <sal-lt> <sal-inequality> <sal-arith-relation> <sal-min> <sal-max> <sal-mod> <sal-idiv> <sal-div> <sal-mul> <sal-sub> <sal-add> <sal-binary-infix-arith-op> <sal-binary-arith-op> <sal-infix-arith-op> <sal-arith-op> <sal-binary-arith-application> <sal-arith-application> <sal-weak-accepting> <sal-accepting> <sal-ctl-er> <sal-ctl-ar> <sal-ctl-eu> <sal-ctl-au> <sal-ctl-ef> <sal-ctl-af> <sal-ctl-eg> <sal-ctl-ag> <sal-ctl-ex> <sal-ctl-ax> <sal-binary-ctl-application> <sal-unary-ctl-application> <sal-ctl-application> <sal-ltl-m> <sal-ltl-w> <sal-ltl-r> <sal-ltl-u> <sal-ltl-f> <sal-ltl-g> <sal-ltl-x> <sal-binary-ltl-application> <sal-unary-ltl-application> <sal-ltl-application> <sal-temporal-application> <sal-implies> <sal-not> <sal-choice> <sal-or> <sal-and> <sal-xor> <sal-iff> <sal-unary-propositional-application> <sal-binary-propositional-application> <sal-propositional-application> <sal-diseq> <sal-assignment> <sal-eq> <sal-accessor-application> <sal-recognizer-application> <sal-constructor-application> <sal-builtin-application> <sal-unary-application> <sal-binary-infix-application> <sal-binary-application> <sal-in> <sal-infix-application>)
+---------------------------
+CLASS: <sal-infix-application>
+FAST SLOT ACCESS: #t
+IDX: 48
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-cyclic-eq> <sal-var-eq-term> <sal-var-eq-ground> <sal-le> <sal-ge> <sal-gt> <sal-lt> <sal-inequality> <sal-arith-relation> <sal-mod> <sal-idiv> <sal-div> <sal-mul> <sal-sub> <sal-add> <sal-binary-infix-arith-op> <sal-infix-arith-op> <sal-implies> <sal-choice> <sal-or> <sal-and> <sal-xor> <sal-iff> <sal-binary-propositional-application> <sal-diseq> <sal-assignment> <sal-eq> <sal-binary-infix-application>)
+---------------------------
+CLASS: <sal-in>
+FAST SLOT ACCESS: #t
+IDX: 49
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-binary-application>
+FAST SLOT ACCESS: #t
+IDX: 50
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<tvv-concat> <sal-cyclic-eq> <sal-var-eq-term> <sal-var-eq-ground> <sal-le> <sal-ge> <sal-gt> <sal-lt> <sal-inequality> <sal-arith-relation> <sal-min> <sal-max> <sal-mod> <sal-idiv> <sal-div> <sal-sub> <sal-binary-infix-arith-op> <sal-binary-arith-op> <sal-binary-arith-application> <sal-ctl-er> <sal-ctl-ar> <sal-ctl-eu> <sal-ctl-au> <sal-binary-ctl-application> <sal-ltl-m> <sal-ltl-w> <sal-ltl-r> <sal-ltl-u> <sal-binary-ltl-application> <sal-implies> <sal-xor> <sal-iff> <sal-binary-propositional-application> <sal-diseq> <sal-assignment> <sal-eq> <sal-binary-infix-application>)
+---------------------------
+CLASS: <sal-binary-infix-application>
+FAST SLOT ACCESS: #t
+IDX: 51
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-cyclic-eq> <sal-var-eq-term> <sal-var-eq-ground> <sal-implies> <sal-xor> <sal-iff> <sal-binary-propositional-application> <sal-diseq> <sal-assignment> <sal-eq>)
+---------------------------
+CLASS: <sal-unary-application>
+FAST SLOT ACCESS: #t
+IDX: 52
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<nat2tvv> <tvv2nat> <sal-ring-succ> <sal-ring-pre> <sal-ring-application> <sal-int-pred> <sal-real-pred> <sal-weak-accepting> <sal-accepting> <sal-ctl-ef> <sal-ctl-af> <sal-ctl-eg> <sal-ctl-ag> <sal-ctl-ex> <sal-ctl-ax> <sal-unary-ctl-application> <sal-ltl-f> <sal-ltl-g> <sal-ltl-x> <sal-unary-ltl-application> <sal-not> <sal-unary-propositional-application> <sal-accessor-application> <sal-recognizer-application>)
+---------------------------
+CLASS: <sal-builtin-application>
+FAST SLOT ACCESS: #t
+IDX: 53
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-cyclic-eq> <sal-var-eq-term> <sal-var-eq-ground> <sal-int-pred> <sal-real-pred> <sal-le> <sal-ge> <sal-gt> <sal-lt> <sal-inequality> <sal-arith-relation> <sal-min> <sal-max> <sal-mod> <sal-idiv> <sal-div> <sal-mul> <sal-sub> <sal-add> <sal-binary-infix-arith-op> <sal-binary-arith-op> <sal-infix-arith-op> <sal-arith-op> <sal-binary-arith-application> <sal-arith-application> <sal-weak-accepting> <sal-accepting> <sal-ctl-er> <sal-ctl-ar> <sal-ctl-eu> <sal-ctl-au> <sal-ctl-ef> <sal-ctl-af> <sal-ctl-eg> <sal-ctl-ag> <sal-ctl-ex> <sal-ctl-ax> <sal-binary-ctl-application> <sal-unary-ctl-application> <sal-ctl-application> <sal-ltl-m> <sal-ltl-w> <sal-ltl-r> <sal-ltl-u> <sal-ltl-f> <sal-ltl-g> <sal-ltl-x> <sal-binary-ltl-application> <sal-unary-ltl-application> <sal-ltl-application> <sal-temporal-application> <sal-implies> <sal-not> <sal-choice> <sal-or> <sal-and> <sal-xor> <sal-iff> <sal-unary-propositional-application> <sal-binary-propositional-application> <sal-propositional-application> <sal-diseq> <sal-assignment> <sal-eq> <sal-accessor-application> <sal-recognizer-application> <sal-constructor-application>)
+---------------------------
+CLASS: <sal-constructor-application>
+FAST SLOT ACCESS: #t
+IDX: 54
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-recognizer-application>
+FAST SLOT ACCESS: #t
+IDX: 55
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-accessor-application>
+FAST SLOT ACCESS: #t
+IDX: 56
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-eq>
+FAST SLOT ACCESS: #t
+IDX: 57
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-cyclic-eq> <sal-var-eq-term> <sal-var-eq-ground> <sal-iff> <sal-assignment>)
+---------------------------
+CLASS: <sal-assignment>
+FAST SLOT ACCESS: #t
+IDX: 58
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-diseq>
+FAST SLOT ACCESS: #t
+IDX: 59
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-xor>)
+---------------------------
+CLASS: <sal-propositional-application>
+FAST SLOT ACCESS: #t
+IDX: 60
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-implies> <sal-not> <sal-choice> <sal-or> <sal-and> <sal-xor> <sal-iff> <sal-unary-propositional-application> <sal-binary-propositional-application>)
+---------------------------
+CLASS: <sal-binary-propositional-application>
+FAST SLOT ACCESS: #t
+IDX: 61
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-implies> <sal-xor> <sal-iff>)
+---------------------------
+CLASS: <sal-unary-propositional-application>
+FAST SLOT ACCESS: #t
+IDX: 62
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-not>)
+---------------------------
+CLASS: <sal-iff>
+FAST SLOT ACCESS: #t
+IDX: 63
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-xor>
+FAST SLOT ACCESS: #t
+IDX: 64
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-and>
+FAST SLOT ACCESS: #t
+IDX: 65
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-or>
+FAST SLOT ACCESS: #t
+IDX: 66
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-choice>)
+---------------------------
+CLASS: <sal-choice>
+FAST SLOT ACCESS: #t
+IDX: 67
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-not>
+FAST SLOT ACCESS: #t
+IDX: 68
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-implies>
+FAST SLOT ACCESS: #t
+IDX: 69
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-temporal-application>
+FAST SLOT ACCESS: #t
+IDX: 70
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-weak-accepting> <sal-accepting> <sal-ctl-er> <sal-ctl-ar> <sal-ctl-eu> <sal-ctl-au> <sal-ctl-ef> <sal-ctl-af> <sal-ctl-eg> <sal-ctl-ag> <sal-ctl-ex> <sal-ctl-ax> <sal-binary-ctl-application> <sal-unary-ctl-application> <sal-ctl-application> <sal-ltl-m> <sal-ltl-w> <sal-ltl-r> <sal-ltl-u> <sal-ltl-f> <sal-ltl-g> <sal-ltl-x> <sal-binary-ltl-application> <sal-unary-ltl-application> <sal-ltl-application>)
+---------------------------
+CLASS: <sal-ltl-application>
+FAST SLOT ACCESS: #t
+IDX: 71
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-ltl-m> <sal-ltl-w> <sal-ltl-r> <sal-ltl-u> <sal-ltl-f> <sal-ltl-g> <sal-ltl-x> <sal-binary-ltl-application> <sal-unary-ltl-application>)
+---------------------------
+CLASS: <sal-unary-ltl-application>
+FAST SLOT ACCESS: #t
+IDX: 72
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-ltl-f> <sal-ltl-g> <sal-ltl-x>)
+---------------------------
+CLASS: <sal-binary-ltl-application>
+FAST SLOT ACCESS: #t
+IDX: 73
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-ltl-m> <sal-ltl-w> <sal-ltl-r> <sal-ltl-u>)
+---------------------------
+CLASS: <sal-ltl-x>
+FAST SLOT ACCESS: #t
+IDX: 74
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ltl-g>
+FAST SLOT ACCESS: #t
+IDX: 75
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ltl-f>
+FAST SLOT ACCESS: #t
+IDX: 76
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ltl-u>
+FAST SLOT ACCESS: #t
+IDX: 77
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ltl-r>
+FAST SLOT ACCESS: #t
+IDX: 78
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ltl-w>
+FAST SLOT ACCESS: #t
+IDX: 79
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ltl-m>
+FAST SLOT ACCESS: #t
+IDX: 80
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ctl-application>
+FAST SLOT ACCESS: #t
+IDX: 81
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-ctl-er> <sal-ctl-ar> <sal-ctl-eu> <sal-ctl-au> <sal-ctl-ef> <sal-ctl-af> <sal-ctl-eg> <sal-ctl-ag> <sal-ctl-ex> <sal-ctl-ax> <sal-binary-ctl-application> <sal-unary-ctl-application>)
+---------------------------
+CLASS: <sal-unary-ctl-application>
+FAST SLOT ACCESS: #t
+IDX: 82
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-ctl-ef> <sal-ctl-af> <sal-ctl-eg> <sal-ctl-ag> <sal-ctl-ex> <sal-ctl-ax>)
+---------------------------
+CLASS: <sal-binary-ctl-application>
+FAST SLOT ACCESS: #t
+IDX: 83
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-ctl-er> <sal-ctl-ar> <sal-ctl-eu> <sal-ctl-au>)
+---------------------------
+CLASS: <sal-ctl-ax>
+FAST SLOT ACCESS: #t
+IDX: 84
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ctl-ex>
+FAST SLOT ACCESS: #t
+IDX: 85
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ctl-ag>
+FAST SLOT ACCESS: #t
+IDX: 86
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ctl-eg>
+FAST SLOT ACCESS: #t
+IDX: 87
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ctl-af>
+FAST SLOT ACCESS: #t
+IDX: 88
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ctl-ef>
+FAST SLOT ACCESS: #t
+IDX: 89
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ctl-au>
+FAST SLOT ACCESS: #t
+IDX: 90
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ctl-eu>
+FAST SLOT ACCESS: #t
+IDX: 91
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ctl-ar>
+FAST SLOT ACCESS: #t
+IDX: 92
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ctl-er>
+FAST SLOT ACCESS: #t
+IDX: 93
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-accepting>
+FAST SLOT ACCESS: #t
+IDX: 94
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-weak-accepting>)
+---------------------------
+CLASS: <sal-weak-accepting>
+FAST SLOT ACCESS: #t
+IDX: 95
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-arith-application>
+FAST SLOT ACCESS: #t
+IDX: 96
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-int-pred> <sal-real-pred> <sal-le> <sal-ge> <sal-gt> <sal-lt> <sal-inequality> <sal-arith-relation> <sal-min> <sal-max> <sal-mod> <sal-idiv> <sal-div> <sal-mul> <sal-sub> <sal-add> <sal-binary-infix-arith-op> <sal-binary-arith-op> <sal-infix-arith-op> <sal-arith-op> <sal-binary-arith-application>)
+---------------------------
+CLASS: <sal-binary-arith-application>
+FAST SLOT ACCESS: #t
+IDX: 97
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-le> <sal-ge> <sal-gt> <sal-lt> <sal-inequality> <sal-arith-relation> <sal-min> <sal-max> <sal-mod> <sal-idiv> <sal-div> <sal-sub> <sal-binary-infix-arith-op> <sal-binary-arith-op>)
+---------------------------
+CLASS: <sal-arith-op>
+FAST SLOT ACCESS: #t
+IDX: 98
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-min> <sal-max> <sal-mod> <sal-idiv> <sal-div> <sal-mul> <sal-sub> <sal-add> <sal-binary-infix-arith-op> <sal-binary-arith-op> <sal-infix-arith-op>)
+---------------------------
+CLASS: <sal-infix-arith-op>
+FAST SLOT ACCESS: #t
+IDX: 99
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-mod> <sal-idiv> <sal-div> <sal-mul> <sal-sub> <sal-add> <sal-binary-infix-arith-op>)
+---------------------------
+CLASS: <sal-binary-arith-op>
+FAST SLOT ACCESS: #t
+IDX: 100
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-min> <sal-max> <sal-mod> <sal-idiv> <sal-div> <sal-sub> <sal-binary-infix-arith-op>)
+---------------------------
+CLASS: <sal-binary-infix-arith-op>
+FAST SLOT ACCESS: #t
+IDX: 101
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-mod> <sal-idiv> <sal-div> <sal-sub>)
+---------------------------
+CLASS: <sal-add>
+FAST SLOT ACCESS: #t
+IDX: 102
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-sub>
+FAST SLOT ACCESS: #t
+IDX: 103
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-mul>
+FAST SLOT ACCESS: #t
+IDX: 104
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-div>
+FAST SLOT ACCESS: #t
+IDX: 105
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-idiv>
+FAST SLOT ACCESS: #t
+IDX: 106
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-mod>
+FAST SLOT ACCESS: #t
+IDX: 107
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-max>
+FAST SLOT ACCESS: #t
+IDX: 108
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-min>
+FAST SLOT ACCESS: #t
+IDX: 109
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-arith-relation>
+FAST SLOT ACCESS: #t
+IDX: 110
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-le> <sal-ge> <sal-gt> <sal-lt> <sal-inequality>)
+---------------------------
+CLASS: <sal-inequality>
+FAST SLOT ACCESS: #t
+IDX: 111
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-le> <sal-ge> <sal-gt> <sal-lt>)
+---------------------------
+CLASS: <sal-lt>
+FAST SLOT ACCESS: #t
+IDX: 112
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-gt>
+FAST SLOT ACCESS: #t
+IDX: 113
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ge>
+FAST SLOT ACCESS: #t
+IDX: 114
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-le>
+FAST SLOT ACCESS: #t
+IDX: 115
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-real-pred>
+FAST SLOT ACCESS: #t
+IDX: 116
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-int-pred>
+FAST SLOT ACCESS: #t
+IDX: 117
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-definition-expression>
+FAST SLOT ACCESS: #t
+IDX: 118
+SLOTS: (:place :context :hash :internal-idx :type :lhs-list :expr)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-numeral>
+FAST SLOT ACCESS: #t
+IDX: 119
+SLOTS: (:place :context :hash :internal-idx :type :num)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-name-expr>
+FAST SLOT ACCESS: #t
+IDX: 120
+SLOTS: (:place :context :hash :internal-idx :type :decl)
+SUBCLASSES: (<ics-term-false> <ics-term-true> <sal-recognizer> <sal-accessor> <sal-constructor> <sal-false> <sal-true> <sal-scalar> <sal-qualified-name-expr> <sal-var-param-name-expr>)
+---------------------------
+CLASS: <sal-var-param-name-expr>
+FAST SLOT ACCESS: #t
+IDX: 121
+SLOTS: (:place :context :hash :internal-idx :type :decl)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-qualified-name-expr>
+FAST SLOT ACCESS: #t
+IDX: 122
+SLOTS: (:place :context :hash :internal-idx :type :decl :context-ref :actuals)
+SUBCLASSES: (<ics-term-false> <ics-term-true> <sal-recognizer> <sal-accessor> <sal-constructor> <sal-false> <sal-true> <sal-scalar>)
+---------------------------
+CLASS: <sal-scalar>
+FAST SLOT ACCESS: #t
+IDX: 123
+SLOTS: (:place :context :hash :internal-idx :type :decl :context-ref :actuals)
+SUBCLASSES: (<ics-term-false> <ics-term-true> <sal-false> <sal-true>)
+---------------------------
+CLASS: <sal-true>
+FAST SLOT ACCESS: #t
+IDX: 124
+SLOTS: (:place :context :hash :internal-idx :type :decl :context-ref :actuals)
+SUBCLASSES: (<ics-term-true>)
+---------------------------
+CLASS: <sal-false>
+FAST SLOT ACCESS: #t
+IDX: 125
+SLOTS: (:place :context :hash :internal-idx :type :decl :context-ref :actuals)
+SUBCLASSES: (<ics-term-false>)
+---------------------------
+CLASS: <sal-constructor>
+FAST SLOT ACCESS: #t
+IDX: 126
+SLOTS: (:place :context :hash :internal-idx :type :decl :context-ref :actuals)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-accessor>
+FAST SLOT ACCESS: #t
+IDX: 127
+SLOTS: (:place :context :hash :internal-idx :type :decl :context-ref :actuals)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-recognizer>
+FAST SLOT ACCESS: #t
+IDX: 128
+SLOTS: (:place :context :hash :internal-idx :type :decl :context-ref :actuals)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-local-binds-expr>
+FAST SLOT ACCESS: #t
+IDX: 129
+SLOTS: (:place :context :hash :internal-idx :type :local-decls :expr)
+SUBCLASSES: (<sal-array-literal> <sal-let-expr> <sal-multi-choice-expr> <sal-exists-expr> <sal-for-all-expr> <sal-quantified-expr> <sal-set-list-expr> <sal-set-pred-expr> <sal-lambda>)
+---------------------------
+CLASS: <sal-lambda>
+FAST SLOT ACCESS: #t
+IDX: 130
+SLOTS: (:place :context :hash :internal-idx :type :local-decls :expr)
+SUBCLASSES: (<sal-array-literal> <sal-set-list-expr> <sal-set-pred-expr>)
+---------------------------
+CLASS: <sal-set-pred-expr>
+FAST SLOT ACCESS: #t
+IDX: 131
+SLOTS: (:place :context :hash :internal-idx :type :local-decls :expr)
+SUBCLASSES: (<sal-set-list-expr>)
+---------------------------
+CLASS: <sal-set-list-expr>
+FAST SLOT ACCESS: #t
+IDX: 132
+SLOTS: (:place :context :hash :internal-idx :type :local-decls :expr)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-quantified-expr>
+FAST SLOT ACCESS: #t
+IDX: 133
+SLOTS: (:place :context :hash :internal-idx :type :local-decls :expr)
+SUBCLASSES: (<sal-multi-choice-expr> <sal-exists-expr> <sal-for-all-expr>)
+---------------------------
+CLASS: <sal-for-all-expr>
+FAST SLOT ACCESS: #t
+IDX: 134
+SLOTS: (:place :context :hash :internal-idx :type :local-decls :expr)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-exists-expr>
+FAST SLOT ACCESS: #t
+IDX: 135
+SLOTS: (:place :context :hash :internal-idx :type :local-decls :expr)
+SUBCLASSES: (<sal-multi-choice-expr>)
+---------------------------
+CLASS: <sal-multi-choice-expr>
+FAST SLOT ACCESS: #t
+IDX: 136
+SLOTS: (:place :context :hash :internal-idx :type :local-decls :expr)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-let-expr>
+FAST SLOT ACCESS: #t
+IDX: 137
+SLOTS: (:place :context :hash :internal-idx :type :local-decls :expr)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-collection-literal>
+FAST SLOT ACCESS: #t
+IDX: 138
+SLOTS: (:place :context :hash :internal-idx :type)
+SUBCLASSES: (<sal-state-record-literal> <sal-record-literal> <sal-arg-tuple-literal> <sal-tuple-literal> <sal-array-literal>)
+---------------------------
+CLASS: <sal-array-literal>
+FAST SLOT ACCESS: #t
+IDX: 139
+SLOTS: (:place :context :hash :internal-idx :type :local-decls :expr)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-tuple-literal>
+FAST SLOT ACCESS: #t
+IDX: 140
+SLOTS: (:place :context :hash :internal-idx :type :exprs)
+SUBCLASSES: (<sal-arg-tuple-literal>)
+---------------------------
+CLASS: <sal-arg-tuple-literal>
+FAST SLOT ACCESS: #t
+IDX: 141
+SLOTS: (:place :context :hash :internal-idx :type :exprs)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-record-literal>
+FAST SLOT ACCESS: #t
+IDX: 142
+SLOTS: (:place :context :hash :internal-idx :type :entries)
+SUBCLASSES: (<sal-state-record-literal>)
+---------------------------
+CLASS: <sal-state-record-literal>
+FAST SLOT ACCESS: #t
+IDX: 143
+SLOTS: (:place :context :hash :internal-idx :type :entries)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-record-entry>
+FAST SLOT ACCESS: #t
+IDX: 144
+SLOTS: (:place :context :hash :internal-idx :id :expr)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-selection>
+FAST SLOT ACCESS: #t
+IDX: 145
+SLOTS: (:place :context :hash :internal-idx :type)
+SUBCLASSES: (<sal-record-selection> <sal-tuple-selection> <sal-simple-selection> <sal-array-selection>)
+---------------------------
+CLASS: <sal-array-selection>
+FAST SLOT ACCESS: #t
+IDX: 146
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-simple-selection>
+FAST SLOT ACCESS: #t
+IDX: 147
+SLOTS: (:place :context :hash :internal-idx :type :target :idx)
+SUBCLASSES: (<sal-record-selection> <sal-tuple-selection>)
+---------------------------
+CLASS: <sal-tuple-selection>
+FAST SLOT ACCESS: #t
+IDX: 148
+SLOTS: (:place :context :hash :internal-idx :type :target :idx)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-record-selection>
+FAST SLOT ACCESS: #t
+IDX: 149
+SLOTS: (:place :context :hash :internal-idx :type :target :idx)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-update-expr>
+FAST SLOT ACCESS: #t
+IDX: 150
+SLOTS: (:place :context :hash :internal-idx :type :target :idx :new-value)
+SUBCLASSES: (<sal-tuple-update> <sal-record-update> <sal-array-update> <sal-function-update>)
+---------------------------
+CLASS: <sal-function-update>
+FAST SLOT ACCESS: #t
+IDX: 151
+SLOTS: (:place :context :hash :internal-idx :type :target :idx :new-value)
+SUBCLASSES: (<sal-array-update>)
+---------------------------
+CLASS: <sal-array-update>
+FAST SLOT ACCESS: #t
+IDX: 152
+SLOTS: (:place :context :hash :internal-idx :type :target :idx :new-value)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-record-update>
+FAST SLOT ACCESS: #t
+IDX: 153
+SLOTS: (:place :context :hash :internal-idx :type :target :idx :new-value)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-tuple-update>
+FAST SLOT ACCESS: #t
+IDX: 154
+SLOTS: (:place :context :hash :internal-idx :type :target :idx :new-value)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-conditional>
+FAST SLOT ACCESS: #t
+IDX: 155
+SLOTS: (:place :context :hash :internal-idx :type :cond-expr :then-expr :else-expr)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-next-operator>
+FAST SLOT ACCESS: #t
+IDX: 156
+SLOTS: (:place :context :hash :internal-idx :type :name-expr)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-string-expr>
+FAST SLOT ACCESS: #t
+IDX: 157
+SLOTS: (:place :context :hash :internal-idx :type :string)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-mod-init>
+FAST SLOT ACCESS: #t
+IDX: 158
+SLOTS: (:place :context :hash :internal-idx :type :module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-mod-trans>
+FAST SLOT ACCESS: #t
+IDX: 159
+SLOTS: (:place :context :hash :internal-idx :type :module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ring-application>
+FAST SLOT ACCESS: #t
+IDX: 160
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-ring-succ> <sal-ring-pre>)
+---------------------------
+CLASS: <sal-ring-pre>
+FAST SLOT ACCESS: #t
+IDX: 161
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ring-succ>
+FAST SLOT ACCESS: #t
+IDX: 162
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-debug-application>
+FAST SLOT ACCESS: #t
+IDX: 163
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<sal-debug-expr> <sal-debug-print>)
+---------------------------
+CLASS: <sal-debug-print>
+FAST SLOT ACCESS: #t
+IDX: 164
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-debug-expr>
+FAST SLOT ACCESS: #t
+IDX: 165
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-pre-operator>
+FAST SLOT ACCESS: #t
+IDX: 166
+SLOTS: (:place :context :hash :internal-idx :type :expr)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-type>
+FAST SLOT ACCESS: #t
+IDX: 167
+SLOTS: (:place :context :hash :internal-idx)
+SUBCLASSES: (<sal-data-type> <sal-scalar-type> <sal-type-def> <sal-ring-set-type> <sal-scalar-set-type> <sal-symmetric-type> <sal-subrange> <sal-bounded-subtype> <sal-subtype> <sal-state-type> <sal-record-type> <sal-domain-tuple-type> <sal-tuple-type> <sal-array-type> <sal-function-type> <sal-string-type> <sal-nat-type> <sal-int-type> <sal-real-type> <sal-number-type> <sal-bool-type> <sal-any-type> <sal-qualified-type-name> <sal-type-param-name> <sal-type-name>)
+---------------------------
+CLASS: <sal-type-name>
+FAST SLOT ACCESS: #t
+IDX: 168
+SLOTS: (:place :context :hash :internal-idx :decl)
+SUBCLASSES: (<sal-string-type> <sal-nat-type> <sal-int-type> <sal-real-type> <sal-number-type> <sal-bool-type> <sal-any-type> <sal-qualified-type-name> <sal-type-param-name>)
+---------------------------
+CLASS: <sal-type-param-name>
+FAST SLOT ACCESS: #t
+IDX: 169
+SLOTS: (:place :context :hash :internal-idx :decl)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-qualified-type-name>
+FAST SLOT ACCESS: #t
+IDX: 170
+SLOTS: (:place :context :hash :internal-idx :decl :context-ref :actuals)
+SUBCLASSES: (<sal-string-type> <sal-nat-type> <sal-int-type> <sal-real-type> <sal-number-type> <sal-bool-type> <sal-any-type>)
+---------------------------
+CLASS: <sal-any-type>
+FAST SLOT ACCESS: #t
+IDX: 171
+SLOTS: (:place :context :hash :internal-idx :decl :context-ref :actuals)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-bool-type>
+FAST SLOT ACCESS: #t
+IDX: 172
+SLOTS: (:place :context :hash :internal-idx :decl :context-ref :actuals)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-number-type>
+FAST SLOT ACCESS: #t
+IDX: 173
+SLOTS: (:place :context :hash :internal-idx :decl :context-ref :actuals)
+SUBCLASSES: (<sal-nat-type> <sal-int-type> <sal-real-type>)
+---------------------------
+CLASS: <sal-real-type>
+FAST SLOT ACCESS: #t
+IDX: 174
+SLOTS: (:place :context :hash :internal-idx :decl :context-ref :actuals)
+SUBCLASSES: (<sal-nat-type> <sal-int-type>)
+---------------------------
+CLASS: <sal-int-type>
+FAST SLOT ACCESS: #t
+IDX: 175
+SLOTS: (:place :context :hash :internal-idx :decl :context-ref :actuals)
+SUBCLASSES: (<sal-nat-type>)
+---------------------------
+CLASS: <sal-nat-type>
+FAST SLOT ACCESS: #t
+IDX: 176
+SLOTS: (:place :context :hash :internal-idx :decl :context-ref :actuals)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-string-type>
+FAST SLOT ACCESS: #t
+IDX: 177
+SLOTS: (:place :context :hash :internal-idx :decl :context-ref :actuals)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-function-type>
+FAST SLOT ACCESS: #t
+IDX: 178
+SLOTS: (:place :context :hash :internal-idx :domain :range)
+SUBCLASSES: (<sal-array-type>)
+---------------------------
+CLASS: <sal-array-type>
+FAST SLOT ACCESS: #t
+IDX: 179
+SLOTS: (:place :context :hash :internal-idx :domain :range)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-tuple-type>
+FAST SLOT ACCESS: #t
+IDX: 180
+SLOTS: (:place :context :hash :internal-idx :types)
+SUBCLASSES: (<sal-domain-tuple-type>)
+---------------------------
+CLASS: <sal-domain-tuple-type>
+FAST SLOT ACCESS: #t
+IDX: 181
+SLOTS: (:place :context :hash :internal-idx :types)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-record-type>
+FAST SLOT ACCESS: #t
+IDX: 182
+SLOTS: (:place :context :hash :internal-idx :fields)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-field>
+FAST SLOT ACCESS: #t
+IDX: 183
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-state-type>
+FAST SLOT ACCESS: #t
+IDX: 184
+SLOTS: (:place :context :hash :internal-idx :module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-subtype>
+FAST SLOT ACCESS: #t
+IDX: 185
+SLOTS: (:place :context :hash :internal-idx :expr)
+SUBCLASSES: (<sal-ring-set-type> <sal-scalar-set-type> <sal-symmetric-type> <sal-subrange> <sal-bounded-subtype>)
+---------------------------
+CLASS: <sal-bounded-subtype>
+FAST SLOT ACCESS: #t
+IDX: 186
+SLOTS: (:place :context :hash :internal-idx :expr :lower :upper)
+SUBCLASSES: (<sal-ring-set-type> <sal-scalar-set-type> <sal-symmetric-type> <sal-subrange>)
+---------------------------
+CLASS: <sal-subrange>
+FAST SLOT ACCESS: #t
+IDX: 187
+SLOTS: (:place :context :hash :internal-idx :expr :lower :upper)
+SUBCLASSES: (<sal-ring-set-type> <sal-scalar-set-type> <sal-symmetric-type>)
+---------------------------
+CLASS: <sal-symmetric-type>
+FAST SLOT ACCESS: #t
+IDX: 188
+SLOTS: (:place :context :hash :internal-idx :expr :lower :upper)
+SUBCLASSES: (<sal-ring-set-type> <sal-scalar-set-type>)
+---------------------------
+CLASS: <sal-scalar-set-type>
+FAST SLOT ACCESS: #t
+IDX: 189
+SLOTS: (:place :context :hash :internal-idx :expr :lower :upper)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-ring-set-type>
+FAST SLOT ACCESS: #t
+IDX: 190
+SLOTS: (:place :context :hash :internal-idx :expr :lower :upper)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-type-def>
+FAST SLOT ACCESS: #t
+IDX: 191
+SLOTS: (:place :context :hash :internal-idx)
+SUBCLASSES: (<sal-data-type> <sal-scalar-type>)
+---------------------------
+CLASS: <sal-scalar-type>
+FAST SLOT ACCESS: #t
+IDX: 192
+SLOTS: (:place :context :hash :internal-idx :scalar-elements)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-data-type>
+FAST SLOT ACCESS: #t
+IDX: 193
+SLOTS: (:place :context :hash :internal-idx :constructors)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-definition>
+FAST SLOT ACCESS: #t
+IDX: 194
+SLOTS: (:place :context :hash :internal-idx)
+SUBCLASSES: (<sal-for-all-definition> <sal-simple-selection-definition> <sal-simple-definition>)
+---------------------------
+CLASS: <sal-simple-definition>
+FAST SLOT ACCESS: #t
+IDX: 195
+SLOTS: (:place :context :hash :internal-idx :lhs :rhs)
+SUBCLASSES: (<sal-simple-selection-definition>)
+---------------------------
+CLASS: <sal-simple-selection-definition>
+FAST SLOT ACCESS: #t
+IDX: 196
+SLOTS: (:place :context :hash :internal-idx :lhs :rhs)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-for-all-definition>
+FAST SLOT ACCESS: #t
+IDX: 197
+SLOTS: (:place :context :hash :internal-idx :local-decls :definitions)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-command-section>
+FAST SLOT ACCESS: #t
+IDX: 198
+SLOTS: (:place :context :hash :internal-idx :commands :else-command)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-command>
+FAST SLOT ACCESS: #t
+IDX: 199
+SLOTS: (:place :context :hash :internal-idx)
+SUBCLASSES: (<sal-else-command> <sal-multi-command> <sal-labeled-command> <sal-guarded-command>)
+---------------------------
+CLASS: <sal-guarded-command>
+FAST SLOT ACCESS: #t
+IDX: 200
+SLOTS: (:place :context :hash :internal-idx :guard :assignments)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-labeled-command>
+FAST SLOT ACCESS: #t
+IDX: 201
+SLOTS: (:place :context :hash :internal-idx :label :command)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-multi-command>
+FAST SLOT ACCESS: #t
+IDX: 202
+SLOTS: (:place :context :hash :internal-idx :local-decls :command)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-else-command>
+FAST SLOT ACCESS: #t
+IDX: 203
+SLOTS: (:place :context :hash :internal-idx :assignments)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-module>
+FAST SLOT ACCESS: #t
+IDX: 204
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table)
+SUBCLASSES: (<sal-data-flat-esm-module> <sal-esm-module> <sal-sliced-boolean-flat-module> <sal-boolean-flat-module> <sal-sliced-simple-data-flat-module> <sal-simple-data-flat-module> <sal-sliced-flat-module> <sal-derived-flat-module> <sal-flat-module> <sal-base-module> <sal-module-instance> <sal-with-module> <sal-new-output> <sal-hiding> <sal-org-module> <sal-renaming> <sal-multi-synch-composition> <sal-multi-asynch-composition> <sal-multi-composition> <sal-observer> <sal-synch-composition> <sal-asynch-composition> <sal-module-composition> <sal-non-base-module>)
+---------------------------
+CLASS: <sal-non-base-module>
+FAST SLOT ACCESS: #t
+IDX: 205
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table)
+SUBCLASSES: (<sal-module-instance> <sal-with-module> <sal-new-output> <sal-hiding> <sal-org-module> <sal-renaming> <sal-multi-synch-composition> <sal-multi-asynch-composition> <sal-multi-composition> <sal-observer> <sal-synch-composition> <sal-asynch-composition> <sal-module-composition>)
+---------------------------
+CLASS: <sal-module-composition>
+FAST SLOT ACCESS: #t
+IDX: 206
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :module1 :module2)
+SUBCLASSES: (<sal-observer> <sal-synch-composition> <sal-asynch-composition>)
+---------------------------
+CLASS: <sal-asynch-composition>
+FAST SLOT ACCESS: #t
+IDX: 207
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :module1 :module2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-synch-composition>
+FAST SLOT ACCESS: #t
+IDX: 208
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :module1 :module2)
+SUBCLASSES: (<sal-observer>)
+---------------------------
+CLASS: <sal-observer>
+FAST SLOT ACCESS: #t
+IDX: 209
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :module1 :module2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-multi-composition>
+FAST SLOT ACCESS: #t
+IDX: 210
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :local-decls :module)
+SUBCLASSES: (<sal-multi-synch-composition> <sal-multi-asynch-composition>)
+---------------------------
+CLASS: <sal-multi-asynch-composition>
+FAST SLOT ACCESS: #t
+IDX: 211
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :local-decls :module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-multi-synch-composition>
+FAST SLOT ACCESS: #t
+IDX: 212
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :local-decls :module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-renaming>
+FAST SLOT ACCESS: #t
+IDX: 213
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :renames :module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-rename>
+FAST SLOT ACCESS: #t
+IDX: 214
+SLOTS: (:place :context :hash :internal-idx :from-name :to-expr)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-org-module>
+FAST SLOT ACCESS: #t
+IDX: 215
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :identifiers :module)
+SUBCLASSES: (<sal-new-output> <sal-hiding>)
+---------------------------
+CLASS: <sal-hiding>
+FAST SLOT ACCESS: #t
+IDX: 216
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :identifiers :module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-new-output>
+FAST SLOT ACCESS: #t
+IDX: 217
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :identifiers :module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-with-module>
+FAST SLOT ACCESS: #t
+IDX: 218
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :new-state-vars :module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-module-name>
+FAST SLOT ACCESS: #t
+IDX: 219
+SLOTS: (:place :context :hash :internal-idx :decl)
+SUBCLASSES: (<sal-qualified-module-name>)
+---------------------------
+CLASS: <sal-qualified-module-name>
+FAST SLOT ACCESS: #t
+IDX: 220
+SLOTS: (:place :context :hash :internal-idx :decl :context-ref :actuals)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-module-instance>
+FAST SLOT ACCESS: #t
+IDX: 221
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :module-name :actuals)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-base-module>
+FAST SLOT ACCESS: #t
+IDX: 222
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :definitions :initialization-definitions :initialization-command-section :transition-definitions :transition-command-section)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-flat-module>
+FAST SLOT ACCESS: #t
+IDX: 223
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :definition :initialization :transition :skip :transition-trace-info :choice-vars :component-info :valid-input-expr :valid-state-expr :valid-constant-expr)
+SUBCLASSES: (<sal-sliced-boolean-flat-module> <sal-boolean-flat-module> <sal-sliced-simple-data-flat-module> <sal-simple-data-flat-module> <sal-sliced-flat-module> <sal-derived-flat-module>)
+---------------------------
+CLASS: <sal-component-info>
+FAST SLOT ACCESS: #t
+IDX: 224
+SLOTS: (:place :context :hash :internal-idx :data)
+SUBCLASSES: (<sal-composite-component-info> <sal-multi-component-info> <sal-base-component-info>)
+---------------------------
+CLASS: <sal-base-component-info>
+FAST SLOT ACCESS: #t
+IDX: 225
+SLOTS: (:place :context :hash :internal-idx :data :input-data :output-data :owned-data)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-multi-component-info>
+FAST SLOT ACCESS: #t
+IDX: 226
+SLOTS: (:place :context :hash :internal-idx :data :local-decls :component)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-composite-component-info>
+FAST SLOT ACCESS: #t
+IDX: 227
+SLOTS: (:place :context :hash :internal-idx :data :components)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-derived-flat-module>
+FAST SLOT ACCESS: #t
+IDX: 228
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :definition :initialization :transition :skip :transition-trace-info :choice-vars :component-info :valid-input-expr :valid-state-expr :valid-constant-expr :original-module :var-trace-info :const-trace-info)
+SUBCLASSES: (<sal-sliced-boolean-flat-module> <sal-boolean-flat-module> <sal-sliced-simple-data-flat-module> <sal-simple-data-flat-module> <sal-sliced-flat-module>)
+---------------------------
+CLASS: <sal-sliced-flat-module>
+FAST SLOT ACCESS: #t
+IDX: 229
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :definition :initialization :transition :skip :transition-trace-info :choice-vars :component-info :valid-input-expr :valid-state-expr :valid-constant-expr :original-module :var-trace-info :const-trace-info)
+SUBCLASSES: (<sal-sliced-boolean-flat-module> <sal-sliced-simple-data-flat-module>)
+---------------------------
+CLASS: <sal-simple-data-flat-module>
+FAST SLOT ACCESS: #t
+IDX: 230
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :definition :initialization :transition :skip :transition-trace-info :choice-vars :component-info :valid-input-expr :valid-state-expr :valid-constant-expr :original-module :var-trace-info :const-trace-info)
+SUBCLASSES: (<sal-sliced-simple-data-flat-module>)
+---------------------------
+CLASS: <sal-sliced-simple-data-flat-module>
+FAST SLOT ACCESS: #t
+IDX: 231
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :definition :initialization :transition :skip :transition-trace-info :choice-vars :component-info :valid-input-expr :valid-state-expr :valid-constant-expr :original-module :var-trace-info :const-trace-info)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-boolean-flat-module>
+FAST SLOT ACCESS: #t
+IDX: 232
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :definition :initialization :transition :skip :transition-trace-info :choice-vars :component-info :valid-input-expr :valid-state-expr :valid-constant-expr :original-module :var-trace-info :const-trace-info)
+SUBCLASSES: (<sal-sliced-boolean-flat-module>)
+---------------------------
+CLASS: <sal-sliced-boolean-flat-module>
+FAST SLOT ACCESS: #t
+IDX: 233
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :definition :initialization :transition :skip :transition-trace-info :choice-vars :component-info :valid-input-expr :valid-state-expr :valid-constant-expr :original-module :var-trace-info :const-trace-info)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-assertion-expr>
+FAST SLOT ACCESS: #t
+IDX: 234
+SLOTS: (:place :context :hash :internal-idx :type)
+SUBCLASSES: (<sal-qualified-assertion-name> <sal-assertion-proposition> <sal-module-implements> <sal-module-models>)
+---------------------------
+CLASS: <sal-module-models>
+FAST SLOT ACCESS: #t
+IDX: 235
+SLOTS: (:place :context :hash :internal-idx :type :module :expr)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-module-implements>
+FAST SLOT ACCESS: #t
+IDX: 236
+SLOTS: (:place :context :hash :internal-idx :type :module1 :module2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-assertion-proposition>
+FAST SLOT ACCESS: #t
+IDX: 237
+SLOTS: (:place :context :hash :internal-idx :type :op :assertion-exprs)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-qualified-assertion-name>
+FAST SLOT ACCESS: #t
+IDX: 238
+SLOTS: (:place :context :hash :internal-idx :type :decl :context-ref :actuals)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-trace-info>
+FAST SLOT ACCESS: #t
+IDX: 239
+SLOTS: (:place :context :hash :internal-idx)
+SUBCLASSES: (<sal-sequence-trace-info> <sal-choice-trace-info> <sal-nested-list-trace-info> <sal-multi-sequence-trace-info> <sal-multi-command-choice-trace-info> <sal-multi-choice-trace-info> <sal-multi-trace-info> <sal-labeled-trace-info> <sal-module-instance-trace-info> <sal-nested-trace-info> <sal-else-trace-info> <sal-transition-trace-info>)
+---------------------------
+CLASS: <sal-transition-trace-info>
+FAST SLOT ACCESS: #t
+IDX: 240
+SLOTS: (:place :context :hash :internal-idx)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-else-trace-info>
+FAST SLOT ACCESS: #t
+IDX: 241
+SLOTS: (:place :context :hash :internal-idx)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-nested-trace-info>
+FAST SLOT ACCESS: #t
+IDX: 242
+SLOTS: (:place :context :hash :internal-idx :info)
+SUBCLASSES: (<sal-multi-sequence-trace-info> <sal-multi-command-choice-trace-info> <sal-multi-choice-trace-info> <sal-multi-trace-info> <sal-labeled-trace-info> <sal-module-instance-trace-info>)
+---------------------------
+CLASS: <sal-module-instance-trace-info>
+FAST SLOT ACCESS: #t
+IDX: 243
+SLOTS: (:place :context :hash :internal-idx :info)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-labeled-trace-info>
+FAST SLOT ACCESS: #t
+IDX: 244
+SLOTS: (:place :context :hash :internal-idx :info :label)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-multi-trace-info>
+FAST SLOT ACCESS: #t
+IDX: 245
+SLOTS: (:place :context :hash :internal-idx :info)
+SUBCLASSES: (<sal-multi-sequence-trace-info> <sal-multi-command-choice-trace-info> <sal-multi-choice-trace-info>)
+---------------------------
+CLASS: <sal-multi-choice-trace-info>
+FAST SLOT ACCESS: #t
+IDX: 246
+SLOTS: (:place :context :hash :internal-idx :info :choice-var-names :original-var-names)
+SUBCLASSES: (<sal-multi-command-choice-trace-info>)
+---------------------------
+CLASS: <sal-multi-command-choice-trace-info>
+FAST SLOT ACCESS: #t
+IDX: 247
+SLOTS: (:place :context :hash :internal-idx :info :choice-var-names :original-var-names)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-multi-sequence-trace-info>
+FAST SLOT ACCESS: #t
+IDX: 248
+SLOTS: (:place :context :hash :internal-idx :info :idx-var-name)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-nested-list-trace-info>
+FAST SLOT ACCESS: #t
+IDX: 249
+SLOTS: (:place :context :hash :internal-idx :info-list)
+SUBCLASSES: (<sal-sequence-trace-info> <sal-choice-trace-info>)
+---------------------------
+CLASS: <sal-choice-trace-info>
+FAST SLOT ACCESS: #t
+IDX: 250
+SLOTS: (:place :context :hash :internal-idx :info-list :choice-var-name)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-sequence-trace-info>
+FAST SLOT ACCESS: #t
+IDX: 251
+SLOTS: (:place :context :hash :internal-idx :info-list)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-esm-component>
+FAST SLOT ACCESS: #t
+IDX: 252
+SLOTS: (:place :context :hash :internal-idx)
+SUBCLASSES: (<sal-data-flat-esm-module> <sal-esm-module> <sal-esm-choice-assignment> <sal-esm-assignment> <sal-esm-guard> <sal-esm-leaf> <sal-esm-multi-choice> <sal-esm-multi-seq> <sal-esm-new-binds-statement> <sal-esm-when-undefined> <sal-esm-case-entry> <sal-esm-case> <sal-esm-monitor-seq> <sal-esm-seq> <sal-esm-choice> <sal-esm-composition-statement> <sal-esm-statement>)
+---------------------------
+CLASS: <sal-esm-statement>
+FAST SLOT ACCESS: #t
+IDX: 253
+SLOTS: (:place :context :hash :internal-idx :num-alternatives)
+SUBCLASSES: (<sal-esm-choice-assignment> <sal-esm-assignment> <sal-esm-guard> <sal-esm-leaf> <sal-esm-multi-choice> <sal-esm-multi-seq> <sal-esm-new-binds-statement> <sal-esm-when-undefined> <sal-esm-case> <sal-esm-monitor-seq> <sal-esm-seq> <sal-esm-choice> <sal-esm-composition-statement>)
+---------------------------
+CLASS: <sal-esm-composition-statement>
+FAST SLOT ACCESS: #t
+IDX: 254
+SLOTS: (:place :context :hash :internal-idx :num-alternatives :statements)
+SUBCLASSES: (<sal-esm-monitor-seq> <sal-esm-seq> <sal-esm-choice>)
+---------------------------
+CLASS: <sal-esm-choice>
+FAST SLOT ACCESS: #t
+IDX: 255
+SLOTS: (:place :context :hash :internal-idx :num-alternatives :statements)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-esm-seq>
+FAST SLOT ACCESS: #t
+IDX: 256
+SLOTS: (:place :context :hash :internal-idx :num-alternatives :statements)
+SUBCLASSES: (<sal-esm-monitor-seq>)
+---------------------------
+CLASS: <sal-esm-monitor-seq>
+FAST SLOT ACCESS: #t
+IDX: 257
+SLOTS: (:place :context :hash :internal-idx :num-alternatives :statements)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-esm-case>
+FAST SLOT ACCESS: #t
+IDX: 258
+SLOTS: (:place :context :hash :internal-idx :num-alternatives :expr :case-entries)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-esm-case-entry>
+FAST SLOT ACCESS: #t
+IDX: 259
+SLOTS: (:place :context :hash :internal-idx :value :statement)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-esm-when-undefined>
+FAST SLOT ACCESS: #t
+IDX: 260
+SLOTS: (:place :context :hash :internal-idx :num-alternatives :lhs :statement)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-esm-new-binds-statement>
+FAST SLOT ACCESS: #t
+IDX: 261
+SLOTS: (:place :context :hash :internal-idx :num-alternatives :local-decls :statement)
+SUBCLASSES: (<sal-esm-multi-choice> <sal-esm-multi-seq>)
+---------------------------
+CLASS: <sal-esm-multi-seq>
+FAST SLOT ACCESS: #t
+IDX: 262
+SLOTS: (:place :context :hash :internal-idx :num-alternatives :local-decls :statement)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-esm-multi-choice>
+FAST SLOT ACCESS: #t
+IDX: 263
+SLOTS: (:place :context :hash :internal-idx :num-alternatives :local-decls :statement)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-esm-leaf>
+FAST SLOT ACCESS: #t
+IDX: 264
+SLOTS: (:place :context :hash :internal-idx :num-alternatives :dependencies :no-delay?)
+SUBCLASSES: (<sal-esm-choice-assignment> <sal-esm-assignment> <sal-esm-guard>)
+---------------------------
+CLASS: <sal-esm-guard>
+FAST SLOT ACCESS: #t
+IDX: 265
+SLOTS: (:place :context :hash :internal-idx :num-alternatives :dependencies :no-delay? :expr)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-esm-assignment>
+FAST SLOT ACCESS: #t
+IDX: 266
+SLOTS: (:place :context :hash :internal-idx :num-alternatives :dependencies :no-delay? :lhs :rhs)
+SUBCLASSES: (<sal-esm-choice-assignment>)
+---------------------------
+CLASS: <sal-esm-choice-assignment>
+FAST SLOT ACCESS: #t
+IDX: 267
+SLOTS: (:place :context :hash :internal-idx :num-alternatives :dependencies :no-delay? :lhs :rhs)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-esm-module>
+FAST SLOT ACCESS: #t
+IDX: 268
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :initialization :transition :definition :transition-trace-info :choice-vars)
+SUBCLASSES: (<sal-data-flat-esm-module>)
+---------------------------
+CLASS: <sal-data-flat-esm-module>
+FAST SLOT ACCESS: #t
+IDX: 269
+SLOTS: (:place :context :hash :internal-idx :state-vars :state-vars-table :initialization :transition :definition :transition-trace-info :choice-vars :original-module :var-trace-info)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-parser-manager>
+FAST SLOT ACCESS: #t
+IDX: 270
+SLOTS: (:curr-line :curr-column)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-instantiation-info>
+FAST SLOT ACCESS: #t
+IDX: 271
+SLOTS: (:context :actuals :proc)
+SUBCLASSES: ()
+---------------------------
+CLASS: <pp-info>
+FAST SLOT ACCESS: #t
+IDX: 272
+SLOTS: (:max-width :max-ribbon :max-num-lines :max-indent :single-line? :bounded?)
+SUBCLASSES: (<pp-value-info++> <pp-info++>)
+---------------------------
+CLASS: <doc>
+FAST SLOT ACCESS: #t
+IDX: 273
+SLOTS: ()
+SUBCLASSES: (<doc-union> <doc-line++> <doc-line> <doc-text> <doc-nest> <doc-concat> <doc-nil>)
+---------------------------
+CLASS: <doc-nil>
+FAST SLOT ACCESS: #t
+IDX: 274
+SLOTS: ()
+SUBCLASSES: ()
+---------------------------
+CLASS: <doc-concat>
+FAST SLOT ACCESS: #t
+IDX: 275
+SLOTS: (:docs)
+SUBCLASSES: ()
+---------------------------
+CLASS: <doc-nest>
+FAST SLOT ACCESS: #t
+IDX: 276
+SLOTS: (:i :doc)
+SUBCLASSES: ()
+---------------------------
+CLASS: <doc-text>
+FAST SLOT ACCESS: #t
+IDX: 277
+SLOTS: (:str)
+SUBCLASSES: ()
+---------------------------
+CLASS: <doc-line>
+FAST SLOT ACCESS: #t
+IDX: 278
+SLOTS: ()
+SUBCLASSES: (<doc-line++>)
+---------------------------
+CLASS: <doc-line++>
+FAST SLOT ACCESS: #t
+IDX: 279
+SLOTS: (:str)
+SUBCLASSES: ()
+---------------------------
+CLASS: <doc-union>
+FAST SLOT ACCESS: #t
+IDX: 280
+SLOTS: (:docs)
+SUBCLASSES: ()
+---------------------------
+CLASS: <idoc>
+FAST SLOT ACCESS: #t
+IDX: 281
+SLOTS: ()
+SUBCLASSES: (<idoc-line> <idoc-text> <idoc-nil>)
+---------------------------
+CLASS: <idoc-nil>
+FAST SLOT ACCESS: #t
+IDX: 282
+SLOTS: ()
+SUBCLASSES: ()
+---------------------------
+CLASS: <idoc-text>
+FAST SLOT ACCESS: #t
+IDX: 283
+SLOTS: (:str :idoc)
+SUBCLASSES: ()
+---------------------------
+CLASS: <idoc-line>
+FAST SLOT ACCESS: #t
+IDX: 284
+SLOTS: (:i :idoc)
+SUBCLASSES: ()
+---------------------------
+CLASS: <pp-info++>
+FAST SLOT ACCESS: #t
+IDX: 285
+SLOTS: (:max-width :max-ribbon :max-num-lines :max-indent :single-line? :bounded? :max-depth :default-indent :simplify-qualified-names?)
+SUBCLASSES: (<pp-value-info++>)
+---------------------------
+CLASS: <pp-value-info++>
+FAST SLOT ACCESS: #t
+IDX: 286
+SLOTS: (:max-width :max-ribbon :max-num-lines :max-indent :single-line? :bounded? :max-depth :default-indent :simplify-qualified-names?)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-var-rename-info>
+FAST SLOT ACCESS: #t
+IDX: 287
+SLOTS: (:defined-vars)
+SUBCLASSES: (<sal-var-rename-info++>)
+---------------------------
+CLASS: <sal-var-rename-info++>
+FAST SLOT ACCESS: #t
+IDX: 288
+SLOTS: (:defined-vars :preserve?)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-type-checker-info>
+FAST SLOT ACCESS: #t
+IDX: 289
+SLOTS: (:already-defined-positions :base-module-region :inside-property? :logic)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-string-reader>
+FAST SLOT ACCESS: #t
+IDX: 290
+SLOTS: (:scratch-context :sal-env)
+SUBCLASSES: (<lsal-string-reader>)
+---------------------------
+CLASS: <lsal-string-reader>
+FAST SLOT ACCESS: #t
+IDX: 291
+SLOTS: (:scratch-context :sal-env)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-env>
+FAST SLOT ACCESS: #t
+IDX: 292
+SLOTS: (:contexts :sal-context-path :extension-parser-table :type-check? :string-reader :prelude :ast-attributes :class-to-decl :auxiliary-context)
+SUBCLASSES: ()
+---------------------------
+CLASS: <bound>
+FAST SLOT ACCESS: #t
+IDX: 293
+SLOTS: (:value)
+SUBCLASSES: (<gt-bound> <ge-bound> <lt-bound> <le-bound> <lower-bound> <upper-bound>)
+---------------------------
+CLASS: <upper-bound>
+FAST SLOT ACCESS: #t
+IDX: 294
+SLOTS: (:value)
+SUBCLASSES: (<lt-bound> <le-bound>)
+---------------------------
+CLASS: <lower-bound>
+FAST SLOT ACCESS: #t
+IDX: 295
+SLOTS: (:value)
+SUBCLASSES: (<gt-bound> <ge-bound>)
+---------------------------
+CLASS: <le-bound>
+FAST SLOT ACCESS: #t
+IDX: 296
+SLOTS: (:value)
+SUBCLASSES: ()
+---------------------------
+CLASS: <lt-bound>
+FAST SLOT ACCESS: #t
+IDX: 297
+SLOTS: (:value)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ge-bound>
+FAST SLOT ACCESS: #t
+IDX: 298
+SLOTS: (:value)
+SUBCLASSES: ()
+---------------------------
+CLASS: <gt-bound>
+FAST SLOT ACCESS: #t
+IDX: 299
+SLOTS: (:value)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-assignment-info>
+FAST SLOT ACCESS: #t
+IDX: 300
+SLOTS: ()
+SUBCLASSES: (<sal-array-assignment-info> <sal-record-assignment-info> <sal-tuple-assignment-info> <sal-collection-assignment-info> <sal-def-assignment-info-with-rhs> <sal-def-assignment-info> <sal-partially-def-assignment-info> <sal-undef-assignment-info>)
+---------------------------
+CLASS: <sal-undef-assignment-info>
+FAST SLOT ACCESS: #t
+IDX: 301
+SLOTS: ()
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-partially-def-assignment-info>
+FAST SLOT ACCESS: #t
+IDX: 302
+SLOTS: ()
+SUBCLASSES: (<sal-array-assignment-info> <sal-record-assignment-info> <sal-tuple-assignment-info> <sal-collection-assignment-info> <sal-def-assignment-info-with-rhs> <sal-def-assignment-info>)
+---------------------------
+CLASS: <sal-def-assignment-info>
+FAST SLOT ACCESS: #t
+IDX: 303
+SLOTS: ()
+SUBCLASSES: (<sal-def-assignment-info-with-rhs>)
+---------------------------
+CLASS: <sal-def-assignment-info-with-rhs>
+FAST SLOT ACCESS: #t
+IDX: 304
+SLOTS: (:rhs)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-collection-assignment-info>
+FAST SLOT ACCESS: #t
+IDX: 305
+SLOTS: (:children)
+SUBCLASSES: (<sal-array-assignment-info> <sal-record-assignment-info> <sal-tuple-assignment-info>)
+---------------------------
+CLASS: <sal-tuple-assignment-info>
+FAST SLOT ACCESS: #t
+IDX: 306
+SLOTS: (:children)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-record-assignment-info>
+FAST SLOT ACCESS: #t
+IDX: 307
+SLOTS: (:children)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-array-assignment-info>
+FAST SLOT ACCESS: #t
+IDX: 308
+SLOTS: (:children)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-entry-info>
+FAST SLOT ACCESS: #t
+IDX: 309
+SLOTS: (:idx :info)
+SUBCLASSES: ()
+---------------------------
+CLASS: <polarity>
+FAST SLOT ACCESS: #t
+IDX: 310
+SLOTS: ()
+SUBCLASSES: (<pos-neg> <neg> <pos>)
+---------------------------
+CLASS: <pos>
+FAST SLOT ACCESS: #t
+IDX: 311
+SLOTS: ()
+SUBCLASSES: ()
+---------------------------
+CLASS: <neg>
+FAST SLOT ACCESS: #t
+IDX: 312
+SLOTS: ()
+SUBCLASSES: ()
+---------------------------
+CLASS: <pos-neg>
+FAST SLOT ACCESS: #t
+IDX: 313
+SLOTS: ()
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-to-esm-context>
+FAST SLOT ACCESS: #t
+IDX: 314
+SLOTS: (:synch-decl-list :choice-var-decl :choice-idx :choice-vars-queue :transition?)
+SUBCLASSES: ()
+---------------------------
+CLASS: <pre-vwaa-transition>
+FAST SLOT ACCESS: #t
+IDX: 315
+SLOTS: (:label :target-list)
+SUBCLASSES: ()
+---------------------------
+CLASS: <vwaa-transition>
+FAST SLOT ACCESS: #t
+IDX: 316
+SLOTS: (:label :target-set)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ltl-context>
+FAST SLOT ACCESS: #t
+IDX: 317
+SLOTS: (:manager :atom-table :bdd-var-idx->atom :pre-vwaa-transition-list-true :place-provider)
+SUBCLASSES: ()
+---------------------------
+CLASS: <vwaa-node>
+FAST SLOT ACCESS: #t
+IDX: 318
+SLOTS: (:source :transition-list :final?)
+SUBCLASSES: ()
+---------------------------
+CLASS: <vwaa-graph>
+FAST SLOT ACCESS: #t
+IDX: 319
+SLOTS: (:initial-nodes :final-nodes :node-table :formula->id :context)
+SUBCLASSES: ()
+---------------------------
+CLASS: <pre-gba-transition>
+FAST SLOT ACCESS: #t
+IDX: 320
+SLOTS: (:label :target-set :mark-set)
+SUBCLASSES: ()
+---------------------------
+CLASS: <pre-gba-node>
+FAST SLOT ACCESS: #t
+IDX: 321
+SLOTS: (:source-set-list :transition-list)
+SUBCLASSES: ()
+---------------------------
+CLASS: <gba-graph>
+FAST SLOT ACCESS: #t
+IDX: 322
+SLOTS: (:initial-nodes :node-vector :num-marks :vwaa-node-mapping :context)
+SUBCLASSES: ()
+---------------------------
+CLASS: <gba-transition>
+FAST SLOT ACCESS: #t
+IDX: 323
+SLOTS: (:label :target :mark-list)
+SUBCLASSES: ()
+---------------------------
+CLASS: <gba-node>
+FAST SLOT ACCESS: #t
+IDX: 324
+SLOTS: (:source :transition-list)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ba-transition>
+FAST SLOT ACCESS: #t
+IDX: 325
+SLOTS: (:label :target)
+SUBCLASSES: ()
+---------------------------
+CLASS: <pre-ba-node>
+FAST SLOT ACCESS: #t
+IDX: 326
+SLOTS: (:source-list :transition-list)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ba-graph>
+FAST SLOT ACCESS: #t
+IDX: 327
+SLOTS: (:initial-nodes :final-nodes :node-vector :gba-node-mapping :context)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ba-node>
+FAST SLOT ACCESS: #t
+IDX: 328
+SLOTS: (:source :transition-list)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-command-expansion-info>
+FAST SLOT ACCESS: #t
+IDX: 329
+SLOTS: (:choice-var-decl :choice-idx :choice-vars-queue :transition?)
+SUBCLASSES: ()
+---------------------------
+CLASS: <module-flattening-info>
+FAST SLOT ACCESS: #t
+IDX: 330
+SLOTS: (:synch-decl-list :aux-env)
+SUBCLASSES: ()
+---------------------------
+CLASS: <dependency-info>
+FAST SLOT ACCESS: #t
+IDX: 331
+SLOTS: (:graph :edge-table :context :next-vars :region :collect-implicit? :ignore-next-dependencies?)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-bdd-context>
+FAST SLOT ACCESS: #t
+IDX: 332
+SLOTS: (:bdd-manager :curr-vars :next-vars :tmp-bdd-var-list)
+SUBCLASSES: (<sal-bdd-fsm>)
+---------------------------
+CLASS: <sal-bdd-fsm>
+FAST SLOT ACCESS: #t
+IDX: 333
+SLOTS: (:bdd-manager :curr-vars :next-vars :tmp-bdd-var-list :initial-states :flat-module :transition-relation-cluster :next-cube :curr-cube :curr-indices :next-indices :input-cube :choice-cube :next-var-array :curr-var-array :no-choice-var-array :num-vars :num-choice-vars :valid-input :valid-latch :reachable-states :layered-reachable-states :restriction :new-let-var-proc)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-bdd-cluster>
+FAST SLOT ACCESS: #t
+IDX: 334
+SLOTS: (:fsm)
+SUBCLASSES: (<sal-bdd-let-cluster> <sal-bdd-conj-cluster> <sal-bdd-disj-cluster> <sal-bdd-monolithic-cluster>)
+---------------------------
+CLASS: <sal-bdd-monolithic-cluster>
+FAST SLOT ACCESS: #t
+IDX: 335
+SLOTS: (:fsm :bdd)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-bdd-disj-cluster>
+FAST SLOT ACCESS: #t
+IDX: 336
+SLOTS: (:fsm :cluster-list)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-bdd-conj-cluster>
+FAST SLOT ACCESS: #t
+IDX: 337
+SLOTS: (:fsm :forward-cluster-element-list :backward-cluster-element-list)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-bdd-cluster-element>
+FAST SLOT ACCESS: #t
+IDX: 338
+SLOTS: (:cluster :e-vars-cube :info)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-bdd-let-cluster>
+FAST SLOT ACCESS: #t
+IDX: 339
+SLOTS: (:fsm :nested-cluster :let-var-cube :num-let-variables)
+SUBCLASSES: ()
+---------------------------
+CLASS: <iwls95-cluster-info>
+FAST SLOT ACCESS: #t
+IDX: 340
+SLOTS: (:supp-Ti :supp-Q-Ci :PSPI-Ti :NS-Ti :v_c :w_c :x_c :y_c :z_c :m_c :M_c)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-path>
+FAST SLOT ACCESS: #t
+IDX: 341
+SLOTS: (:flat-module :step-info-list :auxiliary-decls :global-constraint-list)
+SUBCLASSES: (<sal-pseudo-cyclic-path> <sal-cyclic-path> <sal-concrete-path>)
+---------------------------
+CLASS: <sal-step>
+FAST SLOT ACCESS: #t
+IDX: 342
+SLOTS: (:assignment-table :constraint-list :transition-step)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-concrete-path>
+FAST SLOT ACCESS: #t
+IDX: 343
+SLOTS: (:flat-module :step-info-list :auxiliary-decls :global-constraint-list)
+SUBCLASSES: (<sal-pseudo-cyclic-path> <sal-cyclic-path>)
+---------------------------
+CLASS: <sal-cyclic-path>
+FAST SLOT ACCESS: #t
+IDX: 344
+SLOTS: (:flat-module :step-info-list :auxiliary-decls :global-constraint-list :cycle-step-info-list)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-pseudo-cyclic-path>
+FAST SLOT ACCESS: #t
+IDX: 345
+SLOTS: (:flat-module :step-info-list :auxiliary-decls :global-constraint-list)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-df-info>
+FAST SLOT ACCESS: #t
+IDX: 346
+SLOTS: (:new-decl-table :support-uninterpreted-types?)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-context>
+FAST SLOT ACCESS: #t
+IDX: 347
+SLOTS: ()
+SUBCLASSES: (<sat-boolean-smt-bmc-context> <sat-boolean-smt-context> <sat-boolean-cnf-bmc-context> <sat-boolean-cnf-context> <sat-boolean-ics-bmc-context> <sat-boolean-ics-context> <sat-boolean-bmc-context> <sat-boolean-context>)
+---------------------------
+CLASS: <sat-generic-context>
+FAST SLOT ACCESS: #t
+IDX: 348
+SLOTS: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider)
+SUBCLASSES: (<sat-yices2-bmc-context> <sat-yices2-context> <sat-yices-bmc-context> <sat-yices-context> <sat-uclid-bmc-context> <sat-uclid-context> <sat-cvc-bmc-context> <sat-cvcl-bmc-context> <sat-cvc-context> <sat-cvcl-context> <sat-svc-bmc-context> <sat-svc-context> <sat-ics-bmc-context> <sat-ics-context> <sat-generic-bmc-context>)
+---------------------------
+CLASS: <sat-decl>
+FAST SLOT ACCESS: #t
+IDX: 349
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: (<sat-ics-bool-aux-decl> <sat-step-decl> <sat-scalar-bit-aux-decl> <sat-scalar-bit-decl> <sat-type-constraint-aux-decl> <sat-ho-eq-aux-decl> <sat-ite-aux-decl> <sat-alias-aux-decl> <sat-skolem-aux-decl> <sat-lambda-aux-decl> <sat-let-aux-decl> <sat-aux-decl> <sat-global-decl>)
+---------------------------
+CLASS: <sat-global-decl>
+FAST SLOT ACCESS: #t
+IDX: 350
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-generic-context-model>
+FAST SLOT ACCESS: #t
+IDX: 351
+SLOTS: (:sat-generic-context :atomic-constraint-queue)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-var-eq-ground>
+FAST SLOT ACCESS: #t
+IDX: 352
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-var-eq-term>
+FAST SLOT ACCESS: #t
+IDX: 353
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-aux-decl>
+FAST SLOT ACCESS: #t
+IDX: 354
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: (<sat-ics-bool-aux-decl> <sat-scalar-bit-aux-decl> <sat-type-constraint-aux-decl> <sat-ho-eq-aux-decl> <sat-ite-aux-decl> <sat-alias-aux-decl> <sat-skolem-aux-decl> <sat-lambda-aux-decl> <sat-let-aux-decl>)
+---------------------------
+CLASS: <sat-let-aux-decl>
+FAST SLOT ACCESS: #t
+IDX: 355
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-cyclic-eq>
+FAST SLOT ACCESS: #t
+IDX: 356
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-lambda-aux-decl>
+FAST SLOT ACCESS: #t
+IDX: 357
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-skolem-aux-decl>
+FAST SLOT ACCESS: #t
+IDX: 358
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-alias-aux-decl>
+FAST SLOT ACCESS: #t
+IDX: 359
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-ite-aux-decl>
+FAST SLOT ACCESS: #t
+IDX: 360
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-ho-eq-aux-decl>
+FAST SLOT ACCESS: #t
+IDX: 361
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-type-constraint-aux-decl>
+FAST SLOT ACCESS: #t
+IDX: 362
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-scalar-bit-decl>
+FAST SLOT ACCESS: #t
+IDX: 363
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: (<sat-scalar-bit-aux-decl>)
+---------------------------
+CLASS: <sat-scalar-bit-aux-decl>
+FAST SLOT ACCESS: #t
+IDX: 364
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-generic-context-solver-interface>
+FAST SLOT ACCESS: #t
+IDX: 365
+SLOTS: ()
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-bmc-context>
+FAST SLOT ACCESS: #f
+IDX: 366
+SLOTS: (:step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+SUBCLASSES: (<sat-yices2-bmc-context> <sat-yices-bmc-context> <sat-uclid-bmc-context> <sat-cvc-bmc-context> <sat-cvcl-bmc-context> <sat-svc-bmc-context> <sat-ics-bmc-context> <sat-generic-bmc-context> <sat-boolean-smt-bmc-context> <sat-boolean-cnf-bmc-context> <sat-boolean-ics-bmc-context> <sat-boolean-bmc-context>)
+---------------------------
+CLASS: <sat-boolean-context>
+FAST SLOT ACCESS: #t
+IDX: 367
+SLOTS: (:next-idx)
+SUBCLASSES: (<sat-boolean-smt-bmc-context> <sat-boolean-smt-context> <sat-boolean-cnf-bmc-context> <sat-boolean-cnf-context> <sat-boolean-ics-bmc-context> <sat-boolean-ics-context> <sat-boolean-bmc-context>)
+---------------------------
+CLASS: <sat-boolean-bmc-context>
+FAST SLOT ACCESS: #f
+IDX: 368
+SLOTS: (:next-idx :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+SUBCLASSES: (<sat-boolean-smt-bmc-context> <sat-boolean-cnf-bmc-context> <sat-boolean-ics-bmc-context>)
+---------------------------
+CLASS: <sat-boolean-ics-context>
+FAST SLOT ACCESS: #t
+IDX: 369
+SLOTS: (:next-idx :file-name :top-level-args)
+SUBCLASSES: (<sat-boolean-ics-bmc-context>)
+---------------------------
+CLASS: <sat-boolean-ics-bmc-context>
+FAST SLOT ACCESS: #t
+IDX: 370
+SLOTS: (:next-idx :file-name :top-level-args :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-boolean-cnf-context>
+FAST SLOT ACCESS: #t
+IDX: 371
+SLOTS: (:next-idx :file-name :num-clauses :solver-proc)
+SUBCLASSES: (<sat-boolean-cnf-bmc-context>)
+---------------------------
+CLASS: <sat-boolean-cnf-bmc-context>
+FAST SLOT ACCESS: #t
+IDX: 372
+SLOTS: (:next-idx :file-name :num-clauses :solver-proc :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-boolean-smt-context>
+FAST SLOT ACCESS: #t
+IDX: 373
+SLOTS: (:next-idx :file-name :num-parenthesis :num-asserts :vars)
+SUBCLASSES: (<sat-boolean-smt-bmc-context>)
+---------------------------
+CLASS: <sat-boolean-smt-bmc-context>
+FAST SLOT ACCESS: #t
+IDX: 374
+SLOTS: (:next-idx :file-name :num-parenthesis :num-asserts :vars :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-generic-context-result>
+FAST SLOT ACCESS: #t
+IDX: 375
+SLOTS: (:sat-context :result-constraint-list)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-generic-bmc-context>
+FAST SLOT ACCESS: #t
+IDX: 376
+SLOTS: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+SUBCLASSES: (<sat-yices2-bmc-context> <sat-yices-bmc-context> <sat-uclid-bmc-context> <sat-cvc-bmc-context> <sat-cvcl-bmc-context> <sat-svc-bmc-context> <sat-ics-bmc-context>)
+---------------------------
+CLASS: <sat-step-decl>
+FAST SLOT ACCESS: #t
+IDX: 377
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: ()
+---------------------------
+CLASS: <dp-translation-info>
+FAST SLOT ACCESS: #t
+IDX: 378
+SLOTS: (:curr-idx :alias-idx :alias-queue :decl->id-mapping :id->decl-mapping :already-visited)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-ics-context>
+FAST SLOT ACCESS: #t
+IDX: 379
+SLOTS: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider)
+SUBCLASSES: (<sat-ics-bmc-context>)
+---------------------------
+CLASS: <sat-ics-bool-aux-decl>
+FAST SLOT ACCESS: #t
+IDX: 380
+SLOTS: (:place :context :hash :internal-idx :id :type)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ics-term-true>
+FAST SLOT ACCESS: #t
+IDX: 381
+SLOTS: (:place :context :hash :internal-idx :type :decl :context-ref :actuals)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ics-term-false>
+FAST SLOT ACCESS: #t
+IDX: 382
+SLOTS: (:place :context :hash :internal-idx :type :decl :context-ref :actuals)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-ics-bmc-context>
+FAST SLOT ACCESS: #t
+IDX: 383
+SLOTS: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-svc-context>
+FAST SLOT ACCESS: #t
+IDX: 384
+SLOTS: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider)
+SUBCLASSES: (<sat-svc-bmc-context>)
+---------------------------
+CLASS: <sat-svc-bmc-context>
+FAST SLOT ACCESS: #t
+IDX: 385
+SLOTS: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-cvcl-context>
+FAST SLOT ACCESS: #t
+IDX: 386
+SLOTS: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider)
+SUBCLASSES: (<sat-cvcl-bmc-context>)
+---------------------------
+CLASS: <sat-cvc-context>
+FAST SLOT ACCESS: #t
+IDX: 387
+SLOTS: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider)
+SUBCLASSES: (<sat-cvc-bmc-context>)
+---------------------------
+CLASS: <sat-cvcl-bmc-context>
+FAST SLOT ACCESS: #t
+IDX: 388
+SLOTS: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-cvc-bmc-context>
+FAST SLOT ACCESS: #t
+IDX: 389
+SLOTS: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-uclid-context>
+FAST SLOT ACCESS: #t
+IDX: 390
+SLOTS: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider)
+SUBCLASSES: (<sat-uclid-bmc-context>)
+---------------------------
+CLASS: <sat-uclid-bmc-context>
+FAST SLOT ACCESS: #t
+IDX: 391
+SLOTS: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-yices-context>
+FAST SLOT ACCESS: #t
+IDX: 392
+SLOTS: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider)
+SUBCLASSES: (<sat-yices-bmc-context>)
+---------------------------
+CLASS: <sat-yices-bmc-context>
+FAST SLOT ACCESS: #t
+IDX: 393
+SLOTS: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sat-yices2-context>
+FAST SLOT ACCESS: #t
+IDX: 394
+SLOTS: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider)
+SUBCLASSES: (<sat-yices2-bmc-context>)
+---------------------------
+CLASS: <sat-yices2-bmc-context>
+FAST SLOT ACCESS: #t
+IDX: 395
+SLOTS: (:declaration-queue :constraint-queue :scalar->bool-trace-info :scalar->int-trace-info :eliminated-declaration-queue :eliminated-constraint-queue :already-processed :place-provider :step-decl-tables :inv-step-decls :global-decls :inv-global-decls :max-step :flat-module)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-transition-step>
+FAST SLOT ACCESS: #t
+IDX: 396
+SLOTS: (:place :context :hash :internal-idx)
+SUBCLASSES: (<sal-let-transition-step> <sal-nested-list-transition-step> <sal-module-instance-transition-step> <sal-module-transition-step> <sal-labeled-transition-step> <sal-nested-transition-step> <sal-else-transition-step> <sal-simple-transition-step>)
+---------------------------
+CLASS: <sal-simple-transition-step>
+FAST SLOT ACCESS: #t
+IDX: 397
+SLOTS: (:place :context :hash :internal-idx)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-else-transition-step>
+FAST SLOT ACCESS: #t
+IDX: 398
+SLOTS: (:place :context :hash :internal-idx)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-nested-transition-step>
+FAST SLOT ACCESS: #t
+IDX: 399
+SLOTS: (:place :context :hash :internal-idx :nested-transition)
+SUBCLASSES: (<sal-let-transition-step> <sal-module-instance-transition-step> <sal-module-transition-step> <sal-labeled-transition-step>)
+---------------------------
+CLASS: <sal-labeled-transition-step>
+FAST SLOT ACCESS: #t
+IDX: 400
+SLOTS: (:place :context :hash :internal-idx :nested-transition :label)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-module-transition-step>
+FAST SLOT ACCESS: #t
+IDX: 401
+SLOTS: (:place :context :hash :internal-idx :nested-transition)
+SUBCLASSES: (<sal-module-instance-transition-step>)
+---------------------------
+CLASS: <sal-module-instance-transition-step>
+FAST SLOT ACCESS: #t
+IDX: 402
+SLOTS: (:place :context :hash :internal-idx :nested-transition)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-nested-list-transition-step>
+FAST SLOT ACCESS: #t
+IDX: 403
+SLOTS: (:place :context :hash :internal-idx :nested-transition-list)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-let-transition-step>
+FAST SLOT ACCESS: #t
+IDX: 404
+SLOTS: (:place :context :hash :internal-idx :nested-transition :with-var-value-list)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ebv-info>
+FAST SLOT ACCESS: #t
+IDX: 405
+SLOTS: (:step-vector :new-aux-var-decl-queue :transition-trace-info :curr-step)
+SUBCLASSES: ()
+---------------------------
+CLASS: <tvv-application>
+FAST SLOT ACCESS: #t
+IDX: 406
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: (<tvv-concat> <nat2tvv> <tvv2nat>)
+---------------------------
+CLASS: <tvv2nat>
+FAST SLOT ACCESS: #t
+IDX: 407
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <nat2tvv>
+FAST SLOT ACCESS: #t
+IDX: 408
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <tvv-concat>
+FAST SLOT ACCESS: #t
+IDX: 409
+SLOTS: (:place :context :hash :internal-idx :type :fun :arg)
+SUBCLASSES: ()
+---------------------------
+CLASS: <wmc-evidence>
+FAST SLOT ACCESS: #t
+IDX: 410
+SLOTS: (:fp :expr :in :bad :sub1 :sub2)
+SUBCLASSES: (<or-wmc-evidence> <and-wmc-evidence> <atom-wmc-evidence> <er-wmc-evidence> <eu-wmc-evidence> <ef-wmc-evidence> <ex-wmc-evidence> <eg-wmc-evidence> <ar-wmc-evidence> <au-wmc-evidence> <af-wmc-evidence> <ax-wmc-evidence> <ag-wmc-evidence>)
+---------------------------
+CLASS: <ag-wmc-evidence>
+FAST SLOT ACCESS: #t
+IDX: 411
+SLOTS: (:fp :expr :in :bad :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ax-wmc-evidence>
+FAST SLOT ACCESS: #t
+IDX: 412
+SLOTS: (:fp :expr :in :bad :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <af-wmc-evidence>
+FAST SLOT ACCESS: #t
+IDX: 413
+SLOTS: (:fp :expr :in :bad :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <au-wmc-evidence>
+FAST SLOT ACCESS: #t
+IDX: 414
+SLOTS: (:fp :expr :in :bad :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ar-wmc-evidence>
+FAST SLOT ACCESS: #t
+IDX: 415
+SLOTS: (:fp :expr :in :bad :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <eg-wmc-evidence>
+FAST SLOT ACCESS: #t
+IDX: 416
+SLOTS: (:fp :expr :in :bad :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ex-wmc-evidence>
+FAST SLOT ACCESS: #t
+IDX: 417
+SLOTS: (:fp :expr :in :bad :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ef-wmc-evidence>
+FAST SLOT ACCESS: #t
+IDX: 418
+SLOTS: (:fp :expr :in :bad :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <eu-wmc-evidence>
+FAST SLOT ACCESS: #t
+IDX: 419
+SLOTS: (:fp :expr :in :bad :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <er-wmc-evidence>
+FAST SLOT ACCESS: #t
+IDX: 420
+SLOTS: (:fp :expr :in :bad :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <atom-wmc-evidence>
+FAST SLOT ACCESS: #t
+IDX: 421
+SLOTS: (:fp :expr :in :bad :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <and-wmc-evidence>
+FAST SLOT ACCESS: #t
+IDX: 422
+SLOTS: (:fp :expr :in :bad :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <or-wmc-evidence>
+FAST SLOT ACCESS: #t
+IDX: 423
+SLOTS: (:fp :expr :in :bad :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <wmc-witness-or-counterexample>
+FAST SLOT ACCESS: #t
+IDX: 424
+SLOTS: (:bdd-list :fsm :expr)
+SUBCLASSES: (<or-wmc-counterexample> <and-wmc-counterexample> <atom-wmc-counterexample> <er-wmc-counterexample> <eu-wmc-counterexample> <ex-wmc-counterexample> <ef-wmc-counterexample> <eg-wmc-counterexample> <ar-wmc-counterexample> <au-wmc-counterexample> <ax-wmc-counterexample> <af-wmc-counterexample> <ag-wmc-counterexample> <binary-wmc-counterexample> <unary-wmc-counterexample> <wmc-counterexample> <or-wmc-witness> <and-wmc-witness> <atom-wmc-witness> <er-wmc-witness> <eu-wmc-witness> <ex-wmc-witness> <ef-wmc-witness> <eg-wmc-witness> <ar-wmc-witness> <au-wmc-witness> <ax-wmc-witness> <af-wmc-witness> <ag-wmc-witness> <binary-wmc-witness> <unary-wmc-witness> <wmc-witness>)
+---------------------------
+CLASS: <wmc-witness>
+FAST SLOT ACCESS: #t
+IDX: 425
+SLOTS: (:bdd-list :fsm :expr)
+SUBCLASSES: (<or-wmc-witness> <and-wmc-witness> <atom-wmc-witness> <er-wmc-witness> <eu-wmc-witness> <ex-wmc-witness> <ef-wmc-witness> <eg-wmc-witness> <ar-wmc-witness> <au-wmc-witness> <ax-wmc-witness> <af-wmc-witness> <ag-wmc-witness> <binary-wmc-witness> <unary-wmc-witness>)
+---------------------------
+CLASS: <unary-wmc-witness>
+FAST SLOT ACCESS: #t
+IDX: 426
+SLOTS: (:bdd-list :fsm :expr :sub)
+SUBCLASSES: (<ex-wmc-witness> <ef-wmc-witness> <eg-wmc-witness> <ax-wmc-witness> <af-wmc-witness> <ag-wmc-witness>)
+---------------------------
+CLASS: <binary-wmc-witness>
+FAST SLOT ACCESS: #t
+IDX: 427
+SLOTS: (:bdd-list :fsm :expr :valid1 :valid2 :sub1 :sub2)
+SUBCLASSES: (<or-wmc-witness> <and-wmc-witness> <er-wmc-witness> <eu-wmc-witness> <ar-wmc-witness> <au-wmc-witness>)
+---------------------------
+CLASS: <ag-wmc-witness>
+FAST SLOT ACCESS: #t
+IDX: 428
+SLOTS: (:bdd-list :fsm :expr :sub)
+SUBCLASSES: ()
+---------------------------
+CLASS: <af-wmc-witness>
+FAST SLOT ACCESS: #t
+IDX: 429
+SLOTS: (:bdd-list :fsm :expr :sub)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ax-wmc-witness>
+FAST SLOT ACCESS: #t
+IDX: 430
+SLOTS: (:bdd-list :fsm :expr :sub)
+SUBCLASSES: ()
+---------------------------
+CLASS: <au-wmc-witness>
+FAST SLOT ACCESS: #t
+IDX: 431
+SLOTS: (:bdd-list :fsm :expr :valid1 :valid2 :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ar-wmc-witness>
+FAST SLOT ACCESS: #t
+IDX: 432
+SLOTS: (:bdd-list :fsm :expr :valid1 :valid2 :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <eg-wmc-witness>
+FAST SLOT ACCESS: #t
+IDX: 433
+SLOTS: (:bdd-list :fsm :expr :sub)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ef-wmc-witness>
+FAST SLOT ACCESS: #t
+IDX: 434
+SLOTS: (:bdd-list :fsm :expr :sub)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ex-wmc-witness>
+FAST SLOT ACCESS: #t
+IDX: 435
+SLOTS: (:bdd-list :fsm :expr :sub)
+SUBCLASSES: ()
+---------------------------
+CLASS: <eu-wmc-witness>
+FAST SLOT ACCESS: #t
+IDX: 436
+SLOTS: (:bdd-list :fsm :expr :valid1 :valid2 :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <er-wmc-witness>
+FAST SLOT ACCESS: #t
+IDX: 437
+SLOTS: (:bdd-list :fsm :expr :valid1 :valid2 :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <atom-wmc-witness>
+FAST SLOT ACCESS: #t
+IDX: 438
+SLOTS: (:bdd-list :fsm :expr)
+SUBCLASSES: ()
+---------------------------
+CLASS: <and-wmc-witness>
+FAST SLOT ACCESS: #t
+IDX: 439
+SLOTS: (:bdd-list :fsm :expr :valid1 :valid2 :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <or-wmc-witness>
+FAST SLOT ACCESS: #t
+IDX: 440
+SLOTS: (:bdd-list :fsm :expr :valid1 :valid2 :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <wmc-counterexample>
+FAST SLOT ACCESS: #t
+IDX: 441
+SLOTS: (:bdd-list :fsm :expr)
+SUBCLASSES: (<or-wmc-counterexample> <and-wmc-counterexample> <atom-wmc-counterexample> <er-wmc-counterexample> <eu-wmc-counterexample> <ex-wmc-counterexample> <ef-wmc-counterexample> <eg-wmc-counterexample> <ar-wmc-counterexample> <au-wmc-counterexample> <ax-wmc-counterexample> <af-wmc-counterexample> <ag-wmc-counterexample> <binary-wmc-counterexample> <unary-wmc-counterexample>)
+---------------------------
+CLASS: <unary-wmc-counterexample>
+FAST SLOT ACCESS: #t
+IDX: 442
+SLOTS: (:bdd-list :fsm :expr :sub)
+SUBCLASSES: (<ex-wmc-counterexample> <ef-wmc-counterexample> <eg-wmc-counterexample> <ax-wmc-counterexample> <af-wmc-counterexample> <ag-wmc-counterexample>)
+---------------------------
+CLASS: <binary-wmc-counterexample>
+FAST SLOT ACCESS: #t
+IDX: 443
+SLOTS: (:bdd-list :fsm :expr :valid1 :valid2 :sub1 :sub2)
+SUBCLASSES: (<or-wmc-counterexample> <and-wmc-counterexample> <er-wmc-counterexample> <eu-wmc-counterexample> <ar-wmc-counterexample> <au-wmc-counterexample>)
+---------------------------
+CLASS: <ag-wmc-counterexample>
+FAST SLOT ACCESS: #t
+IDX: 444
+SLOTS: (:bdd-list :fsm :expr :sub)
+SUBCLASSES: ()
+---------------------------
+CLASS: <af-wmc-counterexample>
+FAST SLOT ACCESS: #t
+IDX: 445
+SLOTS: (:bdd-list :fsm :expr :sub)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ax-wmc-counterexample>
+FAST SLOT ACCESS: #t
+IDX: 446
+SLOTS: (:bdd-list :fsm :expr :sub)
+SUBCLASSES: ()
+---------------------------
+CLASS: <au-wmc-counterexample>
+FAST SLOT ACCESS: #t
+IDX: 447
+SLOTS: (:bdd-list :fsm :expr :valid1 :valid2 :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ar-wmc-counterexample>
+FAST SLOT ACCESS: #t
+IDX: 448
+SLOTS: (:bdd-list :fsm :expr :valid1 :valid2 :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <eg-wmc-counterexample>
+FAST SLOT ACCESS: #t
+IDX: 449
+SLOTS: (:bdd-list :fsm :expr :sub)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ef-wmc-counterexample>
+FAST SLOT ACCESS: #t
+IDX: 450
+SLOTS: (:bdd-list :fsm :expr :sub)
+SUBCLASSES: ()
+---------------------------
+CLASS: <ex-wmc-counterexample>
+FAST SLOT ACCESS: #t
+IDX: 451
+SLOTS: (:bdd-list :fsm :expr :sub)
+SUBCLASSES: ()
+---------------------------
+CLASS: <eu-wmc-counterexample>
+FAST SLOT ACCESS: #t
+IDX: 452
+SLOTS: (:bdd-list :fsm :expr :valid1 :valid2 :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <er-wmc-counterexample>
+FAST SLOT ACCESS: #t
+IDX: 453
+SLOTS: (:bdd-list :fsm :expr :valid1 :valid2 :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <atom-wmc-counterexample>
+FAST SLOT ACCESS: #t
+IDX: 454
+SLOTS: (:bdd-list :fsm :expr)
+SUBCLASSES: ()
+---------------------------
+CLASS: <and-wmc-counterexample>
+FAST SLOT ACCESS: #t
+IDX: 455
+SLOTS: (:bdd-list :fsm :expr :valid1 :valid2 :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <or-wmc-counterexample>
+FAST SLOT ACCESS: #t
+IDX: 456
+SLOTS: (:bdd-list :fsm :expr :valid1 :valid2 :sub1 :sub2)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-global-context>
+FAST SLOT ACCESS: #t
+IDX: 457
+SLOTS: (:const-table :type-table :module-table :assertion-table :declarations :name-table :sal-env :curr-type-decl)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-scm-context>
+FAST SLOT ACCESS: #t
+IDX: 458
+SLOTS: (:global-function-decl-table :global-constant-decl-table :idx-val-table :val-idx-table :scm-decl-queue :gmp? :runtime-type-check? :debug? :loop-detection? :max-vector-size :compile? :type-check-table :pick-random-table)
+SUBCLASSES: (<sal-esm-engine-scm-context>)
+---------------------------
+CLASS: <sal-esm-expansion-context>
+FAST SLOT ACCESS: #t
+IDX: 459
+SLOTS: (:expand-everything?)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-esm-dependencies-ctx>
+FAST SLOT ACCESS: #t
+IDX: 460
+SLOTS: (:graph :lhs-to-node)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-esm-used-provided-lhs-ctx>
+FAST SLOT ACCESS: #t
+IDX: 461
+SLOTS: (:cached-used-and-provided-lhs :defined-variables :section-id :conservative?)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-esm-engine-scm-context>
+FAST SLOT ACCESS: #t
+IDX: 462
+SLOTS: (:global-function-decl-table :global-constant-decl-table :idx-val-table :val-idx-table :scm-decl-queue :gmp? :runtime-type-check? :debug? :loop-detection? :max-vector-size :compile? :type-check-table :pick-random-table :curr-var-idx-table :next-var-idx-table :section-id :cached-code :action-scm-decl-queue :randomize? :restricted-randomization? :symmetry? :curr-var-name-table :next-var-name-table :to-bitstream-proc-table :from-bitstream-proc-table :normalized-proc-table :cmp-proc-table :symmetry-constraint-table)
+SUBCLASSES: ()
+---------------------------
+GENERIC: api-entry/print
+IDX: 0
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: api-entry/print-header
+IDX: 1
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: api-entry/match
+IDX: 2
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/for-each-children
+IDX: 3
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (1)
+----------------------------
+GENERIC: sal-new-binds-ast/for-each-new-bind
+IDX: 4
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (1)
+----------------------------
+GENERIC: sal-ast/map
+IDX: 5
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/deep-copy-core
+IDX: 6
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/open-references-core
+IDX: 7
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/unique-decls-core
+IDX: 8
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast->list
+IDX: 9
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/instantiate-with
+IDX: 10
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: pp/flatten
+IDX: 11
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: pp/layout
+IDX: 12
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: fits
+IDX: 13
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: be-next
+IDX: 14
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: object->doc
+IDX: 15
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast->lsal-doc
+IDX: 16
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sal-ast->sal-doc
+IDX: 17
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sal-application/infix?
+IDX: 18
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-application/precedence
+IDX: 19
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-application/associativity
+IDX: 20
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-var-rename-info/new-decl
+IDX: 21
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/rename-variables-core
+IDX: 22
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-trace-info/rename
+IDX: 23
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/local-simplify-core
+IDX: 24
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-not-arg/local-simplify
+IDX: 25
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-quantified-ast/local-simplify-core
+IDX: 26
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sal-ast/eager-local-simplify
+IDX: 27
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/simplify-without-converting-inequalities-core
+IDX: 28
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-expr/evaluate-core
+IDX: 29
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-application/logic-id
+IDX: 30
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-name-expr/type
+IDX: 31
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-var-decl/definition
+IDX: 32
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-name-expr/definition
+IDX: 33
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-name-expr/constructor-accessors
+IDX: 34
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-name-expr/accessor-type
+IDX: 35
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-name-expr/accessor-other-accessors
+IDX: 36
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-argument->argument-list
+IDX: 37
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-expr/apply
+IDX: 38
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sal-expr/apply-conservative
+IDX: 39
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-expr/value-core?
+IDX: 40
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-lhs/ground?
+IDX: 41
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-expr/update-type!
+IDX: 42
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sign-invalid-app-error
+IDX: 43
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-expr->next-expr
+IDX: 44
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type-check
+IDX: 45
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: check-observer
+IDX: 46
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-state-var-decl/kind
+IDX: 47
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-command/else?
+IDX: 48
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-string-reader/scratch-context
+IDX: 49
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: sal-string-reader/read-expr
+IDX: 50
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-string-reader/read-expr-using
+IDX: 51
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-string-reader/read-type
+IDX: 52
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-string-reader/read-module
+IDX: 53
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-string-reader/read-import
+IDX: 54
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-string-reader/read-assertion-name
+IDX: 55
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-dnf/and
+IDX: 56
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sal-dnf/or
+IDX: 57
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sal-dnf/not
+IDX: 58
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-dnf/for-each-cube
+IDX: 59
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-cube/for-each-literal
+IDX: 60
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-expr->dnf-core
+IDX: 61
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-dnf/cube-list
+IDX: 62
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-cube/literal-list
+IDX: 63
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: bound/invert
+IDX: 64
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: bound/strict->non-strict
+IDX: 65
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-expr/bound
+IDX: 66
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type-decl/definition
+IDX: 67
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type-name/definition
+IDX: 68
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/expand-if-type-name
+IDX: 69
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: finite-type?
+IDX: 70
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/kind?
+IDX: 71
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/cast
+IDX: 72
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/boolean?
+IDX: 73
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/for-each-used-type
+IDX: 74
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (1)
+----------------------------
+GENERIC: sal-type/subtype-of?
+IDX: 75
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/number?
+IDX: 76
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type->bounded-subtype
+IDX: 77
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/real?
+IDX: 78
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/integer?
+IDX: 79
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/natural?
+IDX: 80
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type->type-list
+IDX: 81
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/make-iterator-core
+IDX: 82
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/value-idx
+IDX: 83
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/number-of-elements-core
+IDX: 84
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/super-type
+IDX: 85
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/equivalent?
+IDX: 86
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: sal-type/equivalent-core?
+IDX: 87
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sal-type/union-core
+IDX: 88
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sal-ast/compare-children
+IDX: 89
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sal-ast/equivalent-core?
+IDX: 90
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sal-name-ref/equivalent?
+IDX: 91
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sal-ast/hash
+IDX: 92
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-module/update-state-variable-table!
+IDX: 93
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-module/update-interface!
+IDX: 94
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-module-name/definition
+IDX: 95
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-module-instance/expand
+IDX: 96
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: sal-module/defined-variables
+IDX: 97
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-derived-flat-module/original-flat-module
+IDX: 98
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-derived-flat-module/original-boolean-flat-module
+IDX: 99
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-derived-flat-module/original-simple-data-flat-module
+IDX: 100
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-flat-module/slice-of?
+IDX: 101
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-decl/attribute
+IDX: 102
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-decl/name-class
+IDX: 103
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-decl/app-class
+IDX: 104
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-expr/application-class
+IDX: 105
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/reset-cache!
+IDX: 106
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-name-ref/decl
+IDX: 107
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-qualified-name-ref/context-ref
+IDX: 108
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-qualified-name-ref/actuals
+IDX: 109
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-local-binds-ast/local-decls
+IDX: 110
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-selection/target
+IDX: 111
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-selection/idx
+IDX: 112
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-selection/update-target
+IDX: 113
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-expr/lhs?
+IDX: 114
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-lhs/name-expr
+IDX: 115
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-lhs/trivial?
+IDX: 116
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-lhs/next-operator
+IDX: 117
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-lhs/remove-next-operator
+IDX: 118
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-lhs->next-lhs
+IDX: 119
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-next-lhs->lhs
+IDX: 120
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-decl/recursive?
+IDX: 121
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/check-number-of-actuals
+IDX: 122
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-command/guard
+IDX: 123
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-else-command/assignments
+IDX: 124
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-else-command/trace-info
+IDX: 125
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-trace-info/find-choice-var
+IDX: 126
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast->sxml
+IDX: 127
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-lhs/supported?
+IDX: 128
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-simple-definition/supported?
+IDX: 129
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-simple-definition/convert-to-supported
+IDX: 130
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: get-new-lhs
+IDX: 131
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: gen-new-rhs
+IDX: 132
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-assignment-info/union
+IDX: 133
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sal-lhs->assignment-info
+IDX: 134
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-assignment-info->implicit-value
+IDX: 135
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: process-definition
+IDX: 136
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: process-command
+IDX: 137
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: polarity/invert
+IDX: 138
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/map-using-polarity
+IDX: 139
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-expr->nnf-core
+IDX: 140
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sal-ast/expand-core
+IDX: 141
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-expr/lift
+IDX: 142
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-expr/auxiliary-decl-for
+IDX: 143
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: make-function-base-on
+IDX: 144
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-quantified-expr/expand-core
+IDX: 145
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/expand-quantifiers-core
+IDX: 146
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: skolem-expand?
+IDX: 147
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: skolem-expand-finite?
+IDX: 148
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sal-ast/expand-names
+IDX: 149
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/expand-applications
+IDX: 150
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-cse/filter-occurrences-core
+IDX: 151
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-cse/compute-occurrences-core
+IDX: 152
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: places-to-insert-new-decls
+IDX: 153
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: cse-core
+IDX: 154
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/cse
+IDX: 155
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: collect-let-decls
+IDX: 156
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: remove-pulled-let-decls
+IDX: 157
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/pull-let-decls
+IDX: 158
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/finite-rep-num-bits
+IDX: 159
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/union-finite-rep
+IDX: 160
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sal-component-info/empty?
+IDX: 161
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-component-info/simplify
+IDX: 162
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-component-info/convert-data
+IDX: 163
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/convert-to
+IDX: 164
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sal-type/finite-rep-membership-expr
+IDX: 165
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-expr->boolean-expr-core
+IDX: 166
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: bit-list->sal-value
+IDX: 167
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast->boolean-ast
+IDX: 168
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-assertion->boolean-assertion-core
+IDX: 169
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/nontrivial-membership-expr?
+IDX: 170
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/membership-expr
+IDX: 171
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal->esm
+IDX: 172
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm/add-choice-to-queue
+IDX: 173
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm/add-seq-to-queue
+IDX: 174
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal->esm-core
+IDX: 175
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-cmd->esm
+IDX: 176
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-guard->esm
+IDX: 177
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 3)
+----------------------------
+GENERIC: sal-definition->esm
+IDX: 178
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-else-cmd->esm
+IDX: 179
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: combine-multi-synch-core
+IDX: 180
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ltl-expr/collect-atoms-core
+IDX: 181
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: ltl/le?
+IDX: 182
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: ltl/simplify-core
+IDX: 183
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: ltl->pre-vwaa-transition-list
+IDX: 184
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: ltl->ctl-core
+IDX: 185
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: ctl->ltl-core
+IDX: 186
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-assertion-name/definition
+IDX: 187
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: sal-assertion/transformation-core
+IDX: 188
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: make-module-models-with-monitor
+IDX: 189
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-definition/expand
+IDX: 190
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/expand-for-all-definitions
+IDX: 191
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/flat-modules-core
+IDX: 192
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/flat-modules
+IDX: 193
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-command/flat-modules-core
+IDX: 194
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-definition/defined-variables
+IDX: 195
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-module/flat-modules-core
+IDX: 196
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: set-of-support-core
+IDX: 197
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: implicit-dependencies-core
+IDX: 198
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: collect-dependencies
+IDX: 199
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: collect-lhs-targets-core!
+IDX: 200
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/slice
+IDX: 201
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: remove-non-used-var-from-valid-expr-core
+IDX: 202
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-sliced-flat-module->flat-module
+IDX: 203
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-expr->bdd-core
+IDX: 204
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 2)
+----------------------------
+GENERIC: collect-implicit-lets
+IDX: 205
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-bdd-cluster/image
+IDX: 206
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-bdd-cluster/pre-image
+IDX: 207
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-bdd-cluster/disj-image
+IDX: 208
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-bdd-cluster/size
+IDX: 209
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-bdd-cluster/num-clusters
+IDX: 210
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-bdd-cluster->bdd
+IDX: 211
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-bdd-cluster/display-info
+IDX: 212
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-bdd-cluster/compress
+IDX: 213
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-bdd-cluster/push-tiny-bdds-core
+IDX: 214
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-bdd-cluster->cluster-list
+IDX: 215
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-bdd-cluster/support
+IDX: 216
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: make-bdd-let-cluster
+IDX: 217
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-expr->cluster-core
+IDX: 218
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-bdd-fsm/reorder!
+IDX: 219
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: sal-path/length
+IDX: 220
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-path/step-data
+IDX: 221
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-path/state-expr-core
+IDX: 222
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-path/cut
+IDX: 223
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: sal-path/cut-after
+IDX: 224
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: sal-path/evaluate-expr-at
+IDX: 225
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (1)
+----------------------------
+GENERIC: sal-path->cyclic-path
+IDX: 226
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/flattenable?
+IDX: 227
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/display-df-warnings-core
+IDX: 228
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type->flattened-var-decls
+IDX: 229
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/num-atom-types
+IDX: 230
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-expr/flat-data-core
+IDX: 231
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm/flat-data-core
+IDX: 232
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/flat-data
+IDX: 233
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-assertion/flat-data
+IDX: 234
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: populate-inv-flat-data-map-core!
+IDX: 235
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: data-list->sal-value
+IDX: 236
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: flat-data-ast->ast
+IDX: 237
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sat-context/make-or*
+IDX: 238
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sat-context/make-false
+IDX: 239
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sat-context/make-and*
+IDX: 240
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sat-context/make-not
+IDX: 241
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sat-context/make-true
+IDX: 242
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sat-context/make-ite
+IDX: 243
+NUM DISCRIMINATORS: 4
+DISCRIMINATORS POSITIONS: (0 1 2 3)
+----------------------------
+GENERIC: sat-context/make-eq
+IDX: 244
+NUM DISCRIMINATORS: 3
+DISCRIMINATORS POSITIONS: (0 1 2)
+----------------------------
+GENERIC: sat-context/make-iff
+IDX: 245
+NUM DISCRIMINATORS: 3
+DISCRIMINATORS POSITIONS: (0 1 2)
+----------------------------
+GENERIC: sat-context/assert
+IDX: 246
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sat-context/add-auxiliary-decl
+IDX: 247
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/remove-lets
+IDX: 248
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/eliminate-array-theory
+IDX: 249
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/pull-lambdas
+IDX: 250
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/ho-eq-expansion
+IDX: 251
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 2)
+----------------------------
+GENERIC: sal-ast/expand-lambdas
+IDX: 252
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/eliminate-quantifiers
+IDX: 253
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 2)
+----------------------------
+GENERIC: sal-ast/ite->bool-ite
+IDX: 254
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/eliminate-div-mod
+IDX: 255
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/eliminate-int-diseq
+IDX: 256
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 2)
+----------------------------
+GENERIC: sal-ast/polarity-breaker-for-ho-eq
+IDX: 257
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/eliminate-function-subtypes
+IDX: 258
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/no-constraints?
+IDX: 259
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/add-type-constraints
+IDX: 260
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/scalar->int
+IDX: 261
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/scalar->bool
+IDX: 262
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/eliminate-int-real-pred
+IDX: 263
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 2)
+----------------------------
+GENERIC: sal-ast/ite->decl
+IDX: 264
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sat-bmc-context/id-at
+IDX: 265
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast->sat
+IDX: 266
+NUM DISCRIMINATORS: 3
+DISCRIMINATORS POSITIONS: (0 1 4)
+----------------------------
+GENERIC: make-path-extension-sat-context
+IDX: 267
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: append-to-path
+IDX: 268
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: remove-and-collect-pseudo-lets
+IDX: 269
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/remove-pseudo-lets
+IDX: 270
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/simple-abstraction
+IDX: 271
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-expr/simple-abstraction
+IDX: 272
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/substitute-state-var-definitions
+IDX: 273
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/def-var-substitution
+IDX: 274
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: obj->flat-assertion
+IDX: 275
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: obj->flat-module
+IDX: 276
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sat-boolean-context/make-aux-var
+IDX: 277
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sat-bmc-context/decl-at
+IDX: 278
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sat-context/solve
+IDX: 279
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sat-bmc-context/make-path
+IDX: 280
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/sat-ground?
+IDX: 281
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/apply-assignment
+IDX: 282
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: expected-type
+IDX: 283
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/recover-scalars-from-integers
+IDX: 284
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sat-generic-context-result/cleanup!
+IDX: 285
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: sat-generic-context-result/make-path
+IDX: 286
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: build-state-ast
+IDX: 287
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-constraint/normalize
+IDX: 288
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-constraint/invert
+IDX: 289
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/side-insert!
+IDX: 290
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-inequality/swap-class
+IDX: 291
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/create-bool-bridge
+IDX: 292
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/display-ics
+IDX: 293
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-constraint/display-ics
+IDX: 294
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/display-svc
+IDX: 295
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-constraint/display-svc
+IDX: 296
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/display-cvcl
+IDX: 297
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/display-cvcl
+IDX: 298
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-constraint/display-cvcl
+IDX: 299
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/display-uclid
+IDX: 300
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/display-uclid
+IDX: 301
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-term/collect-data
+IDX: 302
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-constraint/display-uclid
+IDX: 303
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/display-yices
+IDX: 304
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/display-yices
+IDX: 305
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-constraint/display-yices
+IDX: 306
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/display-yices2
+IDX: 307
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/display-yices2
+IDX: 308
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-constraint/display-yices2
+IDX: 309
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: make-sal-transition-step-core
+IDX: 310
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-transition-step->doc
+IDX: 311
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-derived-path->original-path-core
+IDX: 312
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sal-derived-input-seq->original-input-seq-core
+IDX: 313
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: find-original-choice-var-name
+IDX: 314
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/eliminate-bad-vars!
+IDX: 315
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-module/var-bits
+IDX: 316
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: var-decls->var-values
+IDX: 317
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: derived-value->value
+IDX: 318
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-path/recover-executed-transition-info!
+IDX: 319
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-value->assignments
+IDX: 320
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: sal-value->assignments-core
+IDX: 321
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sal-var-decl/display-value
+IDX: 322
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: sal-var-decl/display-value-differences
+IDX: 323
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: sal-path/display
+IDX: 324
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-smc/find-path-from-initial-state
+IDX: 325
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: sal-smc/find-path-from-initial-state-with-at-most
+IDX: 326
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
+----------------------------
+GENERIC: make-state-expression-bdd
+IDX: 327
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: temporal?
+IDX: 328
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: wmc-for-each
+IDX: 329
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-wmc
+IDX: 330
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (1)
+----------------------------
+GENERIC: sal-wmc/symbolic-witness
+IDX: 331
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-wmc/symbolic-counterexample
+IDX: 332
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-wmc/get-initial-bdd
+IDX: 333
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-wmc/display-trace
+IDX: 334
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: sal-wmc/display-trace-starting-at
+IDX: 335
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/flat-globals
+IDX: 336
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: x-g-property?
+IDX: 337
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: x-g-property-body
+IDX: 338
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-scm-context/add-decl!
+IDX: 339
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: scm-value->sal
+IDX: 340
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (1)
+----------------------------
+GENERIC: scm-value->sal-array
+IDX: 341
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (1 2)
+----------------------------
+GENERIC: sal-type/simple-idx-val?
+IDX: 342
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/idx->val
+IDX: 343
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/idx->val-proc
+IDX: 344
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/val->idx
+IDX: 345
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/val->idx-proc
+IDX: 346
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/setup-code
+IDX: 347
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-scm/encoded-as-lambda?
+IDX: 348
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal->scm
+IDX: 349
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-scm/create-lambda
+IDX: 350
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type->scm-iterator
+IDX: 351
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: subrange-iterator
+IDX: 352
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: sal-type/gen-eq-pred
+IDX: 353
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/gen-check-membership-pred-core
+IDX: 354
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: esm->dnf-esm
+IDX: 355
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: esm->dnf-esm-core
+IDX: 356
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm-expansion-context/expand
+IDX: 357
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: sal-esm/expand-core
+IDX: 358
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/collect-state-lhs!
+IDX: 359
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm/collect-dependencies!
+IDX: 360
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-lhs/subsumes?
+IDX: 361
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (1)
+----------------------------
+GENERIC: merge-common-lhs-core
+IDX: 362
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (1)
+----------------------------
+GENERIC: sal-lhs-target-type/num-components
+IDX: 363
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-lhs-type/components
+IDX: 364
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm/used-and-provided-lhs
+IDX: 365
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm/rearrange
+IDX: 366
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm-engine-scm-context/compile-code!
+IDX: 367
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: sal-module/transient-vars
+IDX: 368
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/collect-non-transient!
+IDX: 369
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm/collect-lhs-name-expr
+IDX: 370
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm/uses-next-operator?
+IDX: 371
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: collect-defined-vars-input-dependent!
+IDX: 372
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: break-definitions-in-two-lists
+IDX: 373
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: decide-definition-kind
+IDX: 374
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm/remove-non-det-parts
+IDX: 375
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm/num-alternatives
+IDX: 376
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm/has-guards?
+IDX: 377
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm->next-alt-proc
+IDX: 378
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm->exec-alt-proc
+IDX: 379
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: collect-case-target-core!
+IDX: 380
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: erase-guard-exprs-subsumed-by-case-stmt
+IDX: 381
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm/promote-choice-to-case
+IDX: 382
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm/mark-may-delay!
+IDX: 383
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm/collect-access-levels!
+IDX: 384
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-lhs/access-level
+IDX: 385
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm-module/initialization-access-levels
+IDX: 386
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: sal-esm-module/transition-access-levels
+IDX: 387
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: sal-esm/collect-must-initialization
+IDX: 388
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm/collect-may-initialization
+IDX: 389
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: lhs->ground-lhs
+IDX: 390
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: add-implicit-initialization!
+IDX: 391
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/val->bitstream
+IDX: 392
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/val->bitstream-proc
+IDX: 393
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-function-type/val->bitstream-proc
+IDX: 394
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/simple?
+IDX: 395
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/bitstream->val
+IDX: 396
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/bitstream->vector-proc
+IDX: 397
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/gen-normalize
+IDX: 398
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/gen-normalize-proc
+IDX: 399
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-function-type/gen-normalize-proc
+IDX: 400
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/gen-cmp
+IDX: 401
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/gen-cmp-proc
+IDX: 402
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-function-type/gen-cmp-proc
+IDX: 403
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-ast/used-contexts-core
+IDX: 404
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+STATISTICS:
+number of classes: 462
+number of classes which support fast slot access: 460
+number of generic methods: 405
+number of static dispatch generic methods: 19
+number of single dispatch generic methods: 349
+number of double dispatch generic methods: 33
+number of multi dispatch generic methods: 4

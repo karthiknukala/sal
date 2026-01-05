@@ -1,0 +1,827 @@
+%% -----------------------------------------------------------------------------------------
+%% This SAL specification was automatically generated from a HybridSal specification 
+%% describing the B.Subtitlis sporulation initiation network, using the HybridAbstractor.
+%% Invariants AND properties were added by hand. 
+%% The goal is to prove that the BSub Sporulation network stabilizes in a High Spo0AP and
+%% low SinR4 state (when environmental conditions are not conducive to growth).
+%% We prove that whenever the bacteria reaches the "HIGH Spo0AP AND LOW SinR4" state 
+%% *after* certain other protein concentrations have stopped fluctuating, then it continues
+%% remain in this state.
+%% BSubSpor78.sal --- Original SAL specification
+%% BSubSpor78ABS.sal --- Abstract SAL specification (this file)
+%% sporulate2 --- stability property, as described above. Of the form G(p => Gp).
+%% sporulate1 --- the stable state is reached (note this is weaker. It doesn't say it is
+%%		*always eventually* reached.
+%% -----------------------------------------------------------------------------------------
+
+%% Copied from BSubSpor7ABS.sal: Invariant added back! by scheme function
+%% Abstract variable to Polynomial Mapping:
+%% g15 --> ((1 (Spo0AP . 1)) (-1/3))
+%% g14 --> ((1 (Spo0AP . 1)) (-2/3))
+%% g13 --> ((1 (RapA . 1)) (-1/2))
+%% g12 --> ((4 (Spo0A . 1)) (-1))
+%% g11 --> ((2 (Spo0BP . 1)) (-1))
+%% g10 --> ((2 (Spo0FP . 1)) (-1))
+%% g9 --> ((1 (Spo0E . 1)))
+%% g8 --> ((1 (RapA . 1)))
+%% g7 --> ((1 (Spo0FP . 1)))
+%% g6 --> ((1 (Spo0BP . 1)))
+%% g5 --> ((1 (Spo0AP . 1)))
+%% g4 --> ((1 (Spo0A . 1)))
+%% g3 --> ((1 (Spo0BP . 1) (Spo0A . 1) (Vba . 1)) (-1 (Spo0AP . 1) (Spo0E . 1) (v7 . 1)))
+%% g2 --> ((-1 (Spo0BP . 1) (Spo0A . 1) (Vba . 1)) (-1 (Spo0A . 1)) (1 (Spo0AP . 1) (Spo0E . 1) (v7 . 1)) (1/3))
+%% g1 --> ((1 (Spo0FP . 1) (Spo0BP . 1) (Vbm . 1)) (-1 (Spo0FP . 1) (RapA . 1) (d . 1)) (-1 (Spo0FP . 1) (b . 1)) (-1 (Spo0FP . 1) (Vbm . 1)) (1 (b . 1)))
+%% g0 --> ((-1 (Spo0FP . 1) (Spo0BP . 1) (Vbm . 1)) (1 (Spo0FP . 1) (Vbm . 1)) (-1 (Spo0BP . 1) (Spo0A . 1) (Vba . 1)))
+%% g18 --> ((-1 (SinI . 1)) (1 (SinR . 1)))
+%% g17 --> ((2 (SinI . 1)) (-1))
+%% g16 --> ((2 (SinR . 1)) (-1))
+%% g21 --> ((1 (AbrB . 1)))
+%% g20 --> ((1 (AbrB . 1)) (-1))
+%% g19 --> ((1 (AbrB . 1)) (-1/2))
+%% g24 --> ((1 (Hpr . 1)))
+%% g23 --> ((1 (Hpr . 1)) (-1))
+%% g22 --> ((1 (Hpr . 1)) (-1/2))
+%% g27 --> ((1 (SigmaH . 1)))
+%% g26 --> ((1 (SigmaH . 1)) (-1))
+%% g25 --> ((1 (SigmaH . 1)) (-1/2))
+
+BSubSpor78ABS: CONTEXT =
+ BEGIN
+  SIGN: TYPE = {pos, neg, zero};
+
+  ASSVC123(x0: SIGN, c1: BOOLEAN, c2: BOOLEAN, c3: BOOLEAN):
+  [SIGN -> BOOLEAN] =
+      IF x0 = pos
+      THEN IF (c1 OR c2) THEN {pos} ELSE {pos, zero} ENDIF
+      ELSIF x0 = neg
+      THEN IF (c2 OR c3) THEN {neg} ELSE {zero, neg} ENDIF
+      ELSE IF c2 THEN {zero} ELSIF c1 THEN {pos} ELSIF c3 THEN {neg} ELSE {pos, zero, neg} ENDIF
+      ENDIF;
+
+  ASSVD123(x0: SIGN, c1: BOOLEAN, c2: BOOLEAN, c3: BOOLEAN):
+  [SIGN -> BOOLEAN] =
+      IF x0 = pos
+      THEN IF c1 THEN {pos} ELSE {pos, zero} ENDIF
+      ELSIF x0 = neg
+      THEN IF c3 THEN {neg} ELSE {neg, zero} ENDIF
+      ELSE IF c1 AND c3
+           THEN {zero}
+           ELSIF c1 AND c2
+           THEN {pos}
+           ELSIF c3 AND c2
+           THEN {neg}
+           ELSIF c1
+           THEN {pos, zero}
+           ELSIF c3
+           THEN {neg, zero}
+           ELSIF c2 THEN {pos, neg} ELSE {pos, zero, neg}
+           ENDIF
+      ENDIF;
+
+  ASSVD1234(x0: SIGN): [SIGN -> BOOLEAN] =
+      IF x0 = pos THEN {pos, zero}
+      ELSIF x0 = neg THEN {neg, zero}
+      ELSE {pos, neg, zero} ENDIF;
+
+  INV1(x2: SIGN, x1: SIGN, x0: SIGN): BOOLEAN =
+	((x2=zero OR x2=pos) AND x0=neg AND x1=neg) OR
+	(x2=pos AND x0=pos AND (x1=neg OR x1=zero)) OR
+	(x2=pos AND x0=zero AND x1=neg);
+	
+  INV2(x: SIGN): BOOLEAN = (x=zero OR x=pos);
+
+  INV3(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15: SIGN): BOOLEAN =
+	((INV1(x5, x14, x15) OR (x5=pos AND x14=pos AND x15=pos)) AND
+	 INV1(x4, neg, x12) AND
+	 INV1(x8, neg, x13) AND
+	 INV1(x6, neg, x11) AND
+	 INV1(x7, neg, x10) AND
+	 INV2(x9) AND
+	 %% Constraints on x3
+	 %% x11>=0 AND x12>=0 AND x14<=0 THEN x3=pos :: 1/8Vba - 2/3v7-2/3Vbap > 0
+	 (x11=neg OR x12=neg OR x14=pos OR x3=pos) AND 	
+	 (NOT ((x9=zero OR x5=zero) AND (x4=zero OR x6=zero) AND x3=pos)) AND
+	 (NOT ((x9=zero OR x5=zero) AND x4=pos AND x6=pos AND NOT(x3=pos))) AND
+	 (NOT ((x4=zero OR x6=zero) AND x9=pos AND x5=pos AND NOT(x3=neg))) AND
+	 %% Constraints on x2
+	 (x12=pos OR x11=pos OR x2=pos) AND 	%% Constraint: 1/3-1/2Vba > 0
+	 (NOT ((x5=zero OR x9=zero) AND x4=zero AND NOT(x2=pos))) AND
+	 NOT(x12=zero AND (x14=pos OR x14=zero) AND x9=pos AND x2=neg) AND	%% We need Spo0E to be atleast something HERE
+	 %% Constraint on x1
+	 %% IF RapA>=1/2 and Spo0FP<1/2, then Spo0FPdot <= 0
+	 %% NOT(x13=neg) AND NOT(x10=pos) => NOT(x1=pos)
+	 (x10=pos OR x8=pos OR x1=pos) AND 	%% x10<=0 AND x8=zero THEN x1=pos:: b > Vbm
+   	 (x13=neg OR x10=neg OR NOT(x1=pos)) AND %% b - d/2 + Vbmp <= 0
+	 %% Constraint on x0
+	 %% (x10=neg OR x11=pos OR x12=pos OR NOT(x0=neg)) AND 	%% Vbm - 1/2Vba - Vbmp = 0
+	 (x10=neg OR x11=pos OR NOT(x0=neg)) AND 	%% Vbm - 1/2Vba - Vbmp = 0 ---- UNSOUNDNESS INTRODUCED
+	 (x10=pos OR x11=neg OR x12=neg OR NOT(x0=pos)) AND 	%% Vbm - 1/2Vba - Vbmp = 0
+	 (NOT ((x4=zero OR x6=zero) AND x7=zero AND x0=pos)) AND
+	 (NOT (x4=pos AND x6=pos AND x7=zero AND NOT(x0=neg))) AND
+	 (NOT ((x4=zero OR x6=zero) AND NOT(x10=neg) AND NOT(x11=pos) AND x0=neg)));
+
+  INV4(x16, x17, x18: SIGN): BOOLEAN =
+	(x16=neg AND (x17=neg OR x18=neg)) OR
+	(x16=pos AND (x17=pos OR x18=pos)) OR
+	(x16=zero AND ((x17=pos AND x18=pos) OR (x17=zero AND x18=zero) OR (x17=neg AND x18=pos)));
+
+  Environment: MODULE = BEGIN
+    OUTPUT sigmaA?, comAP?, stress?, density?: BOOLEAN
+    INITIALIZATION
+      sigmaA? = TRUE; comAP? = FALSE; density? = TRUE; stress? = TRUE
+    TRANSITION
+      density?' = TRUE; stress?' = TRUE; comAP?' = FALSE; sigmaA?' = TRUE
+    END;
+
+  phosphorelay: MODULE = BEGIN
+    LOCAL 	g0, g1, g2, g3, g4, g5, g6, g7: SIGN
+    OUTPUT 	g8, g10, g11, g12: SIGN
+    LOCAL 	g9, g13, g14, g15: SIGN
+    INPUT 	sigmaA?, sigmaH?, sinR4?, hpr?, abrB6?, comAP?, stress?, density?: BOOLEAN
+    OUTPUT 	spo0AP2zero?, spo0AP2low?, spo0AP2med?, rapA?: BOOLEAN
+    INITIALIZATION
+	g0 = zero; g1 = pos; g2 = pos; g3 = zero; g9 = zero; 
+	g4 = zero; g5 = zero; g6 = zero; g7 = zero; g8 = zero; g10 = neg; g11 = neg;
+	g12 = neg; g13 = neg; g14 = neg; g15 = neg
+    DEFINITION
+      rapA? = (g13 = pos);
+      spo0AP2med? = (g14 = neg);
+      spo0AP2low? = (g15 = neg);
+      spo0AP2zero? = (g5 = zero)
+    TRANSITION
+      [	INV3(g0', g1', g2', g3', g4', g5', g6', g7', g8', g9', g10', g11', g12', g13', g14', g15') --> 
+	g15' IN ASSVC123(g15, g3 = pos, g3 = zero, g3 = neg);
+	g14' IN ASSVC123(g14, g3 = pos, g3 = zero, g3 = neg);
+        g13' IN IF TRUE AND
+                   NOT(hpr? = TRUE OR
+                        NOT(spo0AP2med? = TRUE) OR
+                         comAP? = TRUE OR
+                          NOT(sigmaA? = TRUE) OR
+                           rapA? = TRUE AND density? = TRUE)
+               THEN ASSVC123(g13, g13 = neg, g13 = zero, g13 = pos)
+               ELSIF rapA? = TRUE AND density? = TRUE AND
+                      NOT(hpr? = TRUE OR
+                           NOT(spo0AP2med? = TRUE) OR
+                            comAP? = TRUE OR NOT(sigmaA? = TRUE))
+               THEN ASSVD123(g13, g8 = zero AND g13 = neg,
+                             g8 = zero AND g13 = neg OR
+                              g13 = zero OR g13 = pos,
+                             g13 = zero OR g13 = pos)
+               ELSIF hpr? = TRUE AND
+                      NOT(NOT(spo0AP2med? = TRUE) OR
+                           comAP? = TRUE OR
+                            NOT(sigmaA? = TRUE) OR
+                             rapA? = TRUE AND density? = TRUE)
+               THEN ASSVC123(g13, g8 = neg, g8 = zero, g8 = pos)
+               ELSIF hpr? = TRUE AND (rapA? = TRUE AND density? = TRUE) AND
+                      NOT(NOT(spo0AP2med? = TRUE) OR
+                           comAP? = TRUE OR NOT(sigmaA? = TRUE))
+               THEN ASSVD123(g13, g8 = zero AND g13 = neg,
+                             g13 = neg OR g13 = zero OR g13 = pos, TRUE)
+               ELSIF NOT(spo0AP2med? = TRUE) AND
+                      NOT(comAP? = TRUE OR
+                           NOT(sigmaA? = TRUE) OR
+                            rapA? = TRUE AND density? = TRUE)
+               THEN ASSVC123(g13, g8 = neg, g8 = zero, g8 = pos)
+               ELSIF NOT(spo0AP2med? = TRUE) AND
+                      (rapA? = TRUE AND density? = TRUE)
+                      AND NOT(comAP? = TRUE OR NOT(sigmaA? = TRUE))
+               THEN ASSVD123(g13, g8 = zero AND g13 = neg,
+                             g13 = neg OR g13 = zero OR g13 = pos, TRUE)
+               ELSIF comAP? = TRUE AND
+                      NOT(NOT(sigmaA? = TRUE) OR
+                           rapA? = TRUE AND density? = TRUE)
+               THEN ASSVD123(g13, TRUE, g13 = neg OR g13 = zero, FALSE)
+               ELSIF comAP? = TRUE AND (rapA? = TRUE AND density? = TRUE) AND
+                      NOT(NOT(sigmaA? = TRUE))
+               THEN ASSVD123(g13, g8 = zero AND g13 = neg,
+                             g8 = zero AND g13 = neg, FALSE)
+               ELSIF NOT(sigmaA? = TRUE) AND
+                      NOT(rapA? = TRUE AND density? = TRUE)
+               THEN ASSVC123(g13, g8 = neg, g8 = zero, g8 = pos)
+               ELSE ASSVD123(g13, g8 = zero AND g13 = neg,
+                             g13 = neg OR g13 = zero OR g13 = pos, TRUE)
+               ENDIF;
+       g12' IN IF TRUE AND
+                   NOT(sigmaA? = TRUE AND
+                        (sigmaH? = TRUE AND
+                          (sinR4? = TRUE AND spo0AP2low? = TRUE))
+                        OR
+                        sigmaA? = TRUE AND
+                         (sigmaH? = TRUE AND
+                           (sinR4? = FALSE AND spo0AP2med? = FALSE))
+                         OR
+                         sigmaA? = TRUE AND
+                          (sigmaH? = TRUE AND
+                            (sinR4? = FALSE AND spo0AP2low? = TRUE))
+                          OR
+                          sigmaA? = TRUE AND
+                           (sigmaH? = TRUE AND
+                             (sinR4? = FALSE AND
+                               (spo0AP2med? = TRUE AND spo0AP2low? = FALSE))))
+               THEN ASSVD123(g12, FALSE,
+                             g2 = neg AND g3 = neg OR
+                              g2 = zero AND g3 = neg OR g3 = zero OR g3 = pos,
+                             g2 = neg AND g3 = neg OR
+                              g2 = zero AND g3 = neg OR
+                               g3 = zero OR
+                                g2 = neg AND g3 = pos OR
+                                 g2 = zero AND g3 = pos)
+               ELSIF sigmaA? = TRUE AND
+                      (sigmaH? = TRUE AND
+                        (sinR4? = TRUE AND spo0AP2low? = TRUE))
+                      AND
+                      NOT(sigmaA? = TRUE AND
+                           (sigmaH? = TRUE AND
+                             (sinR4? = FALSE AND spo0AP2med? = FALSE))
+                           OR
+                           sigmaA? = TRUE AND
+                            (sigmaH? = TRUE AND
+                              (sinR4? = FALSE AND spo0AP2low? = TRUE))
+                            OR
+                            sigmaA? = TRUE AND
+                             (sigmaH? = TRUE AND
+                               (sinR4? = FALSE AND
+                                 (spo0AP2med? = TRUE AND
+                                   spo0AP2low? = FALSE))))
+               THEN ASSVC123(g12, g2 = pos, g2 = zero, g2 = neg)
+               ELSIF sigmaA? = TRUE AND
+                      (sigmaH? = TRUE AND
+                        (sinR4? = FALSE AND spo0AP2med? = FALSE))
+                      AND
+                      NOT(sigmaA? = TRUE AND
+                           (sigmaH? = TRUE AND
+                             (sinR4? = FALSE AND spo0AP2low? = TRUE))
+                           OR
+                           sigmaA? = TRUE AND
+                            (sigmaH? = TRUE AND
+                              (sinR4? = FALSE AND
+                                (spo0AP2med? = TRUE AND spo0AP2low? = FALSE))))
+               THEN ASSVC123(g12, g2 = pos, g2 = zero, g2 = neg)
+               ELSIF sigmaA? = TRUE AND
+                      (sigmaH? = TRUE AND
+                        (sinR4? = FALSE AND spo0AP2low? = TRUE))
+                      AND
+                      NOT(sigmaA? = TRUE AND
+                           (sigmaH? = TRUE AND
+                             (sinR4? = FALSE AND
+                               (spo0AP2med? = TRUE AND spo0AP2low? = FALSE))))
+               THEN ASSVD123(g12,
+                             g2 = zero AND g3 = neg OR
+                              g2 = pos AND g3 = neg OR
+                               g2 = zero AND g3 = zero OR
+                                g2 = pos AND g3 = zero OR
+                                 g2 = zero AND g3 = pos OR
+                                  g2 = pos AND g3 = pos,
+                             g2 = zero AND g3 = neg OR
+                              g2 = pos AND g3 = neg OR
+                               g2 = zero AND g3 = zero OR
+                                g2 = pos AND g3 = zero OR
+                                 g2 = zero AND g3 = pos OR
+                                  g2 = pos AND g3 = pos,
+                             FALSE)
+               ELSE ASSVD123(g12,
+                             g2 = zero AND g3 = neg OR
+                              g2 = pos AND g3 = neg OR
+                               g3 = zero OR
+                                g2 = zero AND g3 = pos OR
+                                 g2 = pos AND g3 = pos,
+                             g3 = neg OR
+                              g3 = zero OR
+                               g2 = zero AND g3 = pos OR g2 = pos AND g3 = pos,
+                             FALSE)
+               ENDIF;
+       g11' IN ASSVC123(g11, g0 = pos, g0 = zero, g0 = neg);
+       g10' IN IF TRUE AND NOT(stress? = TRUE)
+               THEN ASSVD123(g10, FALSE, TRUE, g1 = zero)
+               ELSE ASSVC123(g10, g1 = pos, g1 = zero, g1 = neg)
+               ENDIF;
+       g9' IN IF NOT(abrB6? = TRUE) THEN {pos} ELSIF (g9=zero) THEN {zero} ELSE {pos,zero} ENDIF;
+       g8' IN IF TRUE AND
+                  NOT(hpr? = TRUE OR
+                       NOT(spo0AP2med? = TRUE) OR
+                        comAP? = TRUE OR
+                         NOT(sigmaA? = TRUE) OR
+                          rapA? = TRUE AND density? = TRUE)
+              THEN ASSVC123(g8, g13 = neg, g13 = zero, g13 = pos)
+              ELSIF rapA? = TRUE AND density? = TRUE AND
+                     NOT(hpr? = TRUE OR
+                          NOT(spo0AP2med? = TRUE) OR
+                           comAP? = TRUE OR NOT(sigmaA? = TRUE))
+              THEN ASSVD123(g8, g8 = zero AND g13 = neg,
+                            g8 = zero AND g13 = neg OR g13 = zero OR g13 = pos,
+                            g13 = zero OR g13 = pos)
+              ELSIF hpr? = TRUE AND
+                     NOT(NOT(spo0AP2med? = TRUE) OR
+                          comAP? = TRUE OR
+                           NOT(sigmaA? = TRUE) OR
+                            rapA? = TRUE AND density? = TRUE)
+              THEN ASSVC123(g8, g8 = neg, g8 = zero, g8 = pos)
+              ELSIF hpr? = TRUE AND (rapA? = TRUE AND density? = TRUE) AND
+                     NOT(NOT(spo0AP2med? = TRUE) OR
+                          comAP? = TRUE OR NOT(sigmaA? = TRUE))
+              THEN ASSVD123(g8, g8 = zero AND g13 = neg,
+                            g13 = neg OR g13 = zero OR g13 = pos, TRUE)
+              ELSIF NOT(spo0AP2med? = TRUE) AND
+                     NOT(comAP? = TRUE OR
+                          NOT(sigmaA? = TRUE) OR
+                           rapA? = TRUE AND density? = TRUE)
+              THEN ASSVC123(g8, g8 = neg, g8 = zero, g8 = pos)
+              ELSIF NOT(spo0AP2med? = TRUE) AND
+                     (rapA? = TRUE AND density? = TRUE)
+                     AND NOT(comAP? = TRUE OR NOT(sigmaA? = TRUE))
+              THEN ASSVD123(g8, g8 = zero AND g13 = neg,
+                            g13 = neg OR g13 = zero OR g13 = pos, TRUE)
+              ELSIF comAP? = TRUE AND
+                     NOT(NOT(sigmaA? = TRUE) OR
+                          rapA? = TRUE AND density? = TRUE)
+              THEN ASSVD123(g8, TRUE, g13 = neg OR g13 = zero, FALSE)
+              ELSIF comAP? = TRUE AND (rapA? = TRUE AND density? = TRUE) AND
+                     NOT(NOT(sigmaA? = TRUE))
+              THEN ASSVD123(g8, g8 = zero AND g13 = neg,
+                            g8 = zero AND g13 = neg, FALSE)
+              ELSIF NOT(sigmaA? = TRUE) AND
+                     NOT(rapA? = TRUE AND density? = TRUE)
+              THEN ASSVC123(g8, g8 = neg, g8 = zero, g8 = pos)
+              ELSE ASSVD123(g8, g8 = zero AND g13 = neg,
+                            g13 = neg OR g13 = zero OR g13 = pos, TRUE)
+              ENDIF;
+       g7' IN IF TRUE AND NOT(stress? = TRUE)
+              THEN ASSVD123(g7, FALSE, TRUE, g1 = zero)
+              ELSE ASSVC123(g7, g1 = pos, g1 = zero, g1 = neg)
+              ENDIF;
+	g6' IN ASSVC123(g6, g0 = pos, g0 = zero, g0 = neg);
+	g5' IN ASSVC123(g5, g3 = pos, g3 = zero, g3 = neg);
+        g4' IN IF TRUE AND
+                  NOT(sigmaA? = TRUE AND
+                       (sigmaH? = TRUE AND
+                         (sinR4? = TRUE AND spo0AP2low? = TRUE))
+                       OR
+                       sigmaA? = TRUE AND
+                        (sigmaH? = TRUE AND
+                          (sinR4? = FALSE AND spo0AP2med? = FALSE))
+                        OR
+                        sigmaA? = TRUE AND
+                         (sigmaH? = TRUE AND
+                           (sinR4? = FALSE AND spo0AP2low? = TRUE))
+                         OR
+                         sigmaA? = TRUE AND
+                          (sigmaH? = TRUE AND
+                            (sinR4? = FALSE AND
+                              (spo0AP2med? = TRUE AND spo0AP2low? = FALSE))))
+              THEN ASSVD123(g4, FALSE,
+                            g2 = neg AND g3 = neg OR
+                             g2 = zero AND g3 = neg OR g3 = zero OR g3 = pos,
+                            g2 = neg AND g3 = neg OR
+                             g2 = zero AND g3 = neg OR
+                              g3 = zero OR
+                               g2 = neg AND g3 = pos OR g2 = zero AND g3 = pos)
+              ELSIF sigmaA? = TRUE AND
+                     (sigmaH? = TRUE AND
+                       (sinR4? = TRUE AND spo0AP2low? = TRUE))
+                     AND
+                     NOT(sigmaA? = TRUE AND
+                          (sigmaH? = TRUE AND
+                            (sinR4? = FALSE AND spo0AP2med? = FALSE))
+                          OR
+                          sigmaA? = TRUE AND
+                           (sigmaH? = TRUE AND
+                             (sinR4? = FALSE AND spo0AP2low? = TRUE))
+                           OR
+                           sigmaA? = TRUE AND
+                            (sigmaH? = TRUE AND
+                              (sinR4? = FALSE AND
+                                (spo0AP2med? = TRUE AND spo0AP2low? = FALSE))))
+              THEN ASSVC123(g4, g2 = pos, g2 = zero, g2 = neg)
+              ELSIF sigmaA? = TRUE AND
+                     (sigmaH? = TRUE AND
+                       (sinR4? = FALSE AND spo0AP2med? = FALSE))
+                     AND
+                     NOT(sigmaA? = TRUE AND
+                          (sigmaH? = TRUE AND
+                            (sinR4? = FALSE AND spo0AP2low? = TRUE))
+                          OR
+                          sigmaA? = TRUE AND
+                           (sigmaH? = TRUE AND
+                             (sinR4? = FALSE AND
+                               (spo0AP2med? = TRUE AND spo0AP2low? = FALSE))))
+              THEN ASSVC123(g4, g2 = pos, g2 = zero, g2 = neg)
+              ELSIF sigmaA? = TRUE AND
+                     (sigmaH? = TRUE AND
+                       (sinR4? = FALSE AND spo0AP2low? = TRUE))
+                     AND
+                     NOT(sigmaA? = TRUE AND
+                          (sigmaH? = TRUE AND
+                            (sinR4? = FALSE AND
+                              (spo0AP2med? = TRUE AND spo0AP2low? = FALSE))))
+              THEN ASSVD123(g4,
+                            g2 = zero AND g3 = neg OR
+                             g2 = pos AND g3 = neg OR
+                              g2 = zero AND g3 = zero OR
+                               g2 = pos AND g3 = zero OR
+                                g2 = zero AND g3 = pos OR
+                                 g2 = pos AND g3 = pos,
+                            g2 = zero AND g3 = neg OR
+                             g2 = pos AND g3 = neg OR
+                              g2 = zero AND g3 = zero OR
+                               g2 = pos AND g3 = zero OR
+                                g2 = zero AND g3 = pos OR
+                                 g2 = pos AND g3 = pos,
+                            FALSE)
+              ELSE ASSVD123(g4,
+                            g2 = zero AND g3 = neg OR
+                             g2 = pos AND g3 = neg OR
+                              g3 = zero OR
+                               g2 = zero AND g3 = pos OR g2 = pos AND g3 = pos,
+                            g3 = neg OR
+                             g3 = zero OR
+                              g2 = zero AND g3 = pos OR g2 = pos AND g3 = pos,
+                            FALSE)
+              ENDIF;
+		g3' IN ASSVD1234(g3);
+		g2' IN ASSVD1234(g2);
+		g1' IN ASSVD1234(g1);
+		g0' IN ASSVD1234(g0)
+       ]
+    END;
+
+  SinIR: MODULE = BEGIN
+    LOCAL
+      g16: SIGN
+    LOCAL
+      g17: SIGN
+    LOCAL
+      g18: SIGN
+    INPUT
+      spo0AP2med?: BOOLEAN
+    INPUT
+      sigmaA?: BOOLEAN
+    INPUT
+      hpr?: BOOLEAN
+    INPUT
+      abrB6?: BOOLEAN
+    OUTPUT
+      sinR4?: BOOLEAN
+    INITIALIZATION
+      g17 = neg; g16 = neg; g18 = zero		%% ; sinR4? = FALSE
+    DEFINITION
+      sinR4? = (g18 = pos)
+    TRANSITION
+      [INV4(g16', g17', g18') --> 
+       g18' IN IF TRUE AND
+                   NOT(abrB6? = TRUE OR
+                        hpr? = TRUE OR
+                         sinR4? = TRUE OR
+                          NOT(spo0AP2med? = TRUE) OR NOT(sigmaA? = TRUE))
+               THEN ASSVD123(g18,
+                             g18 = neg OR
+                              g18 = zero OR
+                               g16 = neg AND (g17 = neg AND g18 = pos) OR
+                                g16 = zero AND (g17 = neg AND g18 = pos) OR
+                                 g17 = zero AND g18 = pos OR
+                                  g17 = pos AND g18 = pos,
+                             g18 = neg OR
+                              g18 = zero OR
+                               g16 = neg AND (g17 = neg AND g18 = pos) OR
+                                g17 = pos AND g18 = pos,
+                             FALSE)
+               ELSIF abrB6? = TRUE AND
+                      NOT(hpr? = TRUE OR
+                           sinR4? = TRUE OR
+                            NOT(spo0AP2med? = TRUE) OR NOT(sigmaA? = TRUE))
+               THEN ASSVD123(g18, TRUE,
+                             g18 = neg OR
+                              g18 = zero OR
+                               g16 = neg AND (g17 = neg AND g18 = pos) OR
+                                g16 = zero AND (g17 = neg AND g18 = pos) OR
+                                 g17 = zero AND g18 = pos OR
+                                  g17 = pos AND g18 = pos,
+                             FALSE)
+               ELSIF hpr? = TRUE AND
+                      NOT(sinR4? = TRUE OR
+                           NOT(spo0AP2med? = TRUE) OR NOT(sigmaA? = TRUE))
+               THEN ASSVD123(g18, TRUE,
+                             g18 = neg OR
+                              g18 = zero OR
+                               g16 = neg AND (g17 = neg AND g18 = pos) OR
+                                g16 = zero AND (g17 = neg AND g18 = pos) OR
+                                 g17 = zero AND g18 = pos OR
+                                  g17 = pos AND g18 = pos,
+                             FALSE)
+               ELSIF sinR4? = TRUE AND
+                      NOT(NOT(spo0AP2med? = TRUE) OR NOT(sigmaA? = TRUE))
+               THEN ASSVD123(g18, TRUE,
+                             g18 = neg OR
+                              g18 = zero OR
+                               g16 = neg AND (g17 = neg AND g18 = pos) OR
+                                g16 = zero AND (g17 = neg AND g18 = pos) OR
+                                 g17 = zero AND g18 = pos OR
+                                  g17 = pos AND g18 = pos,
+                             FALSE)
+               ELSIF NOT(spo0AP2med? = TRUE) AND NOT(NOT(sigmaA? = TRUE))
+               THEN ASSVC123(g18, g18 = neg, g18 = zero, g18 = pos)
+               ELSE ASSVD123(g18, TRUE,
+                             g18 = neg OR
+                              g18 = zero OR
+                               g16 = neg AND (g17 = neg AND g18 = pos) OR
+                                g16 = zero AND (g17 = neg AND g18 = pos) OR
+                                 g17 = zero AND g18 = pos OR
+                                  g17 = pos AND g18 = pos,
+                             FALSE)
+               ENDIF;
+       g17' IN IF TRUE AND
+                   NOT(abrB6? = TRUE OR
+                        hpr? = TRUE OR
+                         sinR4? = TRUE OR
+                          NOT(spo0AP2med? = TRUE) OR NOT(sigmaA? = TRUE))
+               THEN ASSVD123(g17, FALSE,
+                             g17 = pos AND g18 = neg OR
+                              g17 = zero AND g18 = zero OR
+                               g17 = pos AND g18 = zero OR
+                                g17 = zero AND g18 = pos OR
+                                 g17 = pos AND g18 = pos,
+                             g17 = zero AND g18 = neg OR
+                              g17 = pos AND g18 = neg OR
+                               g17 = zero AND g18 = zero OR
+                                g17 = pos AND g18 = zero OR
+                                 g17 = zero AND g18 = pos OR
+                                  g17 = pos AND g18 = pos)
+               ELSIF abrB6? = TRUE AND
+                      NOT(hpr? = TRUE OR
+                           sinR4? = TRUE OR
+                            NOT(spo0AP2med? = TRUE) OR NOT(sigmaA? = TRUE))
+               THEN ASSVD123(g17, FALSE,
+                             g17 = neg AND g18 = neg OR
+                              g17 = zero AND g18 = neg OR
+                               g17 = pos AND g18 = neg OR
+                                g17 = zero AND g18 = zero OR
+                                 g17 = pos AND g18 = zero OR g18 = pos,
+                             TRUE)
+               ELSIF hpr? = TRUE AND
+                      NOT(sinR4? = TRUE OR
+                           NOT(spo0AP2med? = TRUE) OR NOT(sigmaA? = TRUE))
+               THEN ASSVD123(g17, FALSE,
+                             g17 = neg AND g18 = neg OR
+                              g17 = zero AND g18 = neg OR
+                               g17 = pos AND g18 = neg OR
+                                g17 = zero AND g18 = zero OR
+                                 g17 = pos AND g18 = zero OR g18 = pos,
+                             TRUE)
+               ELSIF sinR4? = TRUE AND
+                      NOT(NOT(spo0AP2med? = TRUE) OR NOT(sigmaA? = TRUE))
+               THEN ASSVD123(g17, FALSE,
+                             g17 = neg AND g18 = neg OR
+                              g17 = zero AND g18 = neg OR
+                               g17 = pos AND g18 = neg OR
+                                g17 = zero AND g18 = zero OR
+                                 g17 = pos AND g18 = zero OR g18 = pos,
+                             TRUE)
+               ELSIF NOT(spo0AP2med? = TRUE) AND NOT(NOT(sigmaA? = TRUE))
+               THEN ASSVD123(g17,
+                             g17 = zero AND g18 = neg OR
+                              g17 = zero AND g18 = zero OR
+                               g17 = pos AND g18 = zero OR
+                                g16 = zero AND (g17 = neg AND g18 = pos) OR
+                                 g17 = zero AND g18 = pos,
+                             g17 = neg AND g18 = neg OR
+                              g17 = zero AND g18 = neg OR
+                               g17 = zero AND g18 = zero OR
+                                g17 = neg AND g18 = pos,
+                             FALSE)
+               ELSE ASSVD123(g17, FALSE,
+                             g17 = neg AND g18 = neg OR
+                              g17 = zero AND g18 = neg OR
+                               g17 = pos AND g18 = neg OR
+                                g17 = zero AND g18 = zero OR
+                                 g17 = pos AND g18 = zero OR g18 = pos,
+                             TRUE)
+               ENDIF;
+       g16' IN ASSVD123(g16,
+                        g16 = neg AND (g17 = neg AND g18 = neg) OR
+                         g17 = zero AND g18 = neg OR
+                          g16 = zero AND (g17 = pos AND g18 = neg) OR
+                           g17 = zero AND g18 = zero OR
+                            g16 = neg AND (g17 = neg AND g18 = pos) OR
+                             g16 = zero AND (g17 = neg AND g18 = pos),
+                        g17 = neg AND g18 = neg OR
+                         g17 = zero AND g18 = neg OR
+                          g16 = neg AND (g17 = pos AND g18 = neg) OR
+                           g17 = zero AND g18 = zero OR
+                            g16 = neg AND (g17 = neg AND g18 = pos) OR
+                             g16 = zero AND (g17 = neg AND g18 = pos) OR
+                              g17 = pos AND g18 = pos,
+                        FALSE)
+       ]
+    END;
+
+  AbrB: MODULE = BEGIN
+    LOCAL
+      g19: SIGN
+    LOCAL
+      g20: SIGN
+    LOCAL
+      g21: SIGN
+    INPUT
+      sigmaA?: BOOLEAN
+    INPUT
+      spo0AP2zero?: BOOLEAN
+    INPUT
+      spo0AP2low?: BOOLEAN
+    INPUT
+      spo0AP2med?: BOOLEAN
+    OUTPUT
+      abrB6?: BOOLEAN
+    INITIALIZATION
+      g21 = zero; g20 = neg; g19 = neg 		%% ; abrB6? = FALSE
+    DEFINITION
+      abrB6? = (g19 = pos)
+    TRANSITION
+      [INV1(g21', g20', g19')
+        -->
+       g21' IN IF TRUE AND
+                   NOT(abrB6? = TRUE OR
+                        NOT(spo0AP2med? = TRUE) OR
+                         spo0AP2low? = TRUE OR
+                          spo0AP2zero? = TRUE OR NOT(sigmaA? = TRUE))
+               THEN ASSVC123(g21, g19 = neg, g19 = zero, g19 = pos)
+               ELSIF abrB6? = TRUE AND
+                      NOT(NOT(spo0AP2med? = TRUE) OR
+                           spo0AP2low? = TRUE OR
+                            spo0AP2zero? = TRUE OR NOT(sigmaA? = TRUE))
+               THEN ASSVC123(g21, g21 = neg, g21 = zero, g21 = pos)
+               ELSIF NOT(spo0AP2med? = TRUE) AND
+                      NOT(spo0AP2low? = TRUE OR
+                           spo0AP2zero? = TRUE OR NOT(sigmaA? = TRUE))
+               THEN ASSVC123(g21, g21 = neg, g21 = zero, g21 = pos)
+               ELSIF spo0AP2low? = TRUE AND
+                      NOT(spo0AP2zero? = TRUE OR NOT(sigmaA? = TRUE))
+               THEN ASSVC123(g21, g20 = neg, g20 = zero, g20 = pos)
+               ELSIF spo0AP2zero? = TRUE AND NOT(NOT(sigmaA? = TRUE))
+               THEN ASSVC123(g21, g20 = neg, g20 = zero, g20 = pos)
+               ELSE ASSVC123(g21, g21 = neg, g21 = zero, g21 = pos)
+               ENDIF;
+       g20' IN IF TRUE AND
+                   NOT(abrB6? = TRUE OR
+                        NOT(spo0AP2med? = TRUE) OR
+                         spo0AP2low? = TRUE OR
+                          spo0AP2zero? = TRUE OR NOT(sigmaA? = TRUE))
+               THEN ASSVC123(g20, g19 = neg, g19 = zero, g19 = pos)
+               ELSIF abrB6? = TRUE AND
+                      NOT(NOT(spo0AP2med? = TRUE) OR
+                           spo0AP2low? = TRUE OR
+                            spo0AP2zero? = TRUE OR NOT(sigmaA? = TRUE))
+               THEN ASSVC123(g20, g21 = neg, g21 = zero, g21 = pos)
+               ELSIF NOT(spo0AP2med? = TRUE) AND
+                      NOT(spo0AP2low? = TRUE OR
+                           spo0AP2zero? = TRUE OR NOT(sigmaA? = TRUE))
+               THEN ASSVC123(g20, g21 = neg, g21 = zero, g21 = pos)
+               ELSIF spo0AP2low? = TRUE AND
+                      NOT(spo0AP2zero? = TRUE OR NOT(sigmaA? = TRUE))
+               THEN ASSVC123(g20, g20 = neg, g20 = zero, g20 = pos)
+               ELSIF spo0AP2zero? = TRUE AND NOT(NOT(sigmaA? = TRUE))
+               THEN ASSVC123(g20, g20 = neg, g20 = zero, g20 = pos)
+               ELSE ASSVC123(g20, g21 = neg, g21 = zero, g21 = pos)
+               ENDIF;
+       g19' IN IF TRUE AND
+                   NOT(abrB6? = TRUE OR
+                        NOT(spo0AP2med? = TRUE) OR
+                         spo0AP2low? = TRUE OR
+                          spo0AP2zero? = TRUE OR NOT(sigmaA? = TRUE))
+               THEN ASSVC123(g19, g19 = neg, g19 = zero, g19 = pos)
+               ELSIF abrB6? = TRUE AND
+                      NOT(NOT(spo0AP2med? = TRUE) OR
+                           spo0AP2low? = TRUE OR
+                            spo0AP2zero? = TRUE OR NOT(sigmaA? = TRUE))
+               THEN ASSVC123(g19, g21 = neg, g21 = zero, g21 = pos)
+               ELSIF NOT(spo0AP2med? = TRUE) AND
+                      NOT(spo0AP2low? = TRUE OR
+                           spo0AP2zero? = TRUE OR NOT(sigmaA? = TRUE))
+               THEN ASSVC123(g19, g21 = neg, g21 = zero, g21 = pos)
+               ELSIF spo0AP2low? = TRUE AND
+                      NOT(spo0AP2zero? = TRUE OR NOT(sigmaA? = TRUE))
+               THEN ASSVC123(g19, g20 = neg, g20 = zero, g20 = pos)
+               ELSIF spo0AP2zero? = TRUE AND NOT(NOT(sigmaA? = TRUE))
+               THEN ASSVC123(g19, g20 = neg, g20 = zero, g20 = pos)
+               ELSE ASSVC123(g19, g21 = neg, g21 = zero, g21 = pos)
+               ENDIF
+       ]
+    END;
+
+  Hpr: MODULE = BEGIN
+    LOCAL
+      g22: SIGN
+    LOCAL
+      g23: SIGN
+    LOCAL
+      g24: SIGN
+    INPUT
+      abrB6?: BOOLEAN
+    OUTPUT
+      hpr?: BOOLEAN
+    INITIALIZATION
+      g24 = zero; g23 = neg; g22 = neg		%% ; hpr? = FALSE
+    DEFINITION
+      hpr? = (g22 = pos)
+    TRANSITION
+      [INV1(g24', g23', g22')
+        -->
+       g24' IN IF TRUE AND NOT(abrB6? = TRUE)
+               THEN ASSVC123(g24, g24 = neg, g24 = zero, g24 = pos)
+               ELSE ASSVC123(g24, g23 = neg, g23 = zero, g23 = pos)
+               ENDIF;
+       g23' IN IF TRUE AND NOT(abrB6? = TRUE)
+               THEN ASSVC123(g23, g24 = neg, g24 = zero, g24 = pos)
+               ELSE ASSVC123(g23, g23 = neg, g23 = zero, g23 = pos)
+               ENDIF;
+       g22' IN IF TRUE AND NOT(abrB6? = TRUE)
+               THEN ASSVC123(g22, g24 = neg, g24 = zero, g24 = pos)
+               ELSE ASSVC123(g22, g23 = neg, g23 = zero, g23 = pos)
+               ENDIF
+       ]
+    END;
+
+  SigmaH: MODULE = BEGIN
+    LOCAL
+      g25: SIGN
+    OUTPUT
+      g26: SIGN
+    LOCAL
+      g27: SIGN
+    INPUT
+      sigmaA?: BOOLEAN
+    INPUT
+      abrB6?: BOOLEAN
+    OUTPUT
+      sigmaH?: BOOLEAN
+    INITIALIZATION
+      g27 = zero; g26 = neg; g25 = neg		%% ; sigmaH? = FALSE
+    DEFINITION
+      sigmaH? = (g25 = pos)
+    TRANSITION
+      [INV1(g27', g26', g25')
+        -->
+       g27' IN IF TRUE AND NOT(sigmaA? = TRUE AND abrB6? = FALSE)
+               THEN ASSVD123(g27, FALSE,
+                             g25 = zero AND (g26 = neg AND g27 = pos) OR
+                              g26 = zero AND g27 = pos,
+                             FALSE)
+               ELSE ASSVD123(g27, FALSE,
+                             g27 = zero OR
+                              g25 = zero AND (g26 = neg AND g27 = pos),
+                             FALSE)
+               ENDIF;
+       g26' IN IF TRUE AND NOT(sigmaA? = TRUE AND abrB6? = FALSE)
+               THEN ASSVD123(g26, FALSE,
+                             g25 = zero AND (g26 = neg AND g27 = pos) OR
+                              g26 = zero AND g27 = pos,
+                             FALSE)
+               ELSE ASSVD123(g26, FALSE,
+                             g27 = zero OR
+                              g25 = zero AND (g26 = neg AND g27 = pos),
+                             FALSE)
+               ENDIF;
+       g25' IN IF TRUE AND NOT(sigmaA? = TRUE AND abrB6? = FALSE)
+               THEN ASSVD123(g25, FALSE,
+                             g25 = zero AND (g26 = neg AND g27 = pos) OR
+                              g26 = zero AND g27 = pos,
+                             FALSE)
+               ELSE ASSVD123(g25, FALSE,
+                             g27 = zero OR
+                              g25 = zero AND (g26 = neg AND g27 = pos),
+                             FALSE)
+               ENDIF
+       ]
+    END;
+
+  Sporulation: MODULE =
+    SigmaH [] Hpr [] AbrB [] SinIR [] Environment [] phosphorelay;
+
+   %%% Allow only G(sigmaH?=TRUE) behaviors
+   dynamicINV: MODULE =
+   BEGIN
+    INPUT sigmaH?, abrB6?: BOOLEAN
+    OUTPUT go?: BOOLEAN
+    INITIALIZATION go? = TRUE
+    TRANSITION 
+	[ 
+	go? --> go?' = TRUE
+	[]
+	go? AND sigmaH? AND abrB6?=FALSE --> go?' = FALSE
+	[]
+	NOT go? AND sigmaH? AND abrB6?=FALSE --> go?' = FALSE
+	]
+   END;
+
+   %% Sanity Check
+   sporulate0: THEOREM
+	Sporulation |- G(spo0AP2med?=TRUE);
+
+   %% We reach the stable region
+   sporulate1: THEOREM
+	Sporulation |- G(spo0AP2med?=TRUE OR sinR4?=TRUE);
+
+   sporulate2: THEOREM
+	   (dynamicINV || Sporulation) |- G((spo0AP2med?=FALSE AND sinR4?=FALSE AND go?=FALSE AND g12=pos AND g8=zero AND g10=pos AND g11=pos) =>
+                                      G(spo0AP2med?=FALSE AND sinR4?=FALSE));
+
+ END

@@ -1,0 +1,392 @@
+importing context "startup_3_15_TRUE"...
+parsing file "./startup_3_15_TRUE.sal"...
+  parsing XML file "./startup_3_15_TRUE.xml"...
+    XML parser time: 0.21 secs
+  XML preprocessor...
+    preprocessor time: 0.02 secs
+creating abstract syntax tree for context "startup_3_15_TRUE"...
+  ast generation time: 0.11 secs
+type checking context "startup_3_15_TRUE"...
+  type-checker time: 0.35 secs
+flattening modules in the assertion located at [Context: scratch, line(1), column(19)]
+calculating implicit assignments of base module at [Context: startup_3_15_TRUE, line(1292), column(1)]...
+calculating implicit assignments of base module at [Context: startup_3_15_TRUE, line(82), column(1)]...
+calculating implicit assignments of base module at [Context: startup_3_15_TRUE, line(1266), column(1)]...
+calculating implicit assignments of base module at [Context: startup_3_15_TRUE, line(834), column(1)]...
+calculating implicit assignments of base module at [Context: startup_3_15_TRUE, line(1329), column(1)]...
+  assertion flattening time: 0.08 secs
+simplifying abstract syntax tree...
+  simplification time: 0.68 secs
+expanding function applications...
+  expansion time: 0.25 secs
+unfolding quantifiers...
+  unfolding quantifiers time: 2.24 secs
+eliminating common subexpressions in an assertion...
+eliminating common subexpressions in a flat module...
+  eliminating common subexpressions...
+    starting a new iteration of the common subexpression elimination procedure...
+    starting a new iteration of the common subexpression elimination procedure...
+    starting a new iteration of the common subexpression elimination procedure...
+    starting a new iteration of the common subexpression elimination procedure...
+    starting a new iteration of the common subexpression elimination procedure...
+    starting a new iteration of the common subexpression elimination procedure...
+    simplifying result of the common subexpression elimination procedure...
+  eliminating common subexpressions...
+    expression doesn't contain common (shared) subexpressions...
+  eliminating common subexpressions...
+    expression doesn't contain common (shared) subexpressions...
+  eliminating common subexpressions...
+    expression doesn't contain common (shared) subexpressions...
+  eliminating common subexpressions...
+    expression doesn't contain common (shared) subexpressions...
+  eliminating common subexpressions...
+    expression doesn't contain common (shared) subexpressions...
+  flat module -- common subexpression elimination time: 3.55 secs
+  assertion -- common subexpression elimination time: 3.55 secs
+converting flat module to boolean flat module...
+  flat module -> boolean flat module conversion time: 2.97 secs
+converting property to boolean property...
+  property -> boolean property conversion time: 0.0 secs
+simplifying abstract syntax tree...
+  simplification time: 0.78 secs
+slicing the module-models assertion...
+    collecting state variables dependencies...
+  removing irrelevant parts of the specification...
+  original number of vars: 227
+  number of removed vars: 13
+  slicer time: 1.28 secs
+converting flat module to BDD representation (initial states, and transition relation)...
+  creating BDD variables...
+  computing static variable ordering (minimizing support)...
+    collecting state variables dependencies...
+  static order time: 0.56 secs
+  number of BDD variables: 268
+  creating definition section BDDs...
+  creating BDD: set of initial states...
+  creating BDD: transition relation...
+  rearranging clusters...
+  reordering BDD variables...
+    begin BDD reordering (node count: 59311)...
+    SALenv GC... done
+    begin BDD GC (dead node count: 155732)...
+    end BDD GC (dead node count: 0)...
+    end BDD reordering (node count: 14635)...
+  compressing BDD clusters...
+  rearranging clusters...
+    cluster compression time: 0.59 secs
+  reordering BDD variables...
+    begin BDD reordering (node count: 96293)...
+    SALenv GC... done
+    begin BDD GC (dead node count: 7262)...
+    end BDD GC (dead node count: 0)...
+    end BDD reordering (node count: 40458)...
+  compressing BDD clusters...
+  rearranging clusters...
+    cluster compression time: 0.45 secs
+    number of nodes in initial states: 135
+    number of nodes in transition relation: 39379
+    transition relation detailed information:
+      conjunctive cluster
+        monolithic cluster size: 7027 nodes
+        monolithic cluster size: 27650 nodes
+        monolithic cluster size: 4701 nodes
+        monolithic cluster size: 1 nodes
+      total size: 39379 nodes
+  flat-module -> BDD conversion time: 14.15 secs
+proving invariant or producing counterexample using BDDs...
+  using forward search
+  iteration: 1
+  frontier lower bound: 135 nodes, upper bound: 135 nodes
+  using frontier with 135 nodes
+  total bdd node count: 42128
+    size of intermediate product: 133 nodes
+    size of intermediate product: 132 nodes
+    size of intermediate product: 169 nodes
+    size of intermediate product: 169 nodes
+    total size of product: 169 nodes
+    maximum intermediate product: 169 nodes
+  iteration: 2
+  frontier lower bound: 169 nodes, upper bound: 242 nodes
+  using frontier with 169 nodes
+  total bdd node count: 42642
+    size of intermediate product: 241 nodes
+    size of intermediate product: 907 nodes
+    size of intermediate product: 650 nodes
+    size of intermediate product: 650 nodes
+    total size of product: 650 nodes
+    maximum intermediate product: 907 nodes
+  iteration: 3
+  frontier lower bound: 722 nodes, upper bound: 874 nodes
+  using frontier with 650 nodes
+  total bdd node count: 44989
+    size of intermediate product: 830 nodes
+    size of intermediate product: 2188 nodes
+    size of intermediate product: 1340 nodes
+    size of intermediate product: 1340 nodes
+    total size of product: 1340 nodes
+    maximum intermediate product: 2188 nodes
+  iteration: 4
+  frontier lower bound: 1677 nodes, upper bound: 2178 nodes
+  using frontier with 1677 nodes
+  total bdd node count: 43174
+    size of intermediate product: 2009 nodes
+    size of intermediate product: 4042 nodes
+    size of intermediate product: 2270 nodes
+    size of intermediate product: 2270 nodes
+    total size of product: 2270 nodes
+    maximum intermediate product: 4042 nodes
+  iteration: 5
+  frontier lower bound: 2637 nodes, upper bound: 3791 nodes
+  using frontier with 2553 nodes
+  total bdd node count: 54642
+    size of intermediate product: 2988 nodes
+    size of intermediate product: 7714 nodes
+    size of intermediate product: 5516 nodes
+    size of intermediate product: 5516 nodes
+    total size of product: 5516 nodes
+    maximum intermediate product: 7714 nodes
+  iteration: 6
+  frontier lower bound: 6132 nodes, upper bound: 8191 nodes
+  using frontier with 6122 nodes
+  total bdd node count: 76463
+    size of intermediate product: 6826 nodes
+    size of intermediate product: 14726 nodes
+    size of intermediate product: 8766 nodes
+    size of intermediate product: 8766 nodes
+    total size of product: 8766 nodes
+    maximum intermediate product: 14726 nodes
+  iteration: 7
+  frontier lower bound: 10315 nodes, upper bound: 13730 nodes
+  using frontier with 9004 nodes
+  total bdd node count: 65596
+    size of intermediate product: 9810 nodes
+    size of intermediate product: 20378 nodes
+    size of intermediate product: 13345 nodes
+    size of intermediate product: 13345 nodes
+    total size of product: 13345 nodes
+    maximum intermediate product: 20378 nodes
+  iteration: 8
+  frontier lower bound: 14260 nodes, upper bound: 20679 nodes
+  using frontier with 13862 nodes
+  total bdd node count: 83272
+    size of intermediate product: 15204 nodes
+    size of intermediate product: 33225 nodes
+    size of intermediate product: 23112 nodes
+    size of intermediate product: 23112 nodes
+    total size of product: 23112 nodes
+    maximum intermediate product: 33225 nodes
+  iteration: 9
+  frontier lower bound: 25230 nodes, upper bound: 35604 nodes
+  using frontier with 23131 nodes
+  total bdd node count: 107316
+    size of intermediate product: 23330 nodes
+    size of intermediate product: 44872 nodes
+    size of intermediate product: 30991 nodes
+    size of intermediate product: 30991 nodes
+    total size of product: 30991 nodes
+    maximum intermediate product: 44872 nodes
+  iteration: 10
+  frontier lower bound: 34849 nodes, upper bound: 50881 nodes
+  using frontier with 31954 nodes
+  total bdd node count: 142890
+    size of intermediate product: 30406 nodes
+    size of intermediate product: 58400 nodes
+    size of intermediate product: 38550 nodes
+    size of intermediate product: 38550 nodes
+    total size of product: 38550 nodes
+    maximum intermediate product: 58400 nodes
+  iteration: 11
+  frontier lower bound: 41382 nodes, upper bound: 64558 nodes
+  using frontier with 39659 nodes
+  total bdd node count: 186189
+    size of intermediate product: 37518 nodes
+    size of intermediate product: 69670 nodes
+    size of intermediate product: 44654 nodes
+    size of intermediate product: 44654 nodes
+    total size of product: 44654 nodes
+    maximum intermediate product: 69670 nodes
+  iteration: 12
+  frontier lower bound: 46413 nodes, upper bound: 78781 nodes
+  using frontier with 44749 nodes
+  total bdd node count: 237590
+    size of intermediate product: 41541 nodes
+    size of intermediate product: 73495 nodes
+    size of intermediate product: 45380 nodes
+    size of intermediate product: 45380 nodes
+    total size of product: 45380 nodes
+    maximum intermediate product: 73495 nodes
+  iteration: 13
+  frontier lower bound: 42301 nodes, upper bound: 89642 nodes
+  using frontier with 41222 nodes
+  total bdd node count: 273024
+    size of intermediate product: 38911 nodes
+    size of intermediate product: 70633 nodes
+    size of intermediate product: 45134 nodes
+    size of intermediate product: 45134 nodes
+    total size of product: 45134 nodes
+    maximum intermediate product: 70633 nodes
+  iteration: 14
+  frontier lower bound: 41426 nodes, upper bound: 100439 nodes
+  using frontier with 41426 nodes
+  total bdd node count: 296801
+    SALenv GC... done
+    begin BDD GC (dead node count: 1005753)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 38794 nodes
+    size of intermediate product: 67970 nodes
+    size of intermediate product: 42396 nodes
+    size of intermediate product: 42396 nodes
+    total size of product: 42396 nodes
+    maximum intermediate product: 67970 nodes
+  iteration: 15
+  frontier lower bound: 38027 nodes, upper bound: 107392 nodes
+  using frontier with 38027 nodes
+  total bdd node count: 314317
+    size of intermediate product: 35884 nodes
+    size of intermediate product: 62615 nodes
+    size of intermediate product: 37576 nodes
+    size of intermediate product: 37576 nodes
+    total size of product: 37576 nodes
+    maximum intermediate product: 62615 nodes
+  iteration: 16
+  frontier lower bound: 33117 nodes, upper bound: 112258 nodes
+  using frontier with 33117 nodes
+  total bdd node count: 329357
+    size of intermediate product: 31336 nodes
+    size of intermediate product: 56267 nodes
+    size of intermediate product: 33065 nodes
+    size of intermediate product: 33065 nodes
+    total size of product: 33065 nodes
+    maximum intermediate product: 56267 nodes
+  iteration: 17
+  frontier lower bound: 30257 nodes, upper bound: 117333 nodes
+  using frontier with 28873 nodes
+  total bdd node count: 347220
+    size of intermediate product: 27350 nodes
+    size of intermediate product: 50068 nodes
+    size of intermediate product: 29836 nodes
+    size of intermediate product: 29836 nodes
+    total size of product: 29836 nodes
+    maximum intermediate product: 50068 nodes
+  iteration: 18
+  frontier lower bound: 28753 nodes, upper bound: 122091 nodes
+  using frontier with 27759 nodes
+  total bdd node count: 364523
+    size of intermediate product: 26392 nodes
+    size of intermediate product: 47684 nodes
+    size of intermediate product: 28845 nodes
+    size of intermediate product: 28845 nodes
+    total size of product: 28845 nodes
+    maximum intermediate product: 47684 nodes
+  number of visited states: 1496185.0
+  INVALID, building counterexample...
+    size of intermediate product: 242 nodes
+    size of intermediate product: 180 nodes
+    size of intermediate product: 171 nodes
+    size of intermediate product: 171 nodes
+    total size of product: 171 nodes
+    maximum intermediate product: 242 nodes
+    size of intermediate product: 122 nodes
+    size of intermediate product: 95 nodes
+    size of intermediate product: 119 nodes
+    size of intermediate product: 119 nodes
+    total size of product: 119 nodes
+    maximum intermediate product: 122 nodes
+    size of intermediate product: 122 nodes
+    size of intermediate product: 95 nodes
+    size of intermediate product: 86 nodes
+    size of intermediate product: 86 nodes
+    total size of product: 86 nodes
+    maximum intermediate product: 122 nodes
+    size of intermediate product: 139 nodes
+    size of intermediate product: 155 nodes
+    size of intermediate product: 125 nodes
+    size of intermediate product: 125 nodes
+    total size of product: 125 nodes
+    maximum intermediate product: 155 nodes
+    size of intermediate product: 326 nodes
+    size of intermediate product: 233 nodes
+    size of intermediate product: 196 nodes
+    size of intermediate product: 196 nodes
+    total size of product: 196 nodes
+    maximum intermediate product: 326 nodes
+    size of intermediate product: 166 nodes
+    size of intermediate product: 188 nodes
+    size of intermediate product: 220 nodes
+    size of intermediate product: 220 nodes
+    total size of product: 220 nodes
+    maximum intermediate product: 220 nodes
+    size of intermediate product: 193 nodes
+    size of intermediate product: 135 nodes
+    size of intermediate product: 118 nodes
+    size of intermediate product: 118 nodes
+    total size of product: 118 nodes
+    maximum intermediate product: 193 nodes
+    size of intermediate product: 196 nodes
+    size of intermediate product: 137 nodes
+    size of intermediate product: 118 nodes
+    size of intermediate product: 118 nodes
+    total size of product: 118 nodes
+    maximum intermediate product: 196 nodes
+    size of intermediate product: 451 nodes
+    size of intermediate product: 299 nodes
+    size of intermediate product: 245 nodes
+    size of intermediate product: 245 nodes
+    total size of product: 245 nodes
+    maximum intermediate product: 451 nodes
+    size of intermediate product: 297 nodes
+    size of intermediate product: 202 nodes
+    size of intermediate product: 344 nodes
+    size of intermediate product: 344 nodes
+    total size of product: 344 nodes
+    maximum intermediate product: 344 nodes
+    size of intermediate product: 193 nodes
+    size of intermediate product: 135 nodes
+    size of intermediate product: 155 nodes
+    size of intermediate product: 155 nodes
+    total size of product: 155 nodes
+    maximum intermediate product: 193 nodes
+    size of intermediate product: 193 nodes
+    size of intermediate product: 135 nodes
+    size of intermediate product: 155 nodes
+    size of intermediate product: 155 nodes
+    total size of product: 155 nodes
+    maximum intermediate product: 193 nodes
+    size of intermediate product: 193 nodes
+    size of intermediate product: 135 nodes
+    size of intermediate product: 155 nodes
+    size of intermediate product: 155 nodes
+    total size of product: 155 nodes
+    maximum intermediate product: 193 nodes
+    size of intermediate product: 193 nodes
+    size of intermediate product: 170 nodes
+    size of intermediate product: 200 nodes
+    size of intermediate product: 200 nodes
+    total size of product: 200 nodes
+    maximum intermediate product: 200 nodes
+    size of intermediate product: 193 nodes
+    size of intermediate product: 180 nodes
+    size of intermediate product: 210 nodes
+    size of intermediate product: 210 nodes
+    total size of product: 210 nodes
+    maximum intermediate product: 210 nodes
+    size of intermediate product: 193 nodes
+    size of intermediate product: 180 nodes
+    size of intermediate product: 210 nodes
+    size of intermediate product: 210 nodes
+    total size of product: 210 nodes
+    maximum intermediate product: 210 nodes
+    size of intermediate product: 193 nodes
+    size of intermediate product: 180 nodes
+    size of intermediate product: 352 nodes
+    size of intermediate product: 352 nodes
+    total size of product: 352 nodes
+    maximum intermediate product: 352 nodes
+    size of intermediate product: 288 nodes
+    size of intermediate product: 268 nodes
+    size of intermediate product: 268 nodes
+    size of intermediate product: 268 nodes
+    total size of product: 268 nodes
+    maximum intermediate product: 288 nodes
+  verification time: 13.01 secs
+total execution time: 43.6 secs

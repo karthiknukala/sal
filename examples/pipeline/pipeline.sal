@@ -1,0 +1,193 @@
+pipeline : CONTEXT =
+BEGIN
+  PC            : TYPE;   %% program counter type
+  Data          : TYPE; 
+  Register      : TYPE;   %% register id
+  Operation     : TYPE;
+  Register_File : TYPE = ARRAY Register OF Data; 
+
+  pc0 : PC;            %% (arbitrary) initial value of the program counter
+  rf0 : Register_File; %% (arbitrary) initial value of the register file
+
+  op     : [ PC -> Operation ]; %% operation extractor   
+  src1   : [ PC -> Register  ]; %% first argument extractor
+  src2   : [ PC -> Register  ]; %% second argument extractor
+  dest   : [ PC -> Register  ]; %% destination register extractor
+  new_pc : [ PC -> PC ];       %% next program counter 
+  alu    : [ [Operation, Data, Data] -> Data ]; %% ALU
+
+  %% Specification Module
+  spec : MODULE =
+  BEGIN
+		%% isa is TRUE if the specification can make a step, FALSE otherwise
+    INPUT isa : BOOLEAN 
+    %% project_impl is TRUE if we must project the implementation's state
+    %% onto the specification's state, FALSE otherwise
+    INPUT project_impl : BOOLEAN
+    
+    %% STATE variables
+    OUTPUT sPC : PC            %% specification program counter
+    OUTPUT sRF : Register_File %% specification register file
+
+    %% Auxiliary variables
+    LOCAL arg1 : Data
+    LOCAL arg2 : Data
+    LOCAL val  : Data
+
+    %% STATE of the implementation module
+    INPUT  pPC : PC
+    INPUT  pRF : Register_File
+  
+    DEFINITION
+      %% Auxiliary definitions
+      arg1 = sRF[src1(sPC)];
+      arg2 = sRF[src2(sPC)];
+      val  = alu(op(sPC), arg1, arg2)
+ 
+    INITIALIZATION
+      sPC  = pc0;
+      sRF  = rf0
+    
+    TRANSITION
+      sPC' = IF     project_impl THEN pPC %% copy the implementation PC
+             ELSIF  isa          THEN new_pc(sPC) %% if a step is made, generate the next value of PC
+             ELSE   sPC          ENDIF;
+      sRF' = IF     project_impl THEN pRF %% copy the implementation RF
+             ELSIF  isa          THEN (sRF WITH [dest(sPC)] := val) %% if a step is made store val at dest(sPC)
+             ELSE   sRF          ENDIF
+  END;
+
+  impl : MODULE =
+  BEGIN
+    INPUT flush : BOOLEAN %% it is TRUE in a step when the pipeline has to be flushed in that step
+   
+    %% STATE variables
+    OUTPUT pPC : PC             %% implementation program counter
+    OUTPUT pRF : Register_File  %% implementation register file
+    %% exec stage state
+    LOCAL  eOP   : Operation
+    LOCAL  eSRC2 : Register     %% first source register
+    LOCAL  eARG1 : Data         
+    LOCAL  eARG2 : Data
+    LOCAL  eDEST : Register     %% destination register
+    LOCAL  eWRT  : BOOLEAN      %% valid bit
+    %% writeback stage state
+    LOCAL  wVAL  : Data         %% result from the ALU
+    LOCAL  wDEST : Register     %% destination register
+    LOCAL  wWRT  : BOOLEAN      %% valid bit
+
+    %% auxiliary variables
+    LOCAL  stall : BOOLEAN      %% stall signal
+    LOCAL  fwd   : Data         %% forwarded result
+  
+    DEFINITION
+      %% stall when the destination of a valid instruction in execute stage
+      %% is the same as the source of the fetched instruction
+      stall = eWRT AND (src1(pPC) = eDEST);        
+      %% forward the result of the writeback stage if it is valid, and its
+      %% destination is the same as the 2nd source of the exec stage 
+      fwd   = IF wWRT AND (wDEST = eSRC2) THEN wVAL
+              ELSE eARG2 ENDIF
+
+    INITIALIZATION
+      pPC   = pc0;
+      pRF   = rf0
+
+    TRANSITION
+      %% the program counter remains the same if the pipeline is flushed or there is a stall
+      pPC'    = IF flush OR stall THEN pPC
+                ELSE new_pc(pPC)  ENDIF;
+      %% store wVAL in wDEST if valid
+      pRF'    = IF wWRT THEN (pRF WITH [wDEST] := wVAL) 
+                ELSE pRF ENDIF;
+      eOP'    = op(pPC);
+      eSRC2'  = src2(pPC);
+      %% note that pRF' is used instead of pRF. This avoids the need to perform
+      %% forwarding or stalling when the write back destination matches one of 
+      %% the source operands in the fetch stage
+      eARG1'  = pRF'[src1(pPC)];
+      eARG2'  = pRF'[src2(pPC)];
+      eDEST'  = dest(pPC);
+      eWRT'   = (NOT stall) AND (NOT flush); %% valid when there is neither a stall or a flush
+      wVAL'   = alu(eOP, eARG1, fwd); %% the first argument is read from the RF, but the second is forwarded
+      wDEST'  = eDEST;
+      wWRT'   = eWRT
+  END;
+
+  %% MAIN IDEA: 
+  %% To verify that the pipelined implementation is equivalent to the unpipelined specification,
+  %% we need to prove a correspondence between the implementation and the specification.
+  %% First, we execute a step of the impl module, to obtain a state in the spec, we must flush the
+  %% pipeline.
+
+  %% auxiliary module
+  step : MODULE = 
+  BEGIN
+    OUTPUT c_step : NATURAL
+    INITIALIZATION
+      c_step  = 0
+    TRANSITION
+      c_step' = c_step + 1 
+  END;                
+
+  
+  %% First part: execute one step in the impl module; followed by two flushes; then store 
+  %%             pPC and pRF in I_pc and I_rf respectively.
+  part1 : MODULE =
+    LOCAL flush, pPC, pRF  %% hide these variables
+    IN (impl || BEGIN
+                  INPUT  c_step : NATURAL   
+                  OUTPUT flush  : BOOLEAN
+                  OUTPUT I_pc   : PC             
+                  OUTPUT I_rf   : Register_File
+                  %% outputs produced by the module impl
+                  INPUT  pPC    : PC             
+                  INPUT  pRF    : Register_File
+                  DEFINITION
+                    flush  = (c_step /= 0)  %% start to flush after first step
+                  TRANSITION 
+                    I_pc'   = IF c_step = 2 THEN pPC'  %% store the pPC produced at step 2
+                              ELSE I_pc ENDIF;         %% otherwise maintain previous value
+                    I_rf'   = IF c_step = 2 THEN pRF'  %% store the pRF produced at step 2
+                              ELSE I_rf ENDIF          %% otherwise maintain previous value
+                END);
+
+  %% Second part: flush the pipeline for two steps; project the result onto the spec module;
+  %%              store the results of sPC and sRF in S_pc0 and S_rf0 repectively; then
+  %%              execute a specification step; and store sPC and sRC in S_pc1 and S_rf1 respectively
+  part2 : MODULE =
+    LOCAL flush, pPC, pRF, sPC, sRF %% hide these variables
+    IN (impl || spec ||
+        BEGIN
+          INPUT  c_step       : NATURAL
+          OUTPUT flush        : BOOLEAN
+          OUTPUT project_impl : BOOLEAN
+          OUTPUT isa          : BOOLEAN
+          OUTPUT S_pc0        : PC
+          OUTPUT S_rf0        : Register_File
+          OUTPUT S_pc1        : PC
+          OUTPUT S_rf1        : Register_File
+          %% outputs produced by the specification module
+          INPUT  sPC    : PC
+          INPUT  sRF    : Register_File
+          DEFINITION
+            flush        = TRUE;          %% always flushing
+            project_impl = (c_step = 2);  %% project the impl state onto the spec at step 2
+            isa          = (c_step = 3)   %% execute the spec machine at step 3
+          TRANSITION
+            S_pc0'       = IF c_step = 2 THEN sPC'  %% store sPC at step2 (after projection)
+                           ELSE S_pc0 ENDIF; 
+            S_pc1'       = IF c_step = 3 THEN sPC'  %% store sPC at step3 (after executing a spec step)
+                           ELSE S_pc1 ENDIF; 
+            S_rf0'       = IF c_step = 2 THEN sRF'  %% store sRF at step2 (after projection)
+                           ELSE S_rf0 ENDIF; 
+            S_rf1'       = IF c_step = 3 THEN sRF'  %% store sRF at step3 (after executing a spec step)
+                           ELSE S_rf1 ENDIF 
+        END);
+
+  system : MODULE = step || part1 || part2;
+
+  %% Does PC and RF correspond, for either 0 or 1 steps of the spec?
+  equivalent : THEOREM system |- G( c_step > 3 => ((S_pc1 = I_pc AND S_rf1 = I_rf) OR (S_pc0 = I_pc AND S_rf0 = I_rf)));
+
+END

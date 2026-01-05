@@ -1,0 +1,60 @@
+Queue
+-----
+
+This example was extracted from the UCLID manual. 
+UCLID is available online at: http://www-2.cs.cmu.edu/~uclid/
+A queue of arbitrary length can be modeled using three components:
+`head', `tail', `contents'. Conceptually, the contents of the queue
+are represented as a subsequence of an infinite sequence. The
+component `contents' is the infinite sequence, and it is modeled
+as an infinite array of data. `head' is an index
+(natural number) to the first element of the queue. `tail' is
+an index of the next available position in the queue.
+
+The module Q specifies the queue using SAL syntax. It has two
+input variables: `op' and `data'. `op' specifies the operation
+to be performed on the queue (push, pop, or noop). `data' contains
+the information to be pushed on the queue, when `op' is equals to
+`push'. The operations are modeled in the following way:
+
+1-	push:
+  update `contents' at position `tail' with the current `data',
+  and increment `tail'
+2-  pop:
+  increment `head'
+3-  noop:
+  do nothing
+
+The ouput variable `first' always contains the head of the queue.
+
+The module `test-bench1' specifies a little test for the Q module.
+It basically performs three pushes, followed by three pops. The property
+`th1' states the the elements are poped in the correct order. The module
+`test-bench1' uses an array to record the output `first' produced 
+by the Q module in every step.
+The property `th2' checks whether `head <= tail' is always true, under
+the assumption it is true in the initial state.
+
+Commands:
+
+- Check the queue property
+
+  % sal-inf-bmc -v 3 -d 6 --enable-ate queue th1
+
+  Remark: we have to use the flag --enable-ate (array theory elimination),
+  because the array theory in ICS is incomplete.
+
+- Check the queue property using UCLID
+
+  % sal-inf-bmc -v 3 -d 6 -s uclid queue th1
+
+  Remark: you must have UCLID installed in your system to use this 
+  command.
+
+- Check consistency property
+
+  % sal-inf-bmc -v 3 -d 6 --enable-ate queue th2
+
+- Generate counterexample for invalid property
+
+  % sal-inf-bmc -v 3 -d 6 --enable-ate queue invalid

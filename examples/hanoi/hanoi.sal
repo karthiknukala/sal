@@ -1,0 +1,37 @@
+hanoi {n : nznat}: CONTEXT = 
+BEGIN
+  index: TYPE = [0..n-1];
+  value: TYPE = [0..n];
+  numpegs: NATURAL = n;
+  peg: TYPE = [0..numpegs-1];
+  state: TYPE = ARRAY peg  OF ARRAY index OF value;
+
+moves: MODULE = 
+  BEGIN
+    OUTPUT 
+      tower : state,
+      top: ARRAY index OF value,
+      done: bool 
+
+    DEFINITION
+     done = (FORALL (j:index): tower[n-1][j] = n-j);
+
+    INITIALIZATION
+      (FORALL (i:peg, j:index): tower[i][j] = (IF i = 0 THEN n-j ELSE 0
+      ENDIF));
+      top[0] = n;
+      top[1] = 0;
+      top[2] = 0;
+
+    TRANSITION
+      [([] (i1, i2 : peg): 
+        top[i1]/= 0 AND top[i2] /= n  AND 
+         (top[i2]=0 OR tower[i1][top[i1]-1] < tower[i2][top[i2]-1])
+         --> tower'[i2][top[i2]] = tower[i1][top[i1]-1];
+              top' = (top WITH [i2] := top[i2]+1) WITH [i1] := top[i1]-1
+       ) ]
+END  ;
+
+never_done: THEOREM moves |- G(NOT done);
+
+END

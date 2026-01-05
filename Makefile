@@ -1,0 +1,579 @@
+#
+#  SAL 3.1, Copyright (C) 2006, 2011, 2012, SRI International.  All Rights Reserved.
+#
+#  SAL is free software; you can redistribute it and/or 
+#  modify it under the terms of the GNU General Public License 
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of 
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+#  GNU General Public License for more details. 
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software 
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. 
+#
+
+SHELL=/bin/sh
+SED=sed
+
+#### configuration part
+BIGLOOLIBDIR= /opt/homebrew/Cellar/bigloo/4.6a/lib/bigloo/4.6a
+salenv_version = 3.3
+prefix = /usr/local
+exec_prefix = ${prefix}
+bindir = ${exec_prefix}/bin
+libdir = ${exec_prefix}/lib
+posixos=darwin
+sal_scripts = salenv salenv-safe sal-wfc lsal2xml sal2bool sal-smc sal-bmc sal-inf-bmc sal-path-finder sal-deadlock-checker sal-sim sal-wmc ltl2buchi sal-emc sal-path-explorer sal-atg sal-atg2 sal-sld sal-sc
+sal_scripts_template = $(sal_scripts:%=src/%.template)
+sal_scripts_local = $(sal_scripts:%=bin/%)
+ARCH=arm-apple-darwin24.6.0
+EXEEXT=
+SALENV_BUILD_MODE=release
+SALENV_ENABLE_DYNAMIC=no
+SALENV_STATIC=no
+SALENV = salenv-exec
+CC = gcc
+AR = ar
+RANLIB = ranlib
+BIGLOO = bigloo
+BDEPEND = bgldepend
+CPPFLAGS=-DCUDD_VERSION_3 -I/usr/local/include -DHAS_SYS_TIMES  -I$(BIGLOOLIBDIR) -DOS_$(posixos)
+LIBS= /usr/local/lib/libcudd.a -lm /opt/homebrew/lib/libgmp.a  
+LDFLAGS=-L/opt/homebrew/lib
+###
+
+.PHONY: documentation
+
+ifeq ($(SALENV_ENABLE_DYNAMIC),yes)
+  DYNAMIC_FLAG= -eval '(define-macro (dynamic-enabled?) \#t)'
+else
+  DYNAMIC_FLAG= -eval '(define-macro (dynamic-enabled?) \#f)'
+endif
+
+BIGLOO_FLAGS_DEFAULT= -c -farithmetic -fmco -copt "$(CPPFLAGS)" $(ESOLVER_FLAG) $(DYNAMIC_FLAG)
+
+#BIGLOO_LFLAGS_DEFAULT= -heapsize $(HEAPSIZE) $(BIGLOOLFLAGS) -ld-relative 
+BIGLOO_LFLAGS_DEFAULT= $(BIGLOOLFLAGS) -ld-relative 
+
+# I'm using static libraries to avoid problems in the binary installation
+
+#
+# BD: 2013/07/17: Changed the option --export-dynamic to -rdynamic in
+# the -ldopt argument The --export-dynamic caused compilation failures
+# (error message from gcc).
+#
+# Platform-specific optimization and linking flags
+# Updated for modern compilers and ARM64 Macs (M1/M2/M3)
+
+ifeq ($(posixos),linux)
+  # -O3 is the maximum standard optimization level (gcc/clang)
+  # -O6 was a gcc-ism that may not work on all compilers
+  OPT=-O3
+  SAFEOPT=-O2
+  COPT=-O2
+  ifeq ($(SALENV_STATIC),no)
+    EXTRA_BIGLOO_LFLAGS= -ldopt "$(LDFLAGS) $(LIBS) -rdynamic" -static-bigloo
+  else
+    EXTRA_BIGLOO_LFLAGS= -ldopt "$(LDFLAGS) $(LIBS) -static" -static-bigloo
+  endif
+else
+ifeq ($(posixos),cygwin)
+  OPT=-O3
+  SAFEOPT=-O2
+  COPT=-O2
+  # increase stack space in Windows
+  EXTRA_BIGLOO_LFLAGS= -ldopt "$(LDFLAGS) -Wl,--stack,16777216 $(LIBS)" -static-bigloo
+else
+ifeq ($(posixos),sunos)
+  OPT=-O3
+  SAFEOPT=-O2
+  COPT=-O2
+  # flag -static didn't work in the Solaris machine
+  EXTRA_BIGLOO_LFLAGS= -ldopt "$(LDFLAGS) $(LIBS) --export-dynamic" -static-bigloo
+else
+  ifeq ($(posixos),darwin)
+  # macOS (Darwin) - supports both Intel and ARM64 (M1/M2/M3) Macs
+  OPT=-O2
+  SAFEOPT=-O2
+  COPT=-O2
+  # Darwin produces the error message crt0.o not found when the flag -static is used
+  # The following website provides an explanation: http://developer.apple.com/qa/qa2001/qa1118.html
+  # On ARM64 Macs, we may need to add Homebrew library paths
+  HOMEBREW_PREFIX := $(shell brew --prefix 2>/dev/null || echo "/usr/local")
+  ifeq ($(SALENV_ENABLE_DYNAMIC),yes)
+    EXTRA_BIGLOO_LFLAGS= -ldopt "$(LDFLAGS) -L$(HOMEBREW_PREFIX)/lib $(LIBS)" -static-bigloo
+  else
+    EXTRA_BIGLOO_LFLAGS= -ldopt "$(LDFLAGS) -L$(HOMEBREW_PREFIX)/lib $(LIBS)" -static-bigloo
+  endif
+else
+  OPT=-O2
+  SAFEOPT=-O2
+  COPT=-O2
+  EXTRA_BIGLOO_LFLAGS= -ldopt "$(LDFLAGS) $(LIBS)" -static-bigloo
+endif
+endif
+endif
+endif
+
+ifeq ($(SALENV_BUILD_MODE),release)
+BIGLOO_UNSAFE_FLAGS= $(OPT) -w -unsafe  $(BIGLOO_FLAGS_DEFAULT) -eval '(define-macro (sal-check-mode) \#f)' \
+  -eval '(define-macro (sal-collect-info) \#f)' -eval '(loadq "compilation-support-code.scm")'
+BIGLOO_UNSAFE_LFLAGS= $(BIGLOO_LFLAGS_DEFAULT) $(EXTRA_BIGLOO_LFLAGS)
+BIGLOO_SAFE_FLAGS= $(SAFEOPT) -w $(BIGLOO_FLAGS_DEFAULT) -eval '(define-macro (sal-check-mode) \#t)' \
+  -eval '(define-macro (sal-collect-info) \#t)' -eval '(loadq "no-compilation-support-code.scm")'
+BIGLOO_SAFE_LFLAGS= $(BIGLOO_LFLAGS_DEFAULT) $(EXTRA_BIGLOO_LFLAGS)
+CFLAGS=$(COPT) -DNDEBUG 
+else
+ifeq ($(SALENV_BUILD_MODE),debug)
+BIGLOO_UNSAFE_FLAGS= -Wall -g -cg $(BIGLOO_FLAGS_DEFAULT) -eval '(define-macro (sal-check-mode) \#t)'  -eval '(define-macro (sal-collect-info) \#t)'  \
+	-eval '(loadq "no-compilation-support-code.scm")' -eval '(set! *strip* \#f)'
+BIGLOO_UNSAFE_LFLAGS= $(BIGLOO_LFLAGS_DEFAULT) $(EXTRA_BIGLOO_LFLAGS)  -eval '(set! *strip* \#f)'
+BIGLOO_SAFE_FLAGS= $(BIGLOO_UNSAFE_FLAGS)
+BIGLOO_SAFE_LFLAGS= $(BIGLOO_UNSAFE_LFLAGS) $(EXTRA_BIGLOO_LFLAGS)
+CFLAGS=-g 
+else
+ifeq ($(SALENV_BUILD_MODE),profile)
+BIGLOO_UNSAFE_FLAGS= $(OPT) -farithmetic -unsafe -w -p $(BIGLOO_FLAGS_DEFAULT) -eval '(define-macro (sal-check-mode) \#f)' \
+  -eval '(define-macro (sal-collect-info) \#f)' -eval '(loadq "compilation-support-code.scm")'
+BIGLOO_UNSAFE_LFLAGS= -p $(BIGLOO_LFLAGS_DEFAULT) $(EXTRA_BIGLOO_LFLAGS)
+BIGLOO_SAFE_FLAGS= $(BIGLOO_UNSAFE_FLAGS)
+BIGLOO_SAFE_LFLAGS= $(BIGLOO_UNSAFE_LFLAGS) $(EXTRA_BIGLOO_LFLAGS)
+CFLAGS=$(COPT) -DNDEBUG 
+else
+ifeq ($(SALENV_BUILD_MODE),bench)
+BIGLOO_UNSAFE_FLAGS= $(OPT) -farithmetic -w -unsafe  $(BIGLOO_FLAGS_DEFAULT) -eval '(define-macro (sal-check-mode) \#f)' \
+  -eval '(define-macro (sal-collect-info) \#f)' -eval '(loadq "compilation-support-code.scm")'
+BIGLOO_UNSAFE_LFLAGS= $(BIGLOO_LFLAGS_DEFAULT) $(EXTRA_BIGLOO_LFLAGS)
+BIGLOO_SAFE_FLAGS= $(BIGLOO_UNSAFE_FLAGS)
+BIGLOO_SAFE_LFLAGS= $(BIGLOO_UNSAFE_LFLAGS) $(EXTRA_BIGLOO_LFLAGS)
+CFLAGS=$(COPT) -DNDEBUG 
+endif
+endif
+endif
+endif
+
+
+DOC=doc
+
+ifeq ($(MAKELEVEL),0)
+BIN_DIR=bin/$(ARCH)-$(SALENV_BUILD_MODE)
+LIB_DIR=lib/$(ARCH)-$(SALENV_BUILD_MODE)
+OBJ_DIR=obj/$(ARCH)-$(SALENV_BUILD_MODE)
+OBJ_SAFE_DIR=obj-safe/$(ARCH)-$(SALENV_BUILD_MODE)
+SRC_DIR=src
+SED_OBJ_DIR=obj\/$(ARCH)-$(SALENV_BUILD_MODE)
+SED_OBJ_SAFE_DIR=obj-safe\/$(ARCH)-$(SALENV_BUILD_MODE)
+else
+BIN_DIR=../bin/$(ARCH)-$(SALENV_BUILD_MODE)
+LIB_DIR=../lib/$(ARCH)-$(SALENV_BUILD_MODE)
+OBJ_DIR=../obj/$(ARCH)-$(SALENV_BUILD_MODE)
+OBJ_SAFE_DIR=../obj-safe/$(ARCH)-$(SALENV_BUILD_MODE)
+SRC_DIR=.
+SED_OBJ_DIR=\.\.\/obj\/$(ARCH)-$(SALENV_BUILD_MODE)
+SED_OBJ_SAFE_DIR=\.\.\/obj-safe\/$(ARCH)-$(SALENV_BUILD_MODE)
+endif
+
+BIGLOO_LDFLAGS = 
+
+SAL_CORE_SCM_FILE=collect-info sal-sxml-support sxml-package front-end  \
+sal-version queue sal-environment utility runtime sal-parser-utility    \
+sal-parser scmobj xformat sal-error sal-string-reader symbol-table      \
+symbol-set sal-ast-attributes sal-context lsal-string-reader sal-decls  \
+sal-module gmp-scheme fast-hash-table file-info ls-parser sal-ast       \
+sal-ast-support api trace sal-type-checker sxml-to-sal-ast wttree       \
+sal-ast-for-each sal-expression sal-type sal-ast-table unique-names     \
+sal-ast-copy sal-ast-instantiate sal-ast-eq sal-ast-env sal-pp          \
+sal-importer sal-ast-list sal-expr-evaluator iterators sal-dnf          \
+sal-bound sal-ast-simplify pretty sal-value-pretty-printer              \
+sal-pretty-printer lsal-pretty-printer sal-rename-variables             \
+sal-prelude
+
+SAL_PARSER_SPECIFIC_SCM_FILE = sal-parser-front-end
+
+SAL_PARSER_SCM_FILE = $(SAL_CORE_SCM_FILE) $(SAL_PARSER_SPECIFIC_SCM_FILE)
+
+SAL_SPECIFIC_SCM_FILE = bdd fast-cache sxml-hash-table sal-ast-to-sxml  \
+sal-implicit-assignments sal-flat-modules sal-slicer sal-ast-expand     \
+sal-finite-types sal-cse sal-finite-expressions sal-assertion sal-path  \
+sal-path-pp sal-bitvector random ordering bdd-util heap sal2bdd         \
+sal-bdd-cluster sal-smc sal-bdd-context sal-bdd-fsm sal-smc-core        \
+sal-api sal-smc-api sal-pseudo-lets sal-nnf sal-ltl graph sort          \
+sal-dependencies finite-set-as-bdd sal-component-info polarity          \
+dot-interface ics-interface tmp-files sal-flat-data-structures          \
+sal-flat-support zchaff-interface grasp-interface svc-interface         \
+uclid-interface cvcl-interface lingeling-interface minisat-interface    \
+simple-abstraction sal-type-membership                                  \
+dp-translation-support sal-derived-path sal-wmc-core                    \
+ltl-ctl sal-global-context sal-smc-prioritized-traversal                \
+sal-bdd-fsm-max-min sal-smc-context sal-flat-module-to-bdd-fsm          \
+sat-generic-context sat-context sat-bmc-context sat-boolean-context     \
+sat-boolean-ics-context sat-boolean-cnf-context                         \
+sat-boolean-bmc-context sat-boolean-ics-bmc-context                     \
+sat-boolean-cnf-bmc-context sat-boolean-zchaff-bmc-context              \
+siege-interface sat-boolean-siege-bmc-context                           \
+sat-boolean-grasp-bmc-context sal-bmc berkmin-interface                 \
+sat-boolean-berkmin-bmc-context sat-boolean-lingeling-bmc-context       \
+sat-boolean-minisat-bmc-context sal-expand-for-all-definitions          \
+sal-guess-reader sat-generic-bmc-context sat-ics-context                \
+sat-ics-bmc-context sat-generic-context-result sal-inf-bmc              \
+sat-svc-context sat-svc-bmc-context sat-cvcl-context                    \
+sat-cvcl-bmc-context sat-uclid-context sat-uclid-bmc-context            \
+sal2scm-core sal2scm sal2scm-runtime scm2sal sal-esm sal-trace-info     \
+sal-flat-modules-core sal-dnf-esm sal-esm-expand sal-esm-dependencies   \
+sal-esm-support sal-collect-state-lhs sal-lhs-subsumption               \
+sal-esm-rearrange sal-lhs-set permute bit-array verbosity-c-interface   \
+state-entry-channel state-cache compile-and-load code-table             \
+state-entry state-to-do-list sal-promote-inputs                         \
+sal-value-to-assignments sal-display-variable-value                     \
+sal-transition-step sal-esm-options sal-esm-options-support             \
+sal-transient-vars status-message-parser sal2scm-type                   \
+sal-scm-obj-table sal-esm-alt sal-esm-case sal-esm-lhs                  \
+sal-esm-may-delay sal-esm-initialization sal-esm-access-level-table     \
+mathsat-interface sal-esm-bitstream sal-esm-runtime                     \
+sal-esm-engine-scm-context sal-ast-used-contexts smt-interface          \
+sat-boolean-smt-context sat-boolean-smt-bmc-context                     \
+sal-module-simplifications yices-interface                              \
+sat-boolean-yices-bmc-context sat-yices-context sat-yices-bmc-context   \
+yices2-interface sat-boolean-yices2-bmc-context sat-yices2-context      \
+sat-yices2-bmc-context
+
+
+SAL_SCM_FILE = $(SAL_CORE_SCM_FILE) $(SAL_SPECIFIC_SCM_FILE)
+
+SALENV_SPECIFIC_SCM_FILE= salenv
+
+ALL_SCM_FILE = $(SAL_CORE_SCM_FILE) $(SAL_SPECIFIC_SCM_FILE)  \
+ $(SAL_PARSER_SPECIFIC_SCM_FILE) $(SALENV_SPECIFIC_SCM_FILE)
+
+ALL_SCM_SRC = $(ALL_SCM_FILE:%=$(SRC_DIR)/%.scm)
+
+SAL_C_CORE_FILE= gmp_scheme_interface.c file-info-imp.c pid_info.c  \
+runtime-support.c
+
+SAL_C_FILE = $(SAL_C_CORE_FILE) state_entry.c state_entry_channel.c \
+state_cache.c jenkins_hash.c bit_array.c random-support.c           \
+cudd_c_utils.c state_to_do_list.c
+
+SALENV_SAFE= $(SALENV)-safe
+SALENV_SCM_FILE = $(SAL_SCM_FILE) $(SALENV_SPECIFIC_SCM_FILE)
+SALENV_SCM_OBJ = $(SALENV_SCM_FILE:%=$(OBJ_DIR)/%.o)
+SALENV_SAFE_SCM_OBJ = $(SALENV_SCM_FILE:%=$(OBJ_SAFE_DIR)/%.o)
+SALENV_C_OBJ = $(SAL_C_FILE:%.c=$(OBJ_DIR)/%.o)
+SALENV_MCO = $(SALENV_SCM_FILE:%=$(OBJ_DIR)/%.mco)
+SALENV_OBJ = $(SALENV_SCM_OBJ) $(SALENV_C_OBJ)
+SALENV_SAFE_OBJ = $(SALENV_SAFE_SCM_OBJ) $(SALENV_C_OBJ)
+SALENV_BIN = $(BIN_DIR)/$(SALENV)
+SALENV_SAFE_BIN = $(BIN_DIR)/$(SALENV_SAFE)
+
+SALHEAP=sal.heap
+SALHEAP_DEST = $(LIB_DIR)/$(SALHEAP)
+
+SALRUNTIME = libsal_u
+SALRUNTIME_SAFE = libsal_s
+SALRUNTIME_LIB = $(LIB_DIR)/$(SALRUNTIME).a
+SALRUNTIME_SAFE_LIB = $(LIB_DIR)/$(SALRUNTIME_SAFE).a
+SALRUNTIME_SCM_FILE = $(SAL_SCM_FILE)
+SALRUNTIME_SCM_OBJ = $(SALRUNTIME_SCM_FILE:%=$(OBJ_DIR)/%.o)
+SALRUNTIME_SAFE_SCM_OBJ = $(SALRUNTIME_SCM_FILE:%=$(OBJ_SAFE_DIR)/%.o)
+SALRUNTIME_C_OBJ = $(SAL_C_FILE:%.c=$(OBJ_DIR)/%.o)
+SALRUNTIME_OBJ = $(SALRUNTIME_SCM_OBJ) $(SALRUNTIME_C_OBJ)
+SALRUNTIME_SAFE_OBJ = $(SALRUNTIME_SAFE_SCM_OBJ) $(SALRUNTIME_C_OBJ)
+
+SAL_PARSER=sal-parser
+SAL_PARSER_BIN=$(BIN_DIR)/$(SAL_PARSER)
+SAL_PARSER_SCM_OBJ=$(SAL_PARSER_SCM_FILE:%=$(OBJ_DIR)/%.o)
+SAL_PARSER_C_OBJ=$(SAL_C_CORE_FILE:%.c=$(OBJ_DIR)/%.o)
+SAL_PARSER_OBJ=$(SAL_PARSER_SCM_OBJ) $(SAL_PARSER_C_OBJ)
+
+.PHONY: all install-local
+
+ifeq ($(SALENV_BUILD_MODE),release)
+TARGETS = $(SALENV_SAFE) $(SALENV) $(SALHEAP) $(SAL_PARSER) $(SALRUNTIME_SAFE) $(SALRUNTIME)
+else
+TARGETS = $(SALENV) $(SALENV_SAFE) $(SALHEAP) $(SAL_PARSER) $(SALRUNTIME)
+endif
+
+all: $(TARGETS) local-install
+
+local-install: $(TARGETS)
+	@ chmod +x install/local-install.sh
+	@ ./install/local-install.sh
+
+#*---------------------------------------------------------------------*/
+#*  Binaries                                                           */
+#*---------------------------------------------------------------------*/
+
+#
+# SALENV
+#
+ifeq ($(MAKELEVEL),1)
+$(SALENV) : $(SALENV_BIN)
+
+ifeq ($(SALENV_BUILD_MODE),release)
+SALENV_BIN_DEPENDENCIES= compilation-support-code.scm $(SALENV_OBJ)
+else
+SALENV_BIN_DEPENDENCIES= $(SALENV_OBJ)
+endif
+
+$(SALENV_BIN) : $(SALENV_BIN_DEPENDENCIES)
+	@mkdir -p $(BIN_DIR)
+	$(BIGLOO) $(BIGLOO_UNSAFE_LFLAGS) $(SALENV_OBJ) -o $(SALENV_BIN)
+else
+$(SALENV) : 
+	make -C src -f ../Makefile $(SALENV) MAKELEVEL=1
+endif
+
+#
+# SALENV SAFE
+#
+ifeq ($(MAKELEVEL),1)
+$(SALENV_SAFE) : $(SALENV_SAFE_BIN)
+
+ifeq ($(SALENV_BUILD_MODE),release)
+$(SALENV_SAFE_BIN) : $(SALENV_SAFE_OBJ)
+	@mkdir -p $(BIN_DIR)
+	$(BIGLOO) $(BIGLOO_SAFE_LFLAGS) $(SALENV_SAFE_OBJ) -o $(SALENV_SAFE_BIN) 
+else
+# Only in release mode I create a safe executable
+$(SALENV_SAFE_BIN) : $(SALENV_BIN)
+		@mkdir -p $(BIN_DIR)
+		rm -f $(SALENV_SAFE_BIN)
+		cp $(SALENV_BIN)$(EXEEXT) $(SALENV_SAFE_BIN)$(EXEEXT)
+endif
+else
+$(SALENV_SAFE) :
+	make -C src -f ../Makefile $(SALENV_SAFE) MAKELEVEL=1
+endif
+
+#
+# SALHEAP
+#
+ifeq ($(MAKELEVEL),1)
+$(SALHEAP) : $(SALHEAP_DEST)
+
+$(SALHEAP_DEST) : $(SALENV_OBJ) make-lib.scm
+	@mkdir -p $(LIB_DIR)
+	$(BIGLOO) -unsafe -q -mkaddheap -mkaddlib make-lib.scm -addheap $(SALHEAP_DEST) -heap-library sal
+else
+$(SALHEAP) : 
+	make -C src -f ../Makefile $(SALHEAP) MAKELEVEL=1
+endif
+
+#
+# SALRUNTIME Library
+#
+ifeq ($(MAKELEVEL),1)
+
+$(SALRUNTIME) : $(SALRUNTIME_LIB)
+
+$(SALRUNTIME_LIB) : $(SALRUNTIME_OBJ)
+	rm -f $(SALRUNTIME_LIB)
+	$(AR) qcv $(SALRUNTIME_LIB) $(SALRUNTIME_OBJ)
+	$(RANLIB) $(SALRUNTIME_LIB)
+
+else
+
+$(SALRUNTIME) :
+	make -C src -f ../Makefile $(SALRUNTIME) MAKELEVEL=1
+
+endif
+
+#
+# SALRUNTIME safe Library
+#
+ifeq ($(MAKELEVEL),1)
+
+$(SALRUNTIME_SAFE) : $(SALRUNTIME_SAFE_LIB)
+
+$(SALRUNTIME_SAFE_LIB) : $(SALRUNTIME_SAFE_OBJ)
+	rm -f $(SALRUNTIME_SAFE_LIB)
+	$(AR) qcv $(SALRUNTIME_SAFE_LIB) $(SALRUNTIME_SAFE_OBJ)
+	$(RANLIB) $(SALRUNTIME_SAFE_LIB)
+
+else
+
+$(SALRUNTIME_SAFE) :
+	make -C src -f ../Makefile $(SALRUNTIME_SAFE) MAKELEVEL=1
+
+endif
+
+#
+# SAL-PARSER
+#
+ifeq ($(MAKELEVEL),1)
+$(SAL_PARSER) : $(SAL_PARSER_BIN)
+
+$(SAL_PARSER_BIN) : $(SAL_PARSER_OBJ)
+	@mkdir -p $(BIN_DIR)
+	$(BIGLOO) $(BIGLOO_UNSAFE_LFLAGS) $(SAL_PARSER_OBJ) -o $(SAL_PARSER_BIN)
+else
+$(SAL_PARSER) : 
+	make -C src -f ../Makefile $(SAL_PARSER) MAKELEVEL=1
+endif
+
+#*---------------------------------------------------------------------*/
+#*    Code analyzer                                                    */
+#*---------------------------------------------------------------------*/
+ifeq ($(MAKELEVEL),1)
+code-analyzer: code-analyzer.scm
+	bigloo -o code-analyzer code-analyzer.scm -ldopt "$(LDFLAGS)"
+
+compilation-support-code.scm: code-analyzer $(SALENV_SAFE_BIN)
+	(SAL_COLLECT_CLASS_INFO=true; export SAL_COLLECT_CLASS_INFO; $(SALENV_SAFE_BIN) -V)
+	./code-analyzer
+else
+code-analyzer:
+	make -C src -f ../Makefile code-analyzer MAKELEVEL=1
+compilation-support-code.scm:
+	make -C src -f ../Makefile compilation-support-code.scm MAKELEVEL=1
+endif
+
+#*---------------------------------------------------------------------*/
+#*    Auxiliary                                                        */
+#*---------------------------------------------------------------------*/
+# I'm using the following ifeq statements to avoid a problem in the solaris
+# (remote) compilation...
+ifeq ($(posixos),linux)
+Makefile: Makefile.in config.status
+	./config.status
+	make MAKELEVEL=0
+endif
+ifeq ($(posixos),linux)
+config.status: configure
+	./config.status --recheck
+endif
+#*---------------------------------------------------------------------*/
+#*    .scm.o                                                           */
+#*---------------------------------------------------------------------*/
+$(OBJ_DIR)/%.o : $(SRC_DIR)/%.scm
+	@mkdir -p $(OBJ_DIR)
+	$(BIGLOO) $(BIGLOO_UNSAFE_FLAGS) -eval '(define-macro (FILE-NAME) "$*.scm")' $(SRC_DIR)/$*.scm -o $(OBJ_DIR)/$*.o
+
+$(OBJ_SAFE_DIR)/%.o : $(SRC_DIR)/%.scm
+	@mkdir -p $(OBJ_SAFE_DIR)
+	$(BIGLOO) $(BIGLOO_SAFE_FLAGS) -eval '(define-macro (FILE-NAME) "$*.scm")' $(SRC_DIR)/$*.scm -o $(OBJ_SAFE_DIR)/$*.o
+
+$(SRC_DIR)/%.sch:
+	touch $@
+
+$(OBJ_DIR)/%.mco: 
+	@echo Generating check sum file \'$@\' ...
+	@ $(BIGLOO) -fmco -mco -o $(OBJ_DIR)/$*.mco $(SRC_DIR)/$*.scm
+
+$(OBJ_SAFE_DIR)/%.mco: 
+	@echo Generating check sum file \'$@\' ...
+	@ $(BIGLOO) -fmco -mco -o $(OBJ_SAFE_DIR)/$*.mco $(SRC_DIR)/$*.scm
+
+$(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
+	@mkdir -p $(OBJ_DIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(SRC_DIR)/$*.c -o $(OBJ_DIR)/$*.o -c
+
+
+#*---------------------------------------------------------------------*/
+#* Dependencies                                                        */
+#*---------------------------------------------------------------------*/
+
+$(OBJ_DIR)/Makefile.dependencies: $(ALL_SCM_SRC)
+	@echo Making Scheme dependency file...
+	@mkdir -p $(OBJ_DIR)
+	@$(SHELL) -ec '(LD_LIBRARY_PATH=$(BIGLOOLIBDIR); export LD_LIBRARY_PATH; $(BDEPEND) -fno-jvm $(ALL_SCM_SRC) > $(OBJ_DIR)/Makefile.dependencies.tmp)'
+	@$(SED) -e "s/trace.macros/trace.macros.in/g" $(OBJ_DIR)/Makefile.dependencies.tmp | \
+	$(SED) -e "s,\([^\./ 	]*\)\.o:,$(SED_OBJ_DIR)/\1.o:,g" \
+	-e "s,\([^\./ 	]*\)\.mco,$(SED_OBJ_DIR)/\1.mco,g" \
+	-e "s,[^ 	]*/\([^\./ ]*\)\.o:,$(SED_OBJ_DIR)/\1.o:,g" \
+	-e "s,[^ 	]*/\([^\./ ]*\)\.mco,$(SED_OBJ_DIR)/\1.mco,g" > $(OBJ_DIR)/Makefile.dependencies
+
+$(OBJ_SAFE_DIR)/Makefile.dependencies: $(OBJ_DIR)/Makefile.dependencies
+	@mkdir -p $(OBJ_SAFE_DIR)
+	@ $(SED) -e "s/$(SED_OBJ_DIR)/$(SED_OBJ_SAFE_DIR)/g" $(OBJ_DIR)/Makefile.dependencies > $(OBJ_SAFE_DIR)/Makefile.dependencies
+
+ifeq ($(MAKELEVEL),1)
+include $(OBJ_DIR)/Makefile.dependencies
+include $(OBJ_SAFE_DIR)/Makefile.dependencies
+endif
+
+#*---------------------------------------------------------------------*/
+#*    .c ==> .d                                                      */
+#*---------------------------------------------------------------------*/
+
+$(OBJ_DIR)/%.d: $(SRC_DIR)/%.c
+	@echo Making dependency file \'$@\' ... 
+	@mkdir -p $(OBJ_DIR)
+	@$(SHELL) -ec '$(CC) -MM $(CPPFLAGS) $< | $(SED) '\''s/\($*\)\.o[ :]*/$(SED_OBJ_DIR)\/\1.o $(SED_OBJ_DIR)\/\1.d : /g'\'' > $@; [ -s $@ ] || rm -f $@'
+	@$(SED) -e "s/msgs.h//g;s/consts.h//g" $@ > $@.DEP.TMP
+	@mv $@.DEP.TMP $@
+
+ifeq ($(MAKELEVEL),1)
+include $(SAL_C_FILE:%.c=$(OBJ_DIR)/%.d)
+endif
+
+#*---------------------------------------------------------------------*/
+#* install                                                             */
+#*---------------------------------------------------------------------*/
+.PHONY: install 
+
+install: 
+	@ echo "SAL DOES NOT SUPPORT THIS ACTION"
+	@ echo "--------------------------------"
+	@ echo "If you want to install, you should create a binary installation package"
+	@ echo ""
+	@ echo " make binary-installation"
+
+#*---------------------------------------------------------------------*/
+#* distribution                                                        */
+#*---------------------------------------------------------------------*/
+.PHONY: binary-distribution source-distribution
+
+binary-distribution:
+	@ chmod +x distribution/build-binary-distribution.sh
+	distribution/build-binary-distribution.sh
+
+source-distribution:
+	@ chmod +x distribution/build-source-distribution.sh
+	distribution/build-source-distribution.sh
+
+
+#*---------------------------------------------------------------------*/
+#*    clean                                                            */
+#*---------------------------------------------------------------------*/
+.PHONY: clean global-clean common-clean
+
+clean: common-clean
+	rm -f $(SALENV_BIN)
+	rm -f $(SALENV_SAFE_BIN)
+	rm -f $(OBJ_DIR)/*
+	rm -f $(OBJ_SAFE_DIR)/*
+	rm -f $(SRC_DIR)/compilation-support-code.scm
+	rm -f $(SRC_DIR)/sal-class-info.data
+	rm -f $(SRC_DIR)/code-analyzer
+
+global-clean: common-clean
+	(cd bin;	ls -I CVS . | xargs rm -r -f)
+	(cd obj; ls -I CVS . | xargs rm -r -f)
+	(cd obj-safe; ls -I CVS . | xargs rm -r -f)
+
+common-clean:
+	rm -f *.tar.gz
+	rm -f $(OBJ_DIR)/Makefile.dependencies*
+	rm -f $(OBJ_SAFE_DIR)/Makefile.dependencies*
+	find . -name 'core*' -exec rm -f '{}' ';'
+	find . -name '.salenv_trace' -exec rm -f '{}' ';'
+	find . -name 'a.out' -exec rm -f '{}' ';'
+	find . -name '*.mco' -exec rm -f '{}' ';'
+
+#*---------------------------------------------------------------------*/
+#*   tags                                                              */
+#*---------------------------------------------------------------------*/
+.PHONY: tags
+
+ifeq ($(MAKELEVEL),1)
+tags: 
+	etags -l none -r '/[ \t]*(define[ \t]+(?[^() \t]+[ \t)]/'  -r '/[ \t]*(define-class[ \t]+[^() \t]+[ \t)]/' -r '/[ \t]*(define-generic[ \t]+([^() \t]+[ \t)]/' -r '/[ \t]*(define-macro[ \t]+([^() \t]+[ \t)]/' -r '/[ \t]*(define-api[ \t]+([^() \t]+[ \t)]/' -r '/[ \t]*(define-bdd-proc[ \t]+[^() \t]+[ \t]+[^() \t]+[ \t]/' -r '/[ \t]*(define-bdd-op[ \t]+[^() \t]+[ \t]+[^() \t]+[ \t]/' -r '/[ \t]*(define-inline[ \t]+([^() \t]+[ \t)]/' -r '/[ \t]*(define-record-type[ \t]+[^() \t]+/' $(ALL_SCM_SRC) *.sch *.macros
+else
+tags:
+	make -C src -f ../Makefile tags MAKELEVEL=1
+endif

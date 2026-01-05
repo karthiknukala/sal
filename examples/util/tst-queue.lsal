@@ -1,0 +1,50 @@
+(context tst-queue () ()
+  
+  (define-type Data (subrange 0 7))
+  
+  (import (queue (Data) (5 0)))
+
+  (define-module writer
+    (begin
+      (global q::Queue)
+      (initialization
+       (= q empty-queue))
+      (transition
+       ([]
+        (label sending-data
+          ([] (d::Data)
+           ((and (/= d 0) (not (full? q)))
+            -->
+            (= q' (insert-result (insert q d))))))
+        (label waiting-reader
+          ((full? q)
+           -->
+           (= q' q)))))))
+
+  (define-module reader
+    (begin
+      (global q::Queue)
+      (output last::Data)
+      (output c::bool)
+      (definition
+       (= c (> last 3)))
+      (initialization
+       (= last 0))
+      (transition
+       ([]
+        (label receiving-data
+          ((not (empty? q)) 
+           -->
+           (= last' (get-first-result (get-first q)))
+           (= q' (remove-result (remove q)))))
+        (label waiting-writer
+          ((empty? q)
+           -->
+           (= last' last)))))))
+       
+  (define-module system
+    ([] writer reader))
+       
+
+
+  )          

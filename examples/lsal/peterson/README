@@ -1,0 +1,40 @@
+Peterson's mutual exclusion protocol
+------------------------------------
+
+Commands:
+
+- Prove the mutual-exclusion property using induction
+
+  % sal-bmc -v 3 --induction peterson mutex
+
+  % sal-bmc -v 3 --induction sync-peterson mutex
+
+- Prove the mutual-exclusion property using sal-smc
+
+  % sal-smc -v 3 peterson mutex
+
+  % sal-smc -v 3 sync-peterson mutex
+
+- Produce a counter-example for the invalid property
+
+  % sal-bmc -v 3 peterson invalid
+
+- Produce a counter-example for the invalid property using sal-smc
+
+  % sal-smc -v 3 peterson invalid
+
+- Produce a counter-example for the invalid liveness property 
+
+  % sal-bmc -v 3 peterson livenessbug1
+
+  % sal-smc -v 3 peterson livenessbug1
+
+- Prove the liveness properties
+  
+  % sal-smc -v 3 peterson liveness1
+
+  % sal-smc -v 3 peterson liveness2
+
+  % sal-smc -v 3 peterson liveness3
+
+  % sal-smc -v 3 peterson liveness4

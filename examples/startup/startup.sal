@@ -1,0 +1,241 @@
+startup: CONTEXT =
+BEGIN
+n: NATURAL = 3;
+index: TYPE = [0..n-1];
+maxcount: NATURAL = 3*n-1;
+counts: TYPE = [0..maxcount];
+states: TYPE = {initial, listen, start, active};
+msgs: TYPE = {quiet, noise, normal};
+
+% slot(r: counts): index = IF r>2*n THEN r-2*n ELSIF r>n THEN r-n ELSE r ENDIF;
+incslot(r: index): index = IF r=n-1 THEN 0 ELSE r+1 ENDIF;
+
+node[i:index]: MODULE =
+BEGIN
+INPUT
+  busmsg: msgs,
+  bustime: index
+OUTPUT
+  flag: BOOLEAN,
+  faulty: BOOLEAN,
+  msg: msgs,
+  time: index,
+  state: states,
+  counter: counts
+LOCAL
+  badtime, simpledeafness, deafness: BOOLEAN,
+  ctimeout, ltimeout: counts
+DEFINITION
+  badtime = TRUE;
+  simpledeafness = FALSE;
+  deafness = FALSE;
+  ctimeout = n+i; % n+i;
+  ltimeout = n+1 % n+1 % n causes collisions
+INITIALIZATION
+  flag = FALSE;
+  faulty = FALSE;
+  msg = quiet;
+  time = 0;
+  state = initial;
+  counter = 0
+TRANSITION
+
+% Invariant is that the bustime should equal counter when I'm active
+% But the bustime is set in the previous tick; so I set bustime' to i
+% when time'=i
+
+[ % Case 1
+   state = initial --> 
+    state' = listen; 
+    counter' = 0
+[] % Case 2
+   state = initial AND counter < n --> 
+    counter' = counter+1
+[] % Case 3
+   state = listen AND busmsg = noise --> 
+    counter' = 0;
+    msg' = quiet
+[] % Case 4
+   state = listen AND busmsg = normal -->
+     state' = active;
+     counter' = 0;
+     time' = incslot(bustime);    
+     msg' = IF time' = i THEN normal ELSE quiet ENDIF
+[] % Case 5
+   state = listen AND busmsg = quiet AND counter < ltimeout -->
+     counter' = counter+1;
+     msg' = quiet
+[] % Case 6
+   state = listen AND busmsg = quiet AND counter = ltimeout -->
+     state' = start;
+     counter' = 0;
+     time' = i;
+     msg' = normal
+[] % Case 6a: bug -- misses prev message
+   simpledeafness AND i=0 AND state = listen AND counter = ltimeout -->
+     faulty' = TRUE;
+     state' = start;
+     counter' = 0;
+     time' = i;
+     msg' = normal
+[] % Case 6b bug -- coldstart sends wrong time value
+  ([] (j:index): badtime AND i=0 AND
+   state = listen AND busmsg = quiet AND counter = ltimeout AND j /= i -->
+     faulty' = TRUE;
+     state' = start;
+     counter' = 0;
+     msg' = normal;
+     time' = j)
+[] % Case 7
+  state = start AND counter = ctimeout  -->
+flag'=TRUE;
+     counter' = 0;
+     time' = i;
+     msg' = normal
+[] % Case 8
+  state = start AND counter < ctimeout AND (busmsg=quiet OR counter = 0) -->
+%  state = start AND counter < ctimeout AND (busmsg=quiet) -->
+     counter' = counter+1;
+     time' = incslot(time);
+     msg' = quiet
+[] % Case 8a: deafness
+  state = start AND counter < ctimeout AND deafness -->
+     faulty' = TRUE;
+     counter' = counter+1;
+     time' = incslot(time);
+     msg' = quiet
+[] % Case 9
+  state = start AND counter < ctimeout AND counter > 0
+         AND busmsg = normal AND bustime = time -->
+     counter' = 0;
+     state' = active;
+     time' = incslot(time);
+     msg' = IF time' = i THEN normal ELSE quiet ENDIF
+[] % Case 10
+  state = start AND counter < ctimeout AND counter > 0
+         AND (busmsg=noise OR 
+               (busmsg = normal AND bustime /= time)) -->
+%     flag' = (busmsg=normal);
+     counter' = 0;
+     time' = 0;
+     msg' = quiet;
+     state' = listen
+%[]
+%  state = active AND incslot(counter) = i -->
+%     counter' = i;
+%     time' = i;     
+%     msg' = normal
+%[]
+%  state = active AND incslot(counter) /= i -->
+%%     flag' = (bustime /= counter);
+%     counter' = incslot(counter);
+%     msg' = quiet
+[] % Case 11
+  state = active -->
+     time' = incslot(time);
+     msg' = IF time' = i THEN normal ELSE quiet ENDIF
+]
+END;
+
+hub: MODULE =
+BEGIN
+INPUT
+  inmsgs: ARRAY index OF msgs,
+  intimes: ARRAY index OF index
+LOCAL
+  noiseok: BOOLEAN
+OUTPUT
+  collisions: [0..4],
+  outmsg: msgs,
+  outtime: index,
+  allow: ARRAY index OF BOOLEAN
+INITIALIZATION
+  noiseok = TRUE;
+  collisions = 0;
+  outmsg = quiet;
+  outtime = 0;
+  (FORALL (i: index): allow[i] = TRUE)
+TRANSITION
+[ % Case A
+  noiseok AND (EXISTS (i,j: index): i/=j AND
+   allow[i] AND allow[j] AND
+   inmsgs'[i] = normal AND inmsgs'[j] = normal) -->
+  outmsg' = noise;
+  outtime' = 0;
+  collisions' = IF collisions = 4 THEN 4 ELSE collisions+1 ENDIF
+[] % Case B
+% strengthened to check correct time sent
+([] (i: index): 
+
+%(NOT EXISTS (k,j: index): k/=j AND
+%   allow[k] AND allow[j] AND
+%   inmsgs'[k] = normal AND inmsgs'[j] = normal)
+%AND
+
+inmsgs'[i] = normal AND allow[i] AND intimes'[i]=i --> 
+  outmsg' = normal;
+  outtime' = intimes'[i])
+[] % send  noise if bad time sent
+([] (i: index): inmsgs'[i] = normal AND allow[i] AND intimes'[i]/=i --> 
+%  allow'[i] = FALSE;
+  outmsg' = noise;
+  outtime' = 0)
+[] % Case C
+(FORALL (i: index): allow[i] => inmsgs'[i] = quiet) -->
+  outmsg' = quiet;
+  outtime' = 0
+]
+END;
+
+
+system: MODULE = hub || (WITH OUTPUT flags: ARRAY index OF BOOLEAN;
+		                  	      OUTPUT faults: ARRAY index OF BOOLEAN;
+                              OUTPUT inmsgs: ARRAY index OF msgs;
+                              OUTPUT lstates: ARRAY index OF states;
+                              OUTPUT intimes: ARRAY index OF index;
+                              OUTPUT lcounts: ARRAY index OF counts
+                          (|| (i: index):  RENAME flag TO flags[i],
+                                                  faulty TO faults[i],
+                                                  msg TO inmsgs[i], 
+                                                  time TO intimes[i],
+                                                  state TO lstates[i],
+                                                  counter TO lcounts[i],
+                                                  bustime TO outtime,
+                                                  busmsg TO outmsg
+                                           IN  node[i]));
+
+sync: LEMMA system |- G(FORALL (i, j: index): lstates[i] = active AND
+lstates[j] = active => intimes[i] = intimes[j]);
+
+noflag: LEMMA system |- G(FORALL (i: index): NOT flags[i]);
+
+fast: LEMMA system |- G(collisions<=1);
+
+fairlyfast: LEMMA system |- AG(collisions<=2);
+
+ok: LEMMA system |- F( G(FORALL (i:index): lstates[i] = active));
+
+fsync: LEMMA system |- G(FORALL (i, j: index): lstates[i] = active AND
+lstates[j] = active AND NOT faults[i] AND NOT faults[j] => intimes[i] = intimes[j]);
+
+fok: LEMMA system |- F( G (FORALL (i:index): NOT faults[i] => lstates[i] = active));
+
+optimism: LEMMA system |- G(collisions = 0);
+
+collision: LEMMA system |- F(outmsg /= quiet);
+
+live: LEMMA system |- F(lstates[0]=active);
+
+eh: LEMMA system |- G(lstates[2]=initial);
+
+END
+
+
+%----------------------------------------------------------------------------
+
+% No fault scenario:
+%  listen for a round; if a msg, sync to it
+%  if no msg, wait until my slot (if a msg sync to it)
+%  after my msg, wait for an ack and go to active mode
+%  if no ack, or bad msg.... must have been a collision
+

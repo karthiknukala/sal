@@ -1,0 +1,76 @@
+#!/bin/sh
+
+#
+# SAL 3.1, Copyright (C) 2006, 2011, SRI International.  All Rights Reserved.
+#
+# SAL is free software; you can redistribute it and/or 
+# modify it under the terms of the GNU General Public License 
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of 
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+# GNU General Public License for more details. 
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software 
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. 
+#
+#
+
+
+#
+# SAL scheme compiler front end
+#
+SALENV_DIR=__SALENV_DIR__;
+export SALENV_DIR;
+PATH=$SALENV_DIR/bin:$PATH
+export PATH
+BIGLOOLIB=__BIGLOO_LIB_DIR__
+export BIGLOOLIB;
+
+help()
+{
+  cat <<HELP
+SAL: BIGLOO compiler front end
+usage: sal-sc [-O0|-O1|-O2|-O3] [--dynamic] [-o <file>] file.scm
+
+-?, --help  Print this message
+--dynamic   Emit a dynamic loading entry point
+-O?         Optimization level
+-o <file>   Place the output into <file> (default: file.o)
+HELP
+  exit 0
+}
+
+EXTRA_FLAGS="-g"
+DFLAG=""
+OBJ_OUTPUT=""
+while [ -n "$1" ]; do
+case $1 in
+    -\?) help;shift 1;; # function help is called
+    --help) help;shift 1;; # function help is called
+    -O0) EXTRA_FLAGS="-g"; shift 1;;
+    -O1) EXTRA_FLAGS="-O2 -farithmetic"; shift 1;;
+    -O2) EXTRA_FLAGS="-O6 -farithmetic"; shift 1;;
+		-O3) EXTRA_FLAGS="-O6 -unsafe -farithmetic"; shift 1;;
+    -o)  OBJ_OUTPUT="$2"; shift 2;;
+		--dynamic) DFLAG="-dload-sym"; shift 1;;
+    -*) echo "Error: no such option $1. -? for help";exit 1;;
+    *)  break;;
+esac
+done
+
+if [ $# -lt 1 ]; then
+		help
+fi
+
+scm_file=$1
+if [ -z $OBJ_OUTPUT ]; then
+		o_file=`basename $1 .scm`.o
+else
+		o_file=$OBJ_OUTPUT
+fi
+
+exec bigloo -c $EXTRA_FLAGS $DFLAG -o $o_file $scm_file

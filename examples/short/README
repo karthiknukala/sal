@@ -1,0 +1,14 @@
+Toy example
+-----------
+
+Description: the theorem `th1', `th2', and `th3' states that every request will be eventually processed.
+
+Commands:
+
+- Prove properties
+
+  % sal-smc -v 3 short th1
+
+  % sal-smc -v 3 short th2
+
+  % sal-smc -v 3 short th3

@@ -1,0 +1,88 @@
+(context queue () ()
+
+  (define-type optype (scalar pop push noop))
+
+  (define-type Data)
+  
+	(define c0::(array NATURAL Data))
+ 
+	(define-module Q
+    (begin
+      (input op::optype)
+      (input data::Data)
+      (local contents::(array NATURAL Data))
+      (local head::NATURAL)
+      (local tail::NATURAL)
+      (output first::Data)
+      (definition (= first contents[head]))
+      (initialization 
+			 (= head 0) 
+			 (= tail 0)
+			 (= contents c0))
+      (transition
+        (= head' (if (= op pop) (+ head 1) head))
+        (= tail' (if (= op push) (+ tail 1) tail))
+        (= contents'
+           (if (= op push) 
+						 (update contents [tail] data) ;; update the contents, if op=push
+						 contents)))))                 ;; otherwise maintains the current value
+
+  (define d0::Data)
+  (define d1::Data)
+  (define d2::Data)
+  (define dummy::Data)
+  (define num_steps::NATURAL 6)
+
+	(define op_seq::(array NATURAL optype)
+		(mk-array (i::NATURAL)
+							(cond ((<= i 2) push)  ;; three pushes 
+										((<= i 5) pop)   ;; followed by three pops
+										(else noop))))   ;; send noop (no operation)  
+	
+	(define data_seq::(array NATURAL Data)
+		(mk-array (i::NATURAL)
+							(cond ((= i 0) d0)     ;; send d0 in the first step
+										((= i 1) d1)     ;; send d1 in the second step
+										((= i 2) d2)     ;; send d2 in the third step
+										(else dummy))))  ;; otherwise send dummy
+		
+  (define-module test_bench1
+    (begin
+      (output op::optype)
+      (output data::Data)
+      (input first::Data)
+      (local step::NATURAL)
+      (local first_seq::(array NATURAL Data))
+      (definition
+			 (= data data_seq[step])            ;; data to be send in the current step
+			 (= op op_seq[step]))               ;; op to execute in the current step
+      (initialization 
+			 (= step 0) 
+			 (= first_seq[0] first))             ;; record the head of the queue in the initial step
+      (transition
+        (= step' (+ step 1))
+        (= first_seq'[step'] first'))))    ;; record the head of the queue in the next step
+
+  (define-module system1 (|| Q test_bench1))
+
+  (theorem th1
+    (|- system1
+        (G (implies (>= step num_steps)
+										(and (= first_seq[3] d0) 
+												 (= first_seq[4] d1)
+												 (= first_seq[5] d2))))))
+
+  (theorem th2
+    (|- system1 (implies (<= head tail) 
+												 (G (<= head tail)))))
+
+
+  (theorem invalid
+    (|- system1
+        (G (implies (>= step num_steps)
+										(and (= first_seq[3] d2) 
+												 (= first_seq[4] d1)
+												 (= first_seq[5] d0))))))
+
+	
+	)

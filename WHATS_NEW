@@ -1,0 +1,430 @@
+;;
+;; SAL 3.1, Copyright (C) 2006, 2011, SRI International.  All Rights Reserved.
+;;
+;; SAL is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License
+;; as published by the Free Software Foundation; either version 2
+;; of the License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program; if not, write to the Free Software
+;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+;;
+;;
+
+
+* New in SAL 3.1
+
+- the SAL bounded model checker (sal-bmc) and the test-case generation
+  tools (sal-atg and sal-atg2) can now use the SAT solvers Lingeling
+  (and Plingeling) and Minisat as backends. 
+
+  Check doc/README.lingeling and doc/README.minisat for explanations. 
+
+- a variant of the sal-atg tool (sal-atg2) is available. The main difference
+  is that sal-atg2 can save intermediate results it produces.
+
+- SAL 3.1 fixes a few bugs
+
+- added a new precompiled distribution for Mac OS X, 64bit Intel
+  (running MacOS X Leopard, Snow Leopard, or Lion)
+
+
+
+
+
+* New in SAL 3.0
+
+- The SALPATH is now called SALCONTEXTPATH.
+
+- Improved performance
+
+- The user can provide predicates to control BDD variable
+  reordering. 
+
+- New configuration scripts are available in the /etc 
+  subdirectory.
+
+- New prioritized traversal strategies.
+
+- New option --skolemize in sal-bmc and sal-inf-bmc. This option
+  force SAL to skolemize quantified variables whenever possible.
+
+- The performance of sal-bmc was improved.
+
+- Yices is the default SAT solver of SAL.
+
+- Yices is the default decision procedure for SAL.
+
+- sal-inf-bmc produces concrete counterexamples.
+
+- The siege SAT solver (http://www.cs.sfu.ca/~loryan/personal) can be
+  used with sal-bmc. 
+
+- The BerkMin SAT solver (http://eigold.tripod.com/BerkMin.html) can be
+  used with sal-bmc. 
+
+- FORALL definitions are now allowed in guarded commands.
+
+- New type constructors SCALARSET(n) and RINGSET(n), where n evaluates
+  to a positive natural number. Both type constructors can be viewed
+  as subranges [0..n-1] with a restricted operation set. SCALARSET(n)
+  only supports the operators = and /=. RINGSET(n) supports the operators
+  =, /=, pred, succ. 
+
+- User scripts can be compiled and dynamically linked. This feature
+  is only available in the following platforms: Linux.
+
+- WITH (update expressions) are left associative. So, the following
+  kind of expression is allowed:
+    t WITH [i1] := val1 WITH [i2] := val2
+
+- The ';' in qualified names and context parameters is now optional.
+  For instance, you can write "bakery{3,5}!mutex" instead of "bakery{;3,5}!mutex".
+
+- It is possible to mix type and variables parameters in the context declaration.
+
+- The IMPORTING directive can be used in SAL contexts to import other contexts.
+  Examples: 
+  1)    
+   IMPORTING list{NATURAL};
+
+   x : list = cons(1,nil);
+   y : NATURAL = car(x);
+
+  2) 
+   IMPORTING list{NATURAL} WITH cons TO mk_cell, car TO hd, cdr TO tl;
+
+   x : list = mk_cell(1,nil);
+   y : NATURAL = hd(x);
+
+- Now, the default input syntax in sal-sim and sal-env is the 
+  SAL concrete syntax. The following command can be used to 
+  set LSAL syntax:
+
+  (sal/set-make-sal-string-reader-proc! make-lsal-string-reader)
+
+- The keywords in SAL are now case insensitive.
+
+- New example: MCS distributed list-based queuing lock                   
+
+- New example: Dinning Philosophers                   
+
+- New example: N process Peterson Protocol
+
+- New example: Modeling and Verification of an Air Traffic
+  Concept of Operations
+
+- New example: Queue Lock using symmetry reduction
+
+- The ICS, CVC and SVC backends support DIV (integer division)
+  and MOD (modulo) by constants.
+
+- Improved support for integer reasoning in ICS.
+
+- K-induction does not consider acyclic paths by default.
+  The option --acyclic can be used to force acylic paths.
+
+- SAL parser supports hexadecimal (e.g., 0xFF) and binary numbers (e.g., 0b101). 
+
+- SAL parser support floating point numbers (e.g., 0.142) as a syntax sugar 
+  for rational numbers (e.g., 0.142 is a syntax sugar for 142/1000).
+
+- Added support for ZChaff 2004
+
+- SAL Well-Formedness Checker (type checker light) checks if
+IMPLEMENTS and OBSERVE-WITH constructors are used correctly.
+
+* Bug fixes
+
+- Fixed a bug in the parser related to nested ELSIF.
+
+- Fixed a bug related to the invalid use of nested WITH updates.
+
+- Fixed a bug in the quantifier expansion procedure.
+
+- Fixed a bug in the UCLID translator. Some expressions outside
+  of the separation logic fragment were causing the translator
+  to crash.
+
+- Fixed a bug in the boolean circuit generator for subtraction (e.g.,
+  x - y).
+
+- Improved garbage collector for huge heaps (> 500Mb)
+
+- Fixed a GC problem during the construction of counterexamples in sal-smc.
+
+- Fixed a bug in sal-inf-bmc and sal-bmc. They were crashing when lemmas contain
+  sliced variables.
+
+- Fixed a bug in sal-inf-bmc and sal-bmc. These tools were not accepting qualified
+  names (using SAL syntax) to reference a lemma.
+
+- Fixed a bug in the AST construction. It crashed when a specification
+  contains an invalid (i.e., type incorrect) nested update expression.
+
+- Fixed a bug in sal-wmc. The bug was in the evaluation of AX and EX operators.
+
+- It is possible to use the same identifier to name a module, type, and constant.
+
+- Fixed the type checker. Now, SAL returns an error when the
+  NEXTOPERATOR is used in a property.
+
+- Fixed a bug in the flat module generator. It was crashing when computing
+  non-trivial implicit assignments.
+
+- Fixed a bug in the generation of counterexamples for the prioritized
+  traversal strategy in sal-smc. 
+
+- Reduced the number of processes created when a SAL tool is started.
+
+- Fixed a confusion between n-ary functions and unary functions where
+  the argument is a n-tuple.
+
+- Fixed a bug in the boolean based model checkers. They were crashing
+  in examples which use subtypes in the state variables, and the
+  subtype predicate contains quantifiers.
+
+- Fixed a bug related to subtypes. The procedure that computed the union
+  of two subtypes was returning the wrong result in some cases.
+
+- Fixed a segmentation fault that happened when the user provided
+  the wrong number of context parameters in the command line.
+
+- Fixed soundness problems in ICS.
+
+- Removed a nondeterministic behavior in the common subexpression module.
+
+- Fixed a bug in the type inference module. 
+
+- Fixed the error message produced when the subrange upper/lower bound is above/below the maximum allowed.
+
+- Fixed a bug in the generation of counterexamples for liveness properties in sal-smc.
+
+- Fixed a bug in the generation of counterexamples in sal-smc and sal-bmc. They were crashing 
+  when a multi command was indexed by a DATATYPE. 
+
+- Fixed a bug in the partial evaluator that was affecting specs using recursive high-order functions.
+
+- Fixed a bug in the parser. The precedence of WITH (update expression) was wrong, it was using the
+same precedence of WITH (module expression).
+
+- Fixed a bug in the type checker. It was not checking if a shared input variable in a module composition
+  had the same type in both modules.
+
+********************** SAL 2.3 **********************
+
+* New functionalities
+
+- A new option (--enable-bs-dyn-reorder) is available in sal-smc
+  and sal-wmc. It enables BDD variable dynamic reordering during
+  the construction of the transition relation.
+
+- A new option (--enable-let-bdd-vars) is available in sal-smc and
+  sal-wmc. This option enables the generation of auxiliary BDD
+  variable. These variables are used to minimize the size of the
+  transition relation. Each new variable corresponds to a new 
+  cluster. This option is ingored if a monolithic transition relation
+  is required.
+
+- CUDD 2.4.0
+
+- The construction of partitioned transition relations in the
+  symbolic model checkers was improved.
+
+- sal-smc supports prioritized traversal. This approach is useful
+  for finding bugs. 
+
+- The functions sal-bdd-fsm/pre-image-without-choices and sal-bdd-fsm/pre-image were
+  renamed to sal-bdd-fsm/pre-image and sal-bdd-fsm/pre-image-with-choices respectively.
+
+- In sal-sim, the functions pre-image-without-choices and pre-image were
+  renamed to pre-image and pre-image-with-choices respectively.
+
+- sal-smc supports the verification of all LTL properties in a context
+  in a single call. The CTL properties that can be converted to LTL
+  are also verified. It also has a new option --only-invariants, that
+  can be used to verify all invariants in a context.
+
+* Bug fixes
+
+- Fixed a bug in make-boolean-state-expression. This bug
+  only affects people using the SAL API.
+
+- Fixed a bug in the invocation of external tools. Now pathnames
+  and user names may contain spaces.
+
+- Fixed a bug in the ics output parser related to CR/LF (carriage
+  return/line feed). This bug happens when the file-system is
+  mounted in textmode instead of binmode.
+
+- lsal2xml generates the ELSIF attribute
+
+- Fixed a bug in sal-bmc/extend-path. This bug only affects people
+  using the SAL API.
+
+- Removed an invalid optimization in the LTL to Buchi translation.
+
+********************** SAL 2.2 **********************
+
+* New functionalities
+
+- ltl2buchi is a new tool that allows the user to visualize the
+  Buchi Automata (monitor) used to verify LTL properties.
+
+- The ICS, CVC and SVC backends support division by constants.
+
+- All tools are accepting also file names, instead of context names.
+  Example:
+    sal-smc -v 3 ~/tmp/peterson.sal mutex
+
+  When file names are used the SALPATH is ignored.
+
+- The call/trace stack is not printed when an error happens in salenv,
+  salenv-safe, or sal-sim. The command '(sal/enable-trace-stack! #t)' can
+  be used to force SAL to display the call/trace stack when an error
+  happens.
+
+- The parser error messages were improved.
+
+* Bug fixes
+
+- Builtin types can be redefined.
+
+- Fixed a bug in the ICS output parser. 
+
+- Fixed a bug in the SVC formula pretty printer. In SVC, the syntax
+  for rational numbers is "x|y" instead of "x/y".
+
+- Fixed a bug in the simplier related to quantifiers.
+
+- Fixed a bug in the sal-parser: it aborted the program when an
+  undefined module is used in an assertion expression.
+
+- Fixed a bug in the sal-parser: it failed to parse recursive
+  datatypes.
+
+- Fixed a bug related to invalid set list expressions. SAL was
+  aborting if a set list expression contains elements of incompatible
+  types.
+
+- Fixed a bug in sal-inf-bmc related to subtypes of numbers. The user
+  defined predicate was not propagated to the decision procedures.
+
+- Fixed a bug in the expression simplifier (equality) of
+  tuple and record literals.
+
+- Fixed a bug in the evaluator related to uninterpreted constants.
+
+- Fixed a bug in sal-inf-bmc: it was not propagating the fact that a
+  subrange is an integer variable to ICS.
+
+- Fixed a bug related to the use of subtypes as indexes of arrays and
+  functions.
+
+- Now, SAL complains when CVC, CVC Lite, UCLID or SVC produces unexpected
+  results. 
+
+- Fixed a bug in the generation of arithmetical circuits.
+
+- Now, SAL certificates containing carriage returns (0x0d) are accepted on
+  UNIX-like machines.
+
+- Fixed a bug in the LTL to Buchi Automata translator. The translator
+  was crashing for trivially true/false properties.
+
+* Changes
+
+- The concrete syntax for StateType and StatePred was modified from
+    
+    StateType := <module> . STATE
+    StatePred := <module> . INIT
+               | <module> . TRANS
+  to
+
+    StateType := STATE_TYPE ( <module> )
+    StatePred := INIT_PRED ( <module> )
+               | TRANS_PRED ( <module> )
+  
+
+
+********************** SAL 2.1 **********************
+
+* New functionalities
+
+- A new and more efficient parser. Now, it is not necessary
+  to have Java installed to be able to use SAL. The new parser
+  accepts lowercase keywords if the option --enable-parser-ext is
+  used.
+
+- Now, it is possible to use SAL syntax to specify assertions
+  in the command line. Examples:
+
+    sal-smc -v 3 --assertion='peterson!mutex'
+
+    sal-smc -v 3 --assertion='arbiter{;10}!at_most_one_ack'
+
+- New tool: sal-wmc (Witness Counterexample Based Symbolic Model Checker)
+  sal-wmc is the main model checker to prove CTL properties. If a LTL
+  property is provided, it tries to convert it to CTL.
+
+- Now sal-smc is a model checker to prove LTL properties. If a CTL
+  property is provided, it tries to convert it to LTL.
+
+- Implemented the operators "div" and "mod" in the finite
+  state model checkers.
+
+- Temporary files generated by SAL are automatically deleted.
+  The option --preserve-tmp-files can be used to disable this
+  behavior. Remark: XML files are not considered temporary files.
+
+- New path manipulation functions were included in the API.
+
+* Bug fixes
+
+- Fixed a problem in translation of "x - y" to a boolean
+  circuit.
+
+- Fixed a problem in the generation of temporary files. 
+  Now, it is possible to execute several instances of the
+  model checkers at the same time.
+
+- Fixed the path (counterexample) pretty printer. Sliced
+  variables were being printed with random values.
+
+- Fixed a nontermination bug in the typepred procedure.
+
+- Now, an error message is produced when sal-inf-bmc (using ICS, CVC,
+  CVL-Lite, SVC, or UCLID) finds an occurrence of the operators '/',
+  'mod', or 'div'.
+
+- Fixed a bug which produces the wrong transition relation
+  when there is an asynchronous composition of two modules
+  'm1' and 'm2', where the variable 'x' is a global variable
+  in 'm1', and an input variable in 'm2'.
+
+- Fixed a bug in the sal-inf-bmc counterexample pretty printer.
+  
+* Changes
+
+- GC messages are only printed in verbose mode >= 10.
+
+- The simplification step before the construction of BDD transition
+  relation was removed. It was just consuming computer cycles.
+
+- Dynamic variable reordering is active during the construction
+  of the BDDs representing the DEFINITION section of a module.
+  This modification is useful, since sal-smc does not perform
+  any kind of partitioning on a BDD representing a bit of a
+  defined variable. The option --disable-def-dyn-reorder can
+  be used to disable the dynamic reordering in this step.
+
+* Documentation
+
+- Small modifications in the SALenv tutorial.
+

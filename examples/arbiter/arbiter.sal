@@ -1,0 +1,84 @@
+arbiter{n : {x : natural | x > 1}}: context =
+begin
+
+  cell [initial_t : boolean]: module =
+    begin
+      input req : boolean
+      input token_in : boolean
+      input override_in : boolean
+      input grant_in : boolean
+      output ack : boolean
+      output token_out : boolean
+      output override_out : boolean
+      output grant_out : boolean
+      local t : boolean
+      local w : boolean
+      local aux : boolean
+      definition
+        token_out = t;
+        aux = w and t;
+        override_out = override_in or aux;
+        grant_out = grant_in and not(req);
+        ack = req and (aux or grant_in)
+      initialization
+        w = false; 
+        t = initial_t
+      transition
+        t' = token_in; 
+        w' = req and (w or t)
+    end;
+
+  range: type = [1..n];
+  arr: type = array range of boolean;
+
+  arbiter: module =
+    with output ack : arr;
+          input req : arr;
+          output token : arr;
+          output grant : arr;
+          output override : arr
+      (rename aux to override[n], inv_aux to grant[n]
+       in begin
+           output zero_const : boolean
+           input aux : boolean
+           output inv_aux : boolean
+           definition
+             zero_const = false; 
+             inv_aux = not(aux)
+          end)
+      || 
+      (with input zero_const : boolean
+            (rename ack to ack[1],
+                    req to req[1],
+                    token_in to token[1],
+                    token_out to token[n],
+                    override_in to zero_const,
+                    override_out to override[1],
+                    grant_in to grant[1]
+             in (local grant_out
+                 in cell[true])))
+      || (|| (idx : [2..n]):
+             (rename ack to ack[idx],
+                     req to req[idx],
+                     token_in to token[idx],
+                     token_out to token[idx - 1],
+                     override_in to override[idx - 1],
+                     override_out to override[idx],
+                     grant_in to grant[idx],
+                     grant_out to grant[idx - 1]
+              in cell[false]));
+
+  at_most_one_ack: 
+    theorem arbiter |- G((forall (i : [1..n - 1]):
+                             (forall (j : [i + 1..n]): not(ack[i] and ack[j]))));
+
+  no_ack_without_request: 
+    theorem arbiter |- G((forall (i : [1..n]): ack[i] => req[i]));
+
+  every_request_is_eventually_acknowledged: 
+    theorem arbiter |- (forall (i : [1..n]): G(F(req[i] => ack[i])));
+
+  at_most_one_token:
+    theorem arbiter |- G((forall (i : [1..n - 1]):
+	                          (forall (j : [i + 1..n]): not(token[i] and token[j]))));
+end

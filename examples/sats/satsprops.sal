@@ -1,0 +1,106 @@
+satsprops : CONTEXT =
+BEGIN
+
+  defs : CONTEXT = satsdefs;
+
+  % No more than four simultaneous arrival operations.
+  four_arrivals(s:defs!State):BOOLEAN =
+    defs!arrival_op(s) <= 4 AND
+    s.ammstate.nextseq-1 <= defs!arrival_op(s);
+
+  % No more than 2 aircraft assigned to each missed approach fix. Moreover
+  % no more than 2 aircraft at each side of the SCA (excluding the approach).
+  well_assigned(s:defs!State):BOOLEAN =
+    defs!assigned2fix(s,defs!right) <= 2 AND
+    defs!assigned2fix(s,defs!left)  <= 2 AND   
+    defs!actual(s.thisside) <= 2 AND
+    defs!actual(s.opposite) <= 2; 
+
+  % At most one aircraft at a holding fix for a given altitude.
+  % No more than 2 aircraft on a missed approach zone. 
+  non_crowded_side(scaside:defs!SCASide):BOOLEAN =
+    defs!length(scaside.holding3) <= 1 AND
+    defs!length(scaside.holding2) <= 1 AND
+    defs!length(scaside.maz) <= 2; 
+
+  % Each side of the SCA is non-crowded. Furthermore, no more than 3 aircraft
+  % on base.
+  non_crowded_sca(s:defs!State):BOOLEAN =
+    non_crowded_side(s.thisside) AND
+    non_crowded_side(s.opposite) AND
+    defs!length(s.thisside.base)+defs!length(s.opposite.base) <= 3;
+
+  % At most one aircraft on lateral entry. Moreover, if there is an 
+  % aircraft on lateral entry, that side of the SCA is empty 
+  % (excluding the approach).
+  safe_len(scaside:defs!SCASide):BOOLEAN =
+    defs!length(scaside.lez) <= 1 AND
+    (defs!length(scaside.lez) > 0 =>
+       defs!length(scaside.holding3) +
+       defs!length(scaside.holding2) + 
+       defs!length(scaside.maz) = 0);
+
+  % An aircraft on the approach is either the first in sequence or its leade 
+  % is already in the approach.
+  smooth_merging(s:defs!State):BOOLEAN = 
+    defs!length(s.thisside.base) > 0 =>
+      LET ac : defs!Aircraft = defs!first(s.thisside.base) IN
+      defs!first_seq?(ac) OR
+      defs!on_zone?(s.finalseg.inter,defs!leader_seq(ac)) OR
+      defs!on_zone?(s.finalseg.final,defs!leader_seq(ac)) OR
+      (defs!length(s.opposite.base) > 0 AND
+       defs!leader?(ac,defs!first(s.opposite.base)));
+
+  % Aircraft land in sequence order.
+  safe_landing(s:defs!State):BOOLEAN = 
+    defs!length(s.finalseg.final) > 0 =>
+      defs!first_seq?(defs!first(s.finalseg.final));
+
+  % At most one aircraft at the runway.
+  no_incursion(s:defs!State):BOOLEAN =    
+    defs!length(s.finalseg.runway) <= 1; 
+
+  % Simultaneous departures are separated. 
+  safe_departure(scaside:defs!SCASide):BOOLEAN =
+    defs!length(scaside.departure) > 1 =>
+    (defs!d10nm?(defs!first(scaside.departure)) AND
+     defs!d0nm?(defs!first(defs!rest(scaside.departure))));
+
+  % none is not an aircraft
+  none_not_ac_side(scaside:defs!SCASide): BOOLEAN =
+    NOT defs!on_zone?(scaside.holding3,defs!no_seq) AND
+    NOT defs!on_zone?(scaside.holding2,defs!no_seq) AND
+    NOT defs!on_zone?(scaside.lez,defs!no_seq) AND
+    NOT defs!on_zone?(scaside.base,defs!no_seq) AND
+    NOT defs!on_zone?(scaside.maz,defs!no_seq);
+
+  none_not_ac(s:defs!State): BOOLEAN =
+    none_not_ac_side(s.thisside) AND
+    none_not_ac_side(s.opposite) AND
+    NOT defs!on_zone?(s.finalseg.inter,defs!no_seq) AND
+    NOT defs!on_zone?(s.finalseg.final,defs!no_seq);
+
+  %% All the above properties
+  invariant(s:defs!State):BOOLEAN = 
+        four_arrivals(s)   
+    AND well_assigned(s)   
+    AND non_crowded_sca(s) 
+    AND safe_len(s.thisside) 
+    AND safe_len(s.opposite) 
+    AND smooth_merging(s)  
+    AND smooth_merging(defs!symm(s)) 
+    AND safe_landing(s)    
+    AND no_incursion(s)    
+    AND safe_departure(s.thisside) 
+    AND safe_departure(s.opposite)
+    ;     
+
+%  correctness : THEOREM
+%    LET result = bdfs(invariant) IN
+%      defs!length(result.counterexample)=0
+
+%  liveness : THEOREM
+%    LET result = bdfs(invariant) IN
+%      defs!length(result.deadlocks)=0
+
+END

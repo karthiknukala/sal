@@ -1,0 +1,204 @@
+;;
+;; SAL 3.1, Copyright (C) 2006, 2011, SRI International.  All Rights Reserved.
+;;
+;; SAL is free software; you can redistribute it and/or 
+;; modify it under the terms of the GNU General Public License 
+;; as published by the Free Software Foundation; either version 2
+;; of the License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of 
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+;; GNU General Public License for more details. 
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program; if not, write to the Free Software 
+;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. 
+;;
+
+(context ltllib () ()
+
+  ;; ----------------------
+  ;; Bounded operators 
+  ;; ----------------------
+
+  ;; `p' is eventually true is at most `n' steps
+  (define (BF::bool p::bool n::nat)
+    (and (> n 0)
+         (or p
+             (X (BF p (- n 1))))))
+
+
+  (define (BU::bool p::bool q::bool n::nat)
+    (and (> n 0)
+         (or q
+             (and p (X (BU p q (- n 1)))))))
+  
+  ;; ----------------------
+  ;; Useful 'macros'
+  ;; ----------------------
+
+  ;; `p' is always true
+  (define-inline (always::bool p::bool)
+    (G p))
+
+  ;; `p' is infinitely often true
+  (define-inline (infinitely-often::bool p::bool)
+    (G (F p)))
+
+  (define-inline (infinitely_often::bool p::bool)
+    (infinitely-often p))
+
+  ;; `p' is always true before `r'
+  (define-inline (always-before::bool p::bool r::bool)
+    (implies (F r) (U p r)))
+
+  (define-inline (always_before::bool p::bool r::bool)
+    (always-before p r))
+
+  ;; `p' is always true after `q'
+  (define-inline (always-after::bool p::bool q::bool)
+    (G (implies q (G p))))
+
+  (define-inline (always_after::bool p::bool q::bool)
+    (always-after p q))
+
+  ;; `p' is always true between `q' and `r'
+  (define-inline (always-between::bool p::bool q::bool r::bool)
+    (G (implies (and q (not r) (F r)) (U p r))))
+
+  (define-inline (always_between::bool p::bool q::bool r::bool)
+    (always-between p q r))
+
+  ;; `p' is always true after `q' until `r'
+  (define-inline (always-after-until::bool p::bool q::bool r::bool)
+    (G (implies (and q (not r)) (W p r))))
+
+  (define-inline (always_after_until::bool p::bool q::bool r::bool)
+    (always-after-until p q r))
+
+  ;; `p' is eventually true
+  (define-inline (eventually::bool p::bool)
+    (F p)) 
+
+  (define-inline (bounded-eventually::bool p::bool n::nat)
+    (BF p n))
+
+  (define-inline (bounded_eventually::bool p::bool n::nat)
+    (BF p n))
+
+  ;; `p' is eventually true before `r'
+  (define-inline (eventually-before::bool p::bool r::bool)
+    (W (not r) (and p (not r))))
+
+  (define-inline (eventually_before::bool p::bool r::bool)
+    (eventually-before p r))
+  
+  ;; `p' is eventually true after `q'
+  (define-inline (eventually-after::bool p::bool q::bool)
+    (G (or (not q) (F (and q (F p))))))
+
+  (define-inline (eventually_after::bool p::bool q::bool)
+    (eventually-after p q))
+  
+  ;; `p' is eventually true between `q' and `r'
+  (define-inline (eventually-between::bool p::bool q::bool r::bool)
+    (G (implies (and q (not r)) (W (not r) (and p (not r))))))
+
+  (define-inline (eventually_between::bool p::bool q::bool r::bool)
+    (eventually_between p q r))
+  
+  ;; `p' is eventually true after `q' until `r'
+  (define-inline (eventually-after-until::bool p::bool q::bool r::bool)
+    (G (implies (and q (not r)) (U (not r) (and p (not r))))))
+
+  (define-inline (eventually_after_until::bool p::bool q::bool r::bool)
+    (eventually-after-until p q r))
+
+  ;; `p' is never true
+  (define-inline (never::bool p::bool)
+    (always (not p)))
+
+  ;; `p' is never true before `r'
+  (define-inline (never-before::bool p::bool r::bool)
+    (always-before (not p) r))
+
+  (define-inline (never_before::bool p::bool r::bool)
+    (never-before p r))
+
+  ;; `p' is never true after `q'
+  (define-inline (never-after::bool p::bool q::bool)
+    (always-after (not p) q))
+
+  (define-inline (never_after::bool p::bool q::bool)
+    (never-after p q))
+
+  ;; `p' is never true between `q' and `r'
+  (define-inline (never-between::bool p::bool q::bool r::bool)
+    (always-between (not p) q r))
+
+  (define-inline (never_between::bool p::bool q::bool r::bool)
+    (never-between p q r))
+
+  ;; `p' is never true after `q' until `r'
+  (define-inline (never-after-until::bool p::bool q::bool r::bool)
+    (always-after-until (not p) q r))
+
+  (define-inline (never_after_until::bool p::bool q::bool r::bool)
+    (never-after-until p q r))
+
+  ;; `s' precedes `p'
+  (define-inline (precedes::bool s::bool p::bool)
+    (W (not p) s))
+
+  ;; `s' precedes `p' before `r'
+  (define-inline (precedes-before::bool s::bool p::bool r::bool)
+    (implies (F r) (U (not p) (or s r))))
+
+  (define-inline (precedes_before::bool s::bool p::bool r::bool)
+    (precedes-before s p r))
+  
+  ;; `s' precedes `p' after `q'
+  (define-inline (precedes-after::bool s::bool p::bool q::bool)
+    (or (G (not q)) (F (and q (W (not p) s)))))
+
+  (define-inline (precedes_after::bool s::bool p::bool q::bool)
+    (precedes-after s p q))
+
+  ;; `s' responds to `p'                         
+  (define-inline (responds-to::bool s::bool p::bool)
+    (G (implies p (F s))))
+
+  (define-inline (responds_to::bool s::bool p::bool)
+    (responds-to s p))
+
+  ;; `s' responds to `p' before `r'
+  (define-inline (responds-to-before::bool s::bool p::bool r::bool)
+    (implies (F r) (U (implies p (U (not r) (and s (not r)))) r)))
+
+  (define-inline (responds_to_before::bool s::bool p::bool r::bool)
+    (responds-to-before s p r))
+
+  ;; `s' responds to `p' after `q'
+  (define-inline (responds-to-after::bool s::bool p::bool q::bool)
+    (G (implies q (G (implies p (F s))))))
+
+  (define-inline (responds_to_after::bool s::bool p::bool q::bool)
+    (responds-to-after s p q))
+    
+  ;; `s' responds to `p' between `q' and `r'
+  (define-inline (responds-to-between::bool s::bool p::bool q::bool r::bool)
+    (G (implies (and q (not r) (F r))
+                (U (implies p (U (not r) (and s (not r)))) r))))
+
+  (define-inline (responds_to_between::bool s::bool p::bool q::bool r::bool)
+    (responds-to-between s p q r))
+
+  (define-inline (responds-to-after-until::bool s::bool p::bool q::bool r::bool)
+    (G (implies (and q (not r))
+                (W (implies p (U (not r) (and s (not r)))) r))))
+
+  (define-inline (responds_to_after_until::bool s::bool p::bool q::bool r::bool)
+    (responds-to-after-until s p q r))
+  
+  )

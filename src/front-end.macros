@@ -1,0 +1,81 @@
+;; -*- Mode: Scheme -*- 
+
+;;
+;; SAL 3.1, Copyright (C) 2006, 2011, SRI International.  All Rights Reserved.
+;;
+;; SAL is free software; you can redistribute it and/or 
+;; modify it under the terms of the GNU General Public License 
+;; as published by the Free Software Foundation; either version 2
+;; of the License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of 
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+;; GNU General Public License for more details. 
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program; if not, write to the Free Software 
+;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. 
+;;
+
+;; Create a command line front-end for a SAL tool.
+;; 
+;; tool-name: a symbol specifying the tool name. 
+;; tool-disp-name: a string - a long name for the tool
+;; header-extra-info: extra information that will be printed after the SAL tool default header.
+;; example-info: simple examples showing how to use the tool
+;;
+;; else-proc: a procedure that's invoked to process command line arguments that are not
+;;            recognized as command-line options. This proc takes a single argument xx,
+;;            which is a string?
+;;
+;; main-body: code that will be executed when the tool starts.
+;;
+;; The macro generates the following procedures
+;; <tool-name>/main 
+;; <tool-name>/help
+;; <tool-name>/simple-help
+;;
+(define-macro (gen-front-end tool-name tool-disp-name header-extra-info example-info else-proc main-body)
+  (let ((main-fun (symbol-append tool-name '/main))
+        (help-fun (symbol-append tool-name '/help))
+        (simple-help-fun (symbol-append tool-name '/simple-help)))
+    `(begin
+       (define (,main-fun)
+         (try
+          (begin
+            (unless (front-end/parse-args *arguments* ,else-proc)
+              (,simple-help-fun))
+            (display-runtime 1 "total execution time: ~a secs"
+              (lambda ()
+                ,main-body))
+            (exit 0))
+          (lambda (escape proc msg obj)
+            ;; (notify-error proc msg obj)
+            (with-output-to-port (current-error-port)
+              (lambda ()
+                (print "Error: " msg)))
+            (exit -1))))
+       (define (,help-fun)
+         (print (sal/header ,tool-disp-name))
+         ,(if header-extra-info
+            `(print ,header-extra-info)
+            #unspecified)
+         (front-end/show-options)
+         (newline)
+         ,(if example-info
+            `(print ,example-info)
+            #unspecified)
+         (exit -1))
+       (define (,simple-help-fun)
+         (with-output-to-port (current-error-port)
+           (lambda ()
+             (print (sal/header ,tool-disp-name))
+             ,(if header-extra-info
+                `(print ,header-extra-info)
+                #unspecified)
+             (print "Try `" (quote ,tool-name) " --help' for more information.")
+             (exit -1))))
+       (front-end/set-help-proc! ,help-fun))))
+
+           

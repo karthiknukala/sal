@@ -1,0 +1,54 @@
+phil {N : NATURAL} : CONTEXT = 
+BEGIN
+  R : TYPE = RINGSET(N);
+
+  FORK_STATE : TYPE = { available, not_available };
+
+  PC : TYPE = { thinking, has_left_fork, has_right_fork, eating };
+
+  left_fork(idx : R):R = rpred(idx);
+  
+  right_fork(idx : R):R = idx;
+
+  phil [idx : R] : MODULE =
+  BEGIN
+    GLOBAL forks : ARRAY R OF FORK_STATE
+    LOCAL  pc : PC
+    INITIALIZATION
+      pc = thinking
+    TRANSITION
+      [
+				pc = thinking AND forks[left_fork(idx)] = available --> pc' = has_left_fork; forks'[left_fork(idx)] = not_available
+			  []
+				pc = thinking AND forks[right_fork(idx)] = available --> pc' = has_right_fork; forks'[right_fork(idx)] = not_available
+        []
+        pc = has_left_fork AND forks[right_fork(idx)] = available --> pc' = eating; forks'[right_fork(idx)] = not_available
+        []
+        pc = has_right_fork AND forks[left_fork(idx)] = available --> pc' = eating; forks'[left_fork(idx)] = not_available
+        []
+        pc = eating --> pc' = thinking; forks' = (forks WITH [left_fork(idx)] := available) WITH [right_fork(idx)] := available
+      ]
+  END;
+
+  init : MODULE =
+  BEGIN
+    GLOBAL forks : ARRAY R OF FORK_STATE
+    INITIALIZATION
+      (FORALL (idx : R): forks[idx] = available);  
+  END;
+
+  system : MODULE = ([] (idx : R): phil[idx]) [] init;
+
+  th1 : THEOREM system |- G(FORALL(idx:R): pc[idx] = eating => forks[left_fork(idx)] = not_available AND 
+                                                               forks[right_fork(idx)] = not_available);
+
+  ind : THEOREM system |- G(FORALL(idx:R): (pc[idx] = has_left_fork OR pc[idx] = eating => 
+                                              pc[rpred(idx)] /= eating AND 
+                                              pc[rpred(idx)] /= has_right_fork) AND
+                                           (pc[idx] = has_right_fork OR pc[idx] = eating => 
+                                              pc[rsucc(idx)] /= eating AND
+                                              pc[rsucc(idx)] /= has_left_fork) AND
+                                           (pc[idx] = has_left_fork OR pc[idx] = eating => forks[left_fork(idx)] = not_available) AND
+                                           (pc[idx] = has_right_fork OR pc[idx] = eating => forks[right_fork(idx)] = not_available));
+
+END

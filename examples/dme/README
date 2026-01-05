@@ -1,0 +1,17 @@
+Distributed Mutual Exclusion
+----------------------------
+
+This example is based on the file dme.smv found
+in the SMV distribution package. This example
+was encoded using the SAL lisp-like input language.
+
+Commands:
+
+- Prove the property mutex for 3 cells 
+
+  % sal-smc -v 3 --assertion='dme{;3}!mutex'
+
+- Prove the property mutex for 5 cells 
+
+  % sal-smc -v 3 --assertion='dme{;5}!mutex'
+

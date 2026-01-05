@@ -1,0 +1,36 @@
+;; This module defines a list datatype
+(context list (T) ()
+
+  (define-type list (datatype
+                     (cons car::T cdr::list)
+                     nil))
+
+  (define (length::nat alist::list)
+    (if (nil? alist) 0 (+ 1 (length (cdr alist)))))
+  (define (element-at::T alist::list pos::nat)
+    (if (= 0 pos)
+      (car alist)
+      (element-at (cdr alist) (- pos 1))))
+  (define (remove-first::list alist::list e::T)
+    (if (nil? alist) 
+      alist
+      (let ((curr::T (car alist)))
+        (if (= e curr) (cdr alist) (cons curr (remove-first (cdr alist) e))))))
+  (define (remove-all::list alist::list e::T)
+    (if (nil? alist)
+      alist
+      (let ((curr::T (car alist)))
+        (if (= e curr) 
+          (remove-all (cdr alist) e) 
+          (cons curr (remove-first (cdr alist) e))))))
+  
+  (define (append::list alist1::list alist2::list)
+    (if (nil? alist1)
+      alist2
+      (cons (car alist1) (append (cdr alist1) alist2))))
+
+  (theorem append-assoc (for-all (l1::list l2::list l3::list) (= (append (append l1 l2) l3)
+                                                                 (append l1 (append l2 l3)))))
+
+  )
+    

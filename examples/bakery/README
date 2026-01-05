@@ -1,0 +1,71 @@
+Bakery Protocol 
+---------------
+
+Description: The basic idea is that of a bakery, where customers (jobs) take numbers,
+             and whoever has the lowest number gets service next. Here, of course,
+             ``service'' means entry to the critical section. The `bakery' context
+             is parametric. The parameter `N' specifies the maximum number of customers,
+             and `B' the maximum ticket number. The field `next_ticket' stores the
+             value of the next ticket to be granted. When, the value of the next_ticket
+             exceeds the value of B, we say the system is saturated. In this case, the system
+             stops to grant tickets, and waits all customers with tickets to enter 
+             (and leave) the critical section, after that the `next_ticket' counter is reset
+             to zero. The contexts bakery_with_bug?.lsal contain buggy versions of the protocol.
+
+Commands:
+
+- Generate an execution trace up to depth 20 steps, for: 4 customers, and maximum ticket value equals to 15.
+
+  % sal-path-finder -v 3 --depth=20 --module='bakery{4,15}!system'
+
+- Generate an execution trace up to depth 20 steps, for: 6 customers, and maximum ticket value equals to 31.
+
+  % sal-path-finder -v 3 --depth=20 --module='bakery{6,31}!system'
+
+- Check property using random simulation (20 paths with 100 steps each)
+ 
+  % sal-emc -v 3 -s cacheless -d 100 -n 20 --assertion='bakery{5,15}!mutex'
+
+- Prove the mutual exclusion property, for: 5 customers, and maximum ticket value equals to 15.
+
+  % sal-smc -v 3 --assertion='bakery{5,15}!mutex'
+
+- Prove the mutual exclusion property using sal-emc and symmetry reduction, 
+  for: 5 customers, and maximum ticket value equals to 15.
+  Remark: s_bakery is a version of the specification that uses SCALARSETs.
+  
+  % sal-emc -y -v 3 --assertion='s_bakery{5,15}!mutex'
+
+- Counterexample for invalid specification, for: 5 customers, and maximum ticket value equals to 15.
+
+  % sal-smc -v 3 --assertion='bakery_with_bug{5,15}!mutex'
+
+- Check the totality of the transition relation, for: 5 customers, and maximum ticket value equals to 15.
+
+  % sal-deadlock-checker -v 3 --module='bakery{5,15}!system'
+
+- Generate a counterexample for an invalid liveness property
+
+  % sal-smc -v 3 --assertion='bakery{3,7}!liveness_bug'
+
+  % sal-smc -v 3 --assertion='bakery{5,15}!liveness_bug'
+
+- Generate a counterexample for an invalid liveness property using sal-bmc
+
+  % sal-bmc -v 3 --assertion='bakery{3,7}!liveness_bug'
+
+  % sal-bmc -v 3 --iterative --assertion='bakery{5,15}!liveness_bug'
+
+- Prove a liveness property
+
+  % sal-smc -v 3 --assertion="bakery{3,7}!liveness"
+
+  % sal-smc -v 3 --assertion="bakery{5,15}!liveness"
+
+- Prove a liveness property using different (faster) configurations.
+
+  % sal-smc -v 3 --monolithic --assertion="bakery{5,15}!liveness"
+
+  % sal-smc -v 3 --cluster-size=8192 --assertion="bakery{5,15}!liveness"
+
+  % sal-smc -v 3 --cluster-size=8192 --disable-counter-examples --assertion="bakery{5,15}!liveness"

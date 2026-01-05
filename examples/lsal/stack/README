@@ -1,0 +1,61 @@
+Stack
+-----
+
+This example was extracted from the UCLID manual. 
+UCLID is available online at: http://www-2.cs.cmu.edu/~uclid/
+A stack of arbitrary length can be modeled using two components:
+`top', `contents'. Conceptually, the contents of the stack
+is represented as a subsequence of an infinite sequence. The
+component `contents' is the infinite sequence, and it is modeled
+as an infinite array of data. `top' is an index
+(natural number) to the next available position on the stack.
+
+The module S specifies the stack using LSAL syntax. It has two
+input variables: `op' and `data'. `op' specifies the operation
+to be performed on the stack (push, pop, or noop). `data' contains
+the information to be pushed on the stack, when `op' is equals to
+`push'. The operations are modeled in the following way:
+
+1-	push:
+  update `contents' at position `top' with the current `data',
+  and increment `top'
+2-  pop:
+  decrement `top' when top > 0
+3-  noop:
+  do nothing
+
+The ouput variable `first' always contains the value on the top of the
+stack. If the stack is empty, then the value is undefined.
+The output variable `invalid_pop' is true when the a pop operation
+is performed over an empty stack.
+
+The module `test-bench1' specifies a little test for the S module.
+It basically performs three pushes, followed by three pops. The property
+`th1' states the the elements are poped in the correct order. The module
+`test-bench1' uses an array to record the output `first' produced 
+by the S module in every step.
+The property `th2' checks whether `invalid_pop' is always false or not.
+
+Commands:
+
+- Check the stack property
+
+  % sal-inf-bmc -v 3 -d 6 --enable-ate stack th1
+
+  Remark: we have to use the flag --enable-ate (array theory elimination),
+  because the array theory in ICS is incomplete.
+
+- Check the stack property using UCLID
+
+  % sal-inf-bmc -v 3 -d 6 -s uclid stack th1
+
+  Remark: you must have UCLID installed in your system to use this 
+  command.
+
+- Check consistency property
+
+  % sal-inf-bmc -v 3 -d 6 --enable-ate stack th2
+
+- Generate counterexample for invalid property
+
+  % sal-inf-bmc -v 3 -d 6 --enable-ate stack invalid

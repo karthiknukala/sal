@@ -1,0 +1,24 @@
+adder {N : {n : natural | n > 1}}: context =
+begin
+  onebitadder: module =
+  begin
+   input cin, a, b : boolean
+   output cout, sum : boolean
+   definition
+     sum = (a xor b) xor cin;
+     cout = (a and b) or (a and cin) or (b and cin)
+  end;
+
+  Nbitadder : module = 
+   with input A, B : array [0 .. N-1] of boolean, carryin: boolean;
+        output S, C: array [0 .. N-1] of boolean
+     rename a to A[0], b to B[0], cin to carryin,
+            sum to S[0], cout to C[0] in
+      onebitadder
+     ||
+     (|| (i : [1 .. N-1]) :
+        (rename a to A[i], b to B[i], cin to C[i-1],
+                sum to S[i], cout to C[i] in
+          onebitadder));
+
+end

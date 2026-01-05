@@ -1,0 +1,1261 @@
+% Master File: fdir-final.tex
+\documentclass[fleqn]{cslreport}
+
+% packages ===>> 
+\usepackage[bookmarks=true,hyperindex=true,colorlinks=true,backref=true,pagebackref=true]{hyperref}
+\usepackage{relsize}
+\usepackage{graphicx}
+\usepackage{enumerate} 
+\usepackage{xspace}
+\usepackage{verbatim}
+\usepackage{moreverb}
+\usepackage{epsfig}
+\usepackage{rotating}
+
+\usepackage{latexsym}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage[mathscr]{eucal}
+\usepackage{url}
+\usepackage{verbatim}
+\usepackage{alltt}
+\usepackage{boxedminipage}
+\usepackage{prelude}
+% <<=== packages
+
+\pagestyle{headings}
+\sloppy
+
+\title{SAL: Tutorial}
+
+\author{Leonardo de Moura}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\chapter{Introduction}
+
+The SAL environment (SALenv) provides an integrated environment and a set of batch commands for the 
+development and analysis of SAL specifications. This tutorial provides a short introduction to the
+usage of the main functionalities of SALenv. 
+
+\section{The SAL environment}
+SALenv runs on PC systems running RedHat Linux or Windows XP (under cygwin), and Solaris (SPARC)
+workstations. We also believe that the system can be compiled for any UNIX variant. SALenv
+is implemented in Scheme and C++, but it is not necessary to know any of these languages to
+effectively use the system. Actually, basic notions of the Scheme language are necessary if
+you intend to customize the behavior of SALenv. 
+
+\section{The SAL language}
+The SAL language is not that different from the input languages 
+used by various other verification tools such as SMV, Murphi, Mocha,
+and SPIN.  Like these languages, SAL describes transition systems in terms of
+initialization and transition commands.  These can be given by
+variable-wise definitions in the style of SMV or as guarded commands in
+the style of Murphi.
+
+\section{Examples}
+In this tutorial we describe the SAL language by presenting some examples. A complete
+description of the SAL language is available online at \verb|http://sal.csl.sri.com/|. 
+The abstract syntaxt tree of SAL is specified in XML. The SALenv tools also accept 
+two machine-friendly formats for other programs: XML and a Lisp-like syntax.
+
+\section{SALCONTEXTPATH}
+
+All SAL tools search for context files in the path specified by the 
+environment variable \verb.SALCONTEXTPATH..
+If you are using \verb.bash., then you should modify your \verb|.bashrc| file. 
+For instance, to set \verb.SALCONTEXTPATH. to the current and the \verb./homes/leonardo/tmp. directories,
+you should add the following command to your \verb|.bashrc| file:
+
+\begin{session}
+export SALCONTEXTPATH=.:/homes/leonardo/tmp
+\end{session}
+
+If you are using \verb.tcsh., then you should modify your \verb|.cshrc| file:
+
+\begin{session}
+setenv SALCONTEXTPATH .:/homes/leonardo/tmp
+\end{session}
+
+If the environment variable \verb.SALCONTEXTPATH. is not specified, then the tools will only  
+search for SAL context files in the current directory.
+
+\chapter{A Simple Example}
+
+Consider the simple SAL specification in Figure~\ref{fig:short:sal}. 
+A SAL context is a ``container'' of types, constants, and modules (i.e., transition systems). 
+The specification in Figure~\ref{fig:short:sal} specifies the context \verb.short., which contains
+a type (\verb.State.), and a module declaration (\verb.main.). The type \verb.State. is an enumerated
+type consisting of two elements: \verb.ready., and \verb.busy.. The module \verb.main. specifies a
+transition system which contains: a boolean input variable (\verb.request.), and an output variable (\verb.state.)
+of type \verb.State.. The variable \verb.state. is initialized with the value \verb.ready.. 
+The \verb.TRANSITION. section specifies a ``step'' of the transition system. In SAL, the notation \verb.X'. is used
+to denote the next value of the variable \verb.X.. In the module \verb.main., the next value of \verb.state. is
+\verb.busy. when the current value is \verb.ready. and the input \verb.request. is true, otherwise the next value is
+any element in the set \verb.{ready, busy}. (remark: the \verb.IN. construct is used to specify nondeterministic assignments).
+Observe that a module can only specify the initial and next values of controlled variables: output, local and global variables. 
+
+\begin{session*}\label{fig:short:sal}
+short: CONTEXT =
+BEGIN
+  State: TYPE = \{ready, busy\};
+
+  main: MODULE =
+    BEGIN
+      INPUT request : BOOLEAN
+      OUTPUT state : State
+      INITIALIZATION 
+        state = ready
+      TRANSITION
+        state' IN IF (state = ready) AND request THEN
+                    \{busy\}
+                  ELSE 
+                    \{ready, busy\}
+                  ENDIF
+    END;
+END
+\end{session*}
+
+%% Figure~\ref{fig:short:lsal} contains the specification of the context \verb.short. using LSAL syntax.
+%% The distribution package of SALenv contains a Emacs mode for LSAL files, it is located in the directory
+%% \verb.etc..  
+
+%% \begin{session*}\label{fig:short:lsal}
+%% (context short () ()
+
+%%   (define-type State (scalar ready busy))
+  
+%%   (define-module main
+%%     (begin
+%%       (input request::bool)
+%%       (output state::State)
+%%       (initialization
+%%        (= state ready))
+%%       (transition
+%%        (in state' (cond
+%%                    ((and (= state ready) request)
+%%                     (set-list busy))
+%%                    (else
+%%                     (set-list ready busy)))))))
+%%   )
+%% \end{session*}
+
+The context \verb.short. is available on the SAL distribution package in the \verb.examples.
+directory. 
+
+\section{Simulator}
+
+SALenv contains a simulator for finite state specifications based on BDDs (Binary Decision Diagrams). The simulator allows users 
+to explore different execution paths of a SAL specification. In this way, users can increase their confidence
+in their model before performing verification. Actually, the SALenv simulator is not a regular simulator, since
+it is scriptable, that is, users can use the Scheme programming language to implement new simulation 
+and verification procedures, and to automate repetitive tasks.
+
+Now, assuming that the current directory contains the file
+\verb|short.sal|, the current directory is in the \verb.SALCONTEXTPATH., and
+the SALenv tools are in the \verb.PATH., the simulator can be started
+executing the command \verb.sal-sim.. The symbol \verb.%. is used to
+represent the system prompt.
+
+\begin{session}
+\% sal-sim
+SALenv (Version 2.4). Copyright (c) 2003, 2004 SRI International.
+Build date: Thu Oct  7 11:20:05 PDT 2004
+Type `(exit)' to exit.
+Type `(help)' for help.
+
+sal > 
+\end{session}
+
+Now, users can import the context \verb.short. using the command:
+
+\begin{session}
+sal > (import! "short")
+\end{session}
+
+Command \verb.(help-commands). prints the main commands available in the simulator. 
+The following commmand can be used to start the simulation of the module \verb.main..
+
+\begin{session}
+sal > (start-simulation! "main")
+\end{session}
+
+The simulation initialized by command \verb.start-simulation!. is composed of:
+a current trace, a current finite state machine, and a set of already visited states.
+Actually, the ``current trace'' may represent a set of traces, since a trace is list of 
+set of states. Command \verb.(display-curr-trace). prints one of the traces
+in the ``current trace''. Initially, the ``current trace'' contains just the set of initial
+states. We say the first element in the list ``current trace'' is the set of current states.
+Command \verb.(display-curr-states). displays the set of current states, its
+default behavior is to print at most 10 states, but \verb.(display-curr-states <num>). can be used
+to print at most \verb.<num>. states. Command \verb.(display-curr-states). assigns an
+index (positive number) to the printed states. Then, users can use this index to peek at a specific
+state using the command \verb.(select-state! <idx>)., which restricts the set of current states to 
+the single selected state. 
+
+\begin{session}
+sal > (display-curr-states)
+State 1
+--- Input Variables (assignments) ---
+request = true;
+--- System Variables (assignments) ---
+state = ready;
+-----------------------------
+State 2
+--- Input Variables (assignments) ---
+request = false;
+--- System Variables (assignments) ---
+state = ready;
+-----------------------------
+
+sal > (select-state! 1)
+
+sal > (display-curr-states)
+State 1
+--- Input Variables (assignments) ---
+request = true;
+--- System Variables (assignments) ---
+state = ready;
+-----------------------------
+\end{session}
+
+Command \verb.(step!). performs a simulation step, that is, it appends the successors
+of the set of current states in the current trace. Clearly, the set of current states is also updated. 
+
+\begin{session}
+sal > (step!)
+
+sal > (display-curr-trace)
+Step 0:
+--- Input Variables (assignments) ---
+request = true;
+--- System Variables (assignments) ---
+state = ready;
+------------------------
+Step 1:
+--- Input Variables (assignments) ---
+request = false;
+--- System Variables (assignments) ---
+state = busy;
+\end{session}
+
+Command \verb.(filter-curr-states! <constraint>). provides an alternative way to select a 
+subset of the set of current states. The argument of \verb.filter-curr-states!. is a BDD or 
+a SAL expression. The new set of current states will contain only states that satisfy the given
+constraint.
+
+\begin{session}
+sal > (filter-curr-states! "NOT request")
+
+sal > (display-curr-states)
+State 1
+--- Input Variables (assignments) ---
+request = false;
+--- System Variables (assignments) ---
+state = busy;
+-----------------------------
+\end{session}
+
+As described before, users can automate repetitive tasks using the Scheme programming language. 
+For instance, the following example shows how to define a new command called \verb.(n-step! n).:
+
+\begin{session}
+sal > (define (n-step! n)
+        (when (> n 0) 
+          (select-state! 1)
+          (step!)
+          (n-step! (- n 1))))
+
+sal > (n-step! 3)
+
+sal > (display-curr-trace)
+Step 0:
+--- Input Variables (assignments) ---
+request = true;
+--- System Variables (assignments) ---
+state = ready;
+------------------------
+Step 1:
+--- Input Variables (assignments) ---
+request = false;
+--- System Variables (assignments) ---
+state = busy;
+------------------------
+...
+------------------------
+Step 4:
+--- Input Variables (assignments) ---
+request = true;
+--- System Variables (assignments) ---
+state = ready;
+\end{session}
+
+User defined commands such as \verb.(n-step! n). can be stored in files and loaded in the simulator using 
+command \verb.(load "<file-name>").. 
+
+User defined commands can be compiled and stored in a dynamic link library using the command
+\verb.(compile-and-load <list-of-definitions> "<lib-name>").. Example: 
+
+\begin{session}
+sal > (compile-and-load '((define (inc x) (+ x 1)) 
+                          (define (dec x) (- x 1))) 
+                        "simple.so")
+/tmp/sal-demoura-19739-action-code.scm:
+simple.so
+sal > (inc 10)
+11
+sal > (dec 20)
+19
+\end{session}
+
+A dynamic link library can be loaded in a future session using the command \verb.(dynamic-load "<lib-name>")..
+Example:
+\begin{session}
+SALenv (Version 2.4). Copyright (c) 2003, 2004 SRI International.
+Build date: Thu Oct  7 11:20:05 PDT 2004
+Type `(exit)' to exit.
+Type `(help)' for help.
+
+sal >  (dynamic-load "simple.so")
+simple.so
+sal > (inc 10)
+11
+\end{session}
+
+Command \verb.(sal/reset!). forces garbage collection and reinitializes all datastructures (e.g., caches) 
+used by the simulator. It is useful to call \verb.(sal/reset!). before starting the simulation of a different
+module. 
+
+\section{Path Finder}
+
+The \verb.sal-path-finder. is a random trace generator for SAL modules based on SAT solving.
+For instance, the following command produces a trace for the module \verb.main. located in the context \verb.short..
+
+\begin{session}
+\% sal-path-finder short main
+========================
+Path
+========================
+Step 0:
+--- Input Variables (assignments) ---
+request = false;
+--- System Variables (assignments) ---
+state = ready;
+------------------------
+...
+------------------------
+Step 10:
+--- Input Variables (assignments) ---
+request = false;
+--- System Variables (assignments) ---
+state = ready;
+\end{session}
+
+The default behavior of \verb.sal-path-finder. is to produce a trace with 10 transitions. The option \verb.--depth=<num>.
+can be used to control the length of the trace. 
+
+\begin{session}
+\% sal-path-finder --depth=5 short main
+...
+\end{session}
+
+\section{Model Checking}
+
+SALenv contains a symbolic model checker called \verb.sal-smc.. \verb.sal-smc. allows users to specify properties 
+in linear temporal logic (LTL), and computation tree logic (CTL). However, in the current version SALenv does not
+print counterexamples for CTL properties.
+When users specify an invalid property in LTL, a counterexample is produced. LTL formulas state properties about
+each linear path induced by a module (transition system). Typical LTL operators are:
+
+\begin{itemize}
+\item \verb.G(p). (read ``always p''), stating that \verb.p. is always true.
+\item \verb.F(p). (read ``eventually p''), stating that \verb.p. will be eventually true.
+\item \verb.U(p,q). (read ``p until q''), stating that \verb.p. holds until a state is reached where \verb.q. holds.
+\item \verb.X(p). (read ``next p''), stating that \verb.p. is true in the next state.
+\end{itemize}
+
+For instance, the formula \verb.G(p => F(q)).  states that whenever \verb.p. holds, \verb.q. will eventually hold.
+The formula \verb.G(F(p)). states that \verb.p. holds infinitely often.
+
+Typical CTL operators are:
+\begin{itemize}
+\item \verb.AG(p)., stating that \verb.p. is globally true.
+\item \verb.EG(p)., stating that there is a path where \verb.p. is continuously true.
+\item \verb.AF(p)., stating that for all paths \verb.p. is eventually true.
+\item \verb.EF(p)., stating that there is a path where \verb.p. is eventually true.
+\item \verb.AU(p,q)., stating that in all paths \verb.p. holds until a state is reached where \verb.q. holds.
+\item \verb.EU(p,q)., stating that there is a path where \verb.p. holds until a state is reached where \verb.q. holds.
+\item \verb.AX(p)., stating that \verb.p. holds in all successor states.
+\item \verb.EX(p)., stating that there is a successor state where \verb.p. holds.
+\end{itemize}
+
+Figure~\ref{fig:short:prop:sal} contains three different ways to state the same property of the module \verb.main..
+The third property uses the \verb.ltllib. context, which defines several ``macros'' for commonly used LTL patterns.
+\verb.ltllib!responds_to. is a qualified name in SAL, it is a reference to the function \verb.responds_to. located
+in the context \verb.ltllib..
+
+\begin{session*}\label{fig:short:prop:sal}
+  th1: THEOREM main |- AG(request => AF(state = busy));
+
+  th2: THEOREM main |- G(request => F(state = busy));
+
+  th3: THEOREM main |- ltllib!responds_to(state = busy, request);
+\end{session*}
+
+These properties can be verified using the following commands:
+
+\begin{session}
+\% sal-smc short th1
+proved.
+\% sal-smc short th2
+proved.
+\% sal-smc short th3
+proved.
+\end{session}
+
+SALenv also contains a bounded model checker called \verb.sal-bmc.. This model checker only supports LTL formulas,
+and it is basically used for refutation, although it can produce proofs by induction for safety properties.  
+
+\begin{session}
+\% sal-bmc short th2
+no counterexample between depths: [0, 10].
+\% sal-bmc short th3
+no counterexample between depths: [0, 10].
+\end{session}
+
+The default behavior is to look for counterexamples up to depth 10. The option \verb.--depth=<num>. can be used to
+control the depth of the search. The option \verb.--iterative. forces the model checker to use iterative deepening,
+and it is useful to find the shortest counterexample for a given property.
+
+\begin{session}
+\% sal-bmc --depth=20 short th2
+no counterexample between depths: [0, 20].
+\end{session}
+
+\chapter{The Peterson Protocol}
+
+In this chapter, we illustrate SAL model checking via a simplified version of Peterson's algorithm for 2-process
+mutual exclusion. The SAL files for this example are located in the following subdirectory in
+the SAL distribution package: \verb.examples/peterson..
+The 2-process version of the mutual exclusion problem requires that two processes are
+never simultaneously in their respective critical sections. 
+The behavior of each process is modeled by a SAL module. Actually, we use a parametric SAL module to
+specify the behavior of both processes. The prefix \verb.pc. denotes \emph{program counter}. When 
+\verb.pc1. (\verb.pc2.) is set to the value \verb.critical., process 1(2) is in
+its critical section. The noncritical section has two self-explanatory phases: \verb.sleeping. and
+\verb.trying.. Each process is allowed to observe whether or not the other process is \verb.sleeping..
+The variables \verb.x1. and \verb.x2. control the access to the critical section.
+
+Figure~\ref{fig:peterson:context} contains the specification of the context \verb.peterson..
+\verb.PC. is an enumerated type. This type consists of three values: \verb.sleeping., 
+\verb.trying., and \verb.critical.. Since the behavior of the two processes in the Peterson's protocol
+is quite similar, a parametric SAL module (\verb.mutex.) is used to specify them.
+In this way, \verb.process[FALSE]. describes the behavior of the first process, and 
+\verb.process[TRUE]. the behavior of the other one. 
+It is important to note that the variable \verb.pc1. in the module \verb.process. represents the
+program counter of the current process, and \verb.pc2. the program counter of the other process.
+It is a good idea to label guarded commands, since it helps us to understand the counterexamples.
+So, the following labels are used: \verb.wakening., \verb.entering_critical., and \verb.leaving_critical..
+
+\begin{session*}\label{fig:peterson:context}
+peterson: CONTEXT =
+BEGIN
+  PC: TYPE = {sleeping, trying, critical};
+
+  process [tval : BOOLEAN]: MODULE =
+    BEGIN
+      INPUT pc2 : PC
+      INPUT x2 : BOOLEAN
+      OUTPUT pc1 : PC
+      OUTPUT x1 : BOOLEAN
+      INITIALIZATION 
+        pc1 = sleeping
+      TRANSITION
+        [
+         wakening: 
+           pc1 = sleeping --> pc1' = trying; x1' = x2 = tval
+         []
+         entering_critical: 
+           pc1 = trying AND (pc2 = sleeping OR x1 = (x2 /= tval))
+           --> pc1' = critical
+         []
+         leaving_critical: 
+           pc1 = critical --> pc1' = sleeping; x1' = x2 = tval
+        ]
+    END;
+
+END
+\end{session*}
+
+Initially, the program counter is set to \verb.sleeping..
+The transition section is composed by three guarded commands which describe the three phases of the 
+algorithm. The entire system is specified by performing the asynchronous composition of two instances
+of the module \verb.process..
+
+\begin{session}
+  system: MODULE =
+     process[FALSE]
+     [] 
+     RENAME pc2 TO pc1, pc1 TO pc2, 
+            x2 TO x1, x1 TO x2
+     IN process[TRUE];
+\end{session}
+
+\section{Path Finder}
+
+The following command can be used to obtain an execution trace (with 5 steps) of the Peterson's protocol.
+
+\begin{session}
+\% sal-path-finder -v 2 -d 5 peterson system
+...
+\end{session}
+
+The option \verb.-v 2. sets the verbosity level to 2, the produced verbose messages allow users to follow the steps
+performed by the SALenv tools. The option \verb.-d 5. sets the number of execution steps.
+Figure~\ref{fig:peterson:trace} contains a fragment of the trace produced by \verb.sal-path-finder.. The trace contains
+detailed information about each transition performed.  
+
+\begin{session*}\label{fig:peterson:trace}
+Step 0:
+--- System Variables (assignments) ---
+pc1 = sleeping;
+pc2 = sleeping;
+x1 = false;
+x2 = false;
+------------------------
+Transition Information: 
+(module instance at [Context: scratch, line(1), column(11)]
+  (module instance at [Context: peterson, line(33), column(10)]
+    (label wakening
+      transition at [Context: peterson, line(14), column(10)])))
+------------------------
+Step 1:
+--- System Variables (assignments) ---
+pc1 = sleeping;
+pc2 = trying;
+x1 = false;
+x2 = false;
+------------------------
+...
+\end{session*}
+
+The following command uses ZCHAFF to obtain an execution trace (with 20 steps) of the Peterson's protocol.
+You must have ZCHAFF installed in your machine to use this command. ZCHAFF is \emph{not} part of the SAL
+distribution package.
+
+\begin{session}
+\% sal-path-finder -v 2 -d 20 -s zchaff peterson system
+...
+\end{session}
+
+\section{Model Checking}
+
+The main property of the Peterson's protocol is mutual-exclusion, that is,
+it is not possible for more than one process to enter the critical section at the same time.
+This safety property can be stated in the following way:
+
+\begin{session}
+  mutex: THEOREM system |- G(NOT(pc1 = critical AND pc2 = critical));
+\end{session}
+
+The following command can be used to prove this property.
+
+\begin{session}
+\% sal-smc -v 3 peterson mutex
+\end{session}
+
+In \verb.sal-smc., the default proof method for safety
+properties is \emph{forward reachability}. The option \verb.backward. can be used to force \verb.sal-smc.
+to perform \emph{backward reachability}.
+
+\begin{session}
+\% sal-smc -v 3 --backward peterson mutex
+...
+proved.
+\end{session}
+
+In this example, backward reachability needs fewer iterations to reach the fix point.
+
+This property can also be proved using k-induction (option \verb.-i. in \verb.sal-bmc.). 
+Actually 2-induction is sufficient to prove this property. 
+
+\begin{session}
+\% sal-bmc -v 3 -d 2 -i peterson mutex
+...
+proved.
+\end{session}
+
+It is important to note that there are several trivial algorithms that
+satisfy the mutual exclusion property. For instance, an algorithm that
+all jobs do not perform any transition. Therefore, it is important to prove
+liveness properties. For instance, we can try to prove that every process reach
+the critical section infinitely often. The following LTL formula states this property:
+
+\begin{session}
+  livenessbug1: THEOREM system |- G(F(pc1 = critical));
+\end{session}
+
+Before proving a liveness property, we must check if the transition relation is total, that
+is, if every state has at least one successor. The model checkers may produce \emph{unsound} results
+when the transition relation is not total. The totality property can be verified using the
+\verb.sal-deadlock-checker.. 
+
+\begin{session}
+\% sal-deadlock-checker -v 3 peterson system
+...
+ok (module does NOT contain deadlock states).
+\end{session}
+
+Now, we use \verb.sal-smc. to check the property \verb.livenessbug1..
+
+\begin{session}
+\% sal-smc -v 3 peterson livenessbug1
+...
+Step 0:
+...
+========================
+Begin of Cycle
+========================
+...
+\end{session}
+
+Unfortunately, this property is not true. A counterexample for a LTL liveness property
+is always composed of a prefix, and a cycle. For instance, the counterexample for the property
+\verb.livenessbug1. describes a cycle where the process 2 does not perform a transition.
+
+
+There is not guarantee that \verb.sal-smc. will produce the shortest counterexample for
+a liveness property. However, it is possible to use \verb.sal-bmc. to produce the shortest
+counterexample.
+
+\begin{session}
+\% sal-bmc -v 3 -it peterson livenessbug1
+...
+Counterexample:
+...
+\end{session}
+
+It is important to note that \verb.sal-bmc. is usually more efficient for counterexample detection.
+
+Since, \verb.livenessbug1. is not a valid property, we can try to prove the weaker liveness property:
+
+\begin{session}
+  liveness1: THEOREM system |- G(pc1 = trying => F(pc1 = critical));
+\end{session}
+
+This property states that if process 1 is trying to enter the critical section, it will eventually
+succeed. The following command can be used to prove the property:
+
+\begin{session}
+\% sal-smc -v 3 peterson liveness1
+...
+proved.
+\end{session}
+
+
+\chapter{The Bakery Protocol}
+
+In this chapter, we specify the bakery protocol. 
+The SAL files for this example are located in the following subdirectory in
+the SAL distribution package: \verb.examples/bakery..
+The basic idea is that of a bakery, 
+where customers (jobs) take numbers, and whoever has the lowest number gets service next.
+Here, of course, ``service'' means entry to the critical section. 
+The version of the bakery protocol described in this chapter is finite state, since 
+we want to model-check it using \verb.sal-smc., and \verb.sal-bmc.. So, in our
+version there is a maximum ``ticket'' value. Figure~\ref{fig:bak:context} contains the 
+the header of the context \verb.bakery., and the type declarations. The context \verb.bakery.
+has two parameters: \verb.N. is the number of (potential) customers, and \verb.B. is the maximum
+ticket value. Both values must be non-zero natural numbers. The type \verb.Job_Idx. is a subrange
+that is used to identify the customers. The type \verb.Ticket_Idx. is also a subrange, where \verb.0.
+represents the ``null'' ticket. The type of the next ticket to be issued (\verb.Next_Ticket_Idx.) is also
+a subrange, where \verb.B+1. represents the ``no ticket available'' condition. The type of the ``resources''
+of the system (\verb.RSRC.) is a record with two fields: \verb.data., an array which stores the
+``ticket'' of each job (customer); \verb.next-ticket., the value of the next ticket to be issued.
+We say the system is \emph{saturated}, when the field \verb.next_ticket. is equals to \verb.B+1..
+Each job (customer) has a control variable of type \verb.Job_PC., an enumerated type consisting 
+of the three values: \verb.sleeping., \verb.trying., and \verb.critical..  
+
+\begin{session*}\label{fig:bak:context}
+bakery\{N : nznat, B : nznat\}: CONTEXT =
+BEGIN
+  Job_Idx: TYPE = [1..N];
+
+  Ticket_Idx: TYPE = [0..B];
+
+  Next_Ticket_Idx: TYPE = [1..(B + 1)];
+
+  RSRC: TYPE =  [# data: ARRAY Job_Idx OF Ticket_Idx,
+                   next_ticket: Next_Ticket_Idx #];
+
+  Job_PC: TYPE = \{sleeping, trying, critical\};
+
+	...
+
+END
+\end{session*}
+
+Figure~\ref{fig:bak:functions} contains auxiliary functions used to specify the bakery protocol.
+Function \verb.min_non_zero_ticket. returns the ``ticket'' of the job (customer) to be ``served'',
+the possible return values are:
+
+\begin{itemize}
+\item \verb.0. when there is no job (customer) with a non-zero ticket (no customer condition).
+\item \verb.n > 0., where \verb.n. is the minimal (non-zero) ticket issued to a job (customer).
+\end{itemize}
+
+The auxiliary (recursive) function \verb.min_non_zero_ticket_aux. is used to traverse the array
+\verb|rsrc.data|. The function \verb.min. is a builtin function that returns the minimum of 
+two numbers. The function \verb.can_enter_critical?. returns true, when \verb.job_idx. can enter the 
+critical section by comparing the customer's ticket with the value returned by \verb.min_non_zero_ticket..
+The function \verb.next_ticket. issues a new ticket to the job \verb.job_idx., that is, it updates the array \verb|rsrc.data|
+at position \verb.job_idx., and increments the counter \verb|rsrs.next_ticket|. In SAL, expressions 
+do not have side-effects. For instance, the update expression \verb|x WITH [idx] := v| results in
+an array that is equals to \verb.x., except that at position \verb.idx. it takes the value \verb.v..
+The function \verb.reset_job_ticket. assigns the ``null ticket'' to the job \verb.job_idx..
+The function \verb.can_reset_ticket_counter. returns true, when it is safe to reset the \verb|rsrc.next_ticket|
+counter. 
+
+\begin{session*}\label{fig:bak:functions}
+  min_non_zero_ticket_aux(rsrc : RSRC, idx : Job_Idx) : Ticket_Idx =
+   IF idx = N THEN rsrc.data[idx]
+   ELSE LET curr: Ticket_Idx = rsrc.data[idx],
+            rest: Ticket_Idx = min_non_zero_ticket_aux(rsrc, idx + 1)
+        IN IF curr = 0 THEN rest
+           ELSIF rest = 0 THEN curr
+           ELSE min(curr, rest) 
+           ENDIF 
+   ENDIF;
+
+  min_non_zero_ticket(rsrc : RSRC) : Ticket_Idx =
+    min_non_zero_ticket_aux(rsrc, 1);
+
+  can_enter_critical?(rsrc : RSRC, job_idx : Job_Idx): BOOLEAN =
+    LET min_ticket: Ticket_Idx = min_non_zero_ticket(rsrc),
+        job_ticket: Ticket_Idx = rsrc.data[job_idx]
+    IN job_ticket <= min_ticket;
+
+  saturated?(rsrc : RSRC): BOOLEAN =
+    rsrc.next_ticket = B + 1;
+
+  next_ticket(rsrc : RSRC, job_idx : Job_Idx): RSRC =
+    IF saturated?(rsrc) THEN rsrc
+    ELSE (rsrc WITH .data[job_idx] := rsrc.next_ticket)
+               WITH .next_ticket := rsrc.next_ticket + 1
+    ENDIF;
+
+  reset_job_ticket(rsrc : RSRC, job_idx : Job_Idx): RSRC =
+    rsrc WITH .data[job_idx] := 0;
+
+  can_reset_ticket_counter?(rsrc : RSRC): BOOLEAN  =
+    (FORALL (j : Job_Idx): rsrc.data[j] = 0);
+
+  reset_ticket_counter(rsrc : RSRC): RSRC =
+    rsrc WITH .next_ticket := 1;
+\end{session*}
+
+Since the behavior of each job (customer) is almost identical, we use a parametric
+SAL module to specify them (Figure~\ref{fig:bak:job}). In this way,
+\verb.job[1]. denotes the first job, \verb.job[2]. the second, and so on.
+The local variable \verb.pc. contains the program counter of a job, and it is initialized
+with the value \verb.sleeping.. 
+The global variable \verb.rsrc. contains the shared ``resources'' of the system. 
+The transition section is specified using three labeled guarded commands: \verb.wakening.,
+\verb.entering_critical_section., and \verb.leaving_critical_section.. Labeled commands
+are particularly useful in the generation of readable counterexamples.
+A guarded command is composed of a guard, and a sequence of assignments. The guard is
+a boolean expression, and a guarded command is said to be \emph{ready to execute} when the
+guard is true. If more than one guarded command is ready to execute, a nondeterministic choice
+is performed. For instance, the guarded command \verb.wakening. is ready to execute, when
+the current value of \verb.pc. is \verb.sleeping., and the system is not ``saturated''.
+If the next value of a controlled (local, output, and global) variable \verb.x. is not specified
+by a guarded command, then \verb.x. maintains its current value, that is, the guarded command contains an ``implicit'' assignment
+ \verb.x' = x.. For instance, in the guarded command \verb.entering_critical_section. the variable
+\verb.rsrc. is not modified. 
+
+\begin{session*}\label{fig:bak:job}
+  job [job_idx : Job_Idx]: MODULE =
+    BEGIN
+      GLOBAL rsrc : RSRC
+      LOCAL pc : Job_PC 
+      INITIALIZATION 
+        pc = sleeping
+      TRANSITION
+        [
+         wakening: 
+           pc = sleeping AND NOT(saturated?(rsrc))
+           --> pc' = trying; 
+               rsrc' = next_ticket(rsrc, job_idx)
+         []
+         entering_critical_section: 
+           pc = trying AND can_enter_critical?(rsrc, job_idx)
+           --> pc' = critical
+         []
+         leaving_critical_section: 
+           pc = critical --> pc' = sleeping; 
+                             rsrc' = reset_job_ticket(rsrc, job_idx)
+        ]
+    END;
+\end{session*}
+
+Figure~\ref{fig:bak:controller} specifies an auxiliary module that is used to initialize
+the shared variable \verb.rsrc., and to reset the next-ticket counter when the system is 
+``saturated''. Note that the array literal \verb.[[j : Job_Idx] 0]. is used to initialize the field 
+\verb.data..
+
+\begin{session*}\label{fig:bak:controller}
+  controller: MODULE =
+    BEGIN
+      GLOBAL rsrc : RSRC
+      INITIALIZATION
+        rsrc = (# data := [[j : Job_Idx] 0], next_ticket := 1 #)
+      TRANSITION
+        [
+          reseting_ticket_counter: 
+            can_reset_ticket_counter?(rsrc)
+            --> rsrc' = reset_ticket_counter(rsrc)
+        ]
+    END;
+\end{session*}
+
+The whole system is obtained by composing \verb.N. instances of the module \verb.job., and 
+one instance of the module \verb.controller. (Figure~\ref{fig:bak:system}). The auxiliary module \verb.jobs.
+is the multi-asynchronous composition of \verb.N. instances of \verb.job., since the type
+\verb.Job_Idx. is a subrange \verb|[1..N]|. Notice that each instance of \verb.job. is initialized
+with a different index. In a multi-asynchronous (and multi-synchronous) composition, all local variables 
+are implicitly mapped to arrays. For instance, the local variable \verb.pc. of each \verb.job. instance
+is implicitly mapped to \verb.pc[job_idx]., where the type of \verb.pc. in the module \verb.jobs. is \verb.ARRAY Job_Idx OF Job_PC..
+This kind of mapping is necessary, since users may need to
+reference the local variables of different instances when specifying a property.
+The module \verb.system. is the asynchronous composition of the modules \verb.controller.
+and \verb.jobs..
+
+\begin{session*}\label{fig:bak:system}
+  jobs : MODULE = ([] (job_idx : Job_Idx): job[job_idx]);
+
+  system: MODULE = controller [] jobs;
+\end{session*}
+
+The SAL context \verb.bakery. is available in the SAL distribution package in the \verb.examples.
+directory.
+
+\section{Path Finder}
+
+The following command can be used to obtain a trace of an instance of the bakery protocol with 3 jobs, and maximum
+ticket number equals to 7. 
+
+\begin{session}
+\% sal-path-finder -v 2 --depth=5 --module='bakery\{3,7\}!system'
+...
+\end{session}
+
+The option \verb.-v 2. sets the verbosity level to 2, the produced verbose messages allow users to follow the steps
+performed by the SAL tools. The module to be simulated is specified using the option \verb.--module. because
+the context \verb.bakery. is parametric. 
+
+Figure~\ref{fig:bak:trace} contains a fragment of the trace produced by \verb.sal-path-finder.. The trace contains
+detailed information about each transition performed. For instance, the first transition was performed by the guarded
+command \verb.wakening. of job 3 (\verb.job_idx = 3.). 
+
+\begin{session*}\label{fig:bak:trace}
+Step 0:
+--- System Variables (assignments) ---
+pc[1] = sleeping;
+pc[2] = sleeping;
+pc[3] = sleeping;
+rsrc.data[1] = 0;
+rsrc.data[2] = 0;
+rsrc.data[3] = 0;
+rsrc.next-ticket = 1;
+------------------------
+Transition Information: 
+(module instance at [Context: scratch, line(1), column(11)]
+  (module instance at [Context: bakery, line(116), column(8)]
+    (label reseting-ticket-counter
+      transition at [Context: bakery, line(111), column(10)])))
+------------------------
+Step 1:
+--- System Variables (assignments) ---
+pc[1] = sleeping;
+pc[2] = sleeping;
+pc[3] = sleeping;
+rsrc.data[1] = 0;
+rsrc.data[2] = 0;
+rsrc.data[3] = 0;
+rsrc.next-ticket = 1;
+------------------------
+...
+\end{session*}
+
+\section{Model Checking}
+
+The main property of the bakery protocol is mutual-exclusion, that is,
+it is not possible for more than one job to enter the critical section at the same time.
+This safety property can be stated in the following way:
+
+\begin{session}
+  mutex: THEOREM 
+    system |- G(NOT (EXISTS (i : Job_Idx, j : Job_Idx):
+                       i /= j AND 
+                       pc[i] = critical AND 
+                       pc[j] = critical));
+\end{session}
+
+The following command can be used to prove this property for 5 customers and maximum ticket
+value equals to 15. 
+
+\begin{session}
+\% sal-smc -v 3 --assertion='bakery\{5,15\}!mutex'
+...
+proved.
+\end{session}
+
+The assertion to be verified is specified using the option \verb.--assertion. because the
+context \verb.bakery. is parametric. In \verb.sal-smc., the default proof method for safety
+properties is \emph{forward reachability}. The option \verb.backward. can be used to force \verb.sal-smc.
+to perform \emph{backward reachability}. 
+
+\begin{session}
+\% sal-smc -v 3 --backward --assertion='bakery\{5,15\}!mutex'
+...
+proved.
+\end{session}
+
+In this example, backward reachability needs fewer iterations to reach the fix point, but 
+it is less efficient, and consumes much more memory than forward reachability.
+
+The default behavior of \verb.sal-smc. is to build a partitioned transition relation composed
+of several BDDs. However, the option \verb.--monolithic. forces \verb.sal-smc. (and \verb.sal-sim.)
+to build a monolithic (a single BDD) transition relation. The option \verb.--cluster-size=<num>. controls
+the generation of clusters in a partitioned transition relation, the idea is that two clusters (BDDs) are
+only combined into a single cluster if their sizes are below the threshold.
+
+\begin{session}
+\% sal-smc -v 3 --monolithic --assertion='bakery\{5,15\}!mutex'
+...
+\% sal-smc -v 3 --max-cluster-size=32768 
+          --assertion='bakery\{5,15\}!mutex'
+...
+\end{session}
+
+In \verb.sal-smc. the BDD variables are (re)ordered to minimize the size of the BDDs. 
+Variable (re)ordering is performed in the following stages of \verb.sal-smc..
+\begin{itemize}
+\item First, an initial (static) variable order is built. The option
+\verb.--static-order=<name>. sets the algorithm used to build the initial order.
+\item After the construction of the transition relation, one or more forced variable
+      reordering may be performed. The default behavior is one forced variable reordering.
+      The option \verb.--num-reorders=<num>. sets the number of variable reorderings. 
+      The option \verb.-r <name>. sets the reordering strategy (the default strategy is \verb.sift.).
+			Use the option \verb.--help. to obtain the available strategies.
+\item Dynamic variable reordering is not enabled, but the option \verb.--enable-dynamic-reorder.
+      can be used to enable it. Dynamic variable reordering also uses the strategy specified by
+      the option \verb.-r <name>..
+\end{itemize}
+
+It is important to note that there are several trivial algorithms that
+satisfy the mutual exclusion property. For instance, an algorithm that
+all jobs do not perform any transition. Therefore, it is important to prove
+liveness properties. For instance, we can try to prove that every process reaches
+the critical section infinitely often. The following LTL formula states this property:
+
+\begin{session}
+  liveness_bug: THEOREM 
+    system |- (FORALL (i : Job_Idx): G(F(pc[i] = critical)));
+\end{session}
+
+Before proving a liveness property, we must check if the transition relation is total, that
+is, if every state has at least one successor. The model checkers may produce \emph{unsound} results
+when the transition relation is not total. The totality property can be verified using the
+\verb.sal-deadlock-checker.. 
+
+\begin{session}
+\% sal-deadlock-checker -v 3 --module='bakery\{5,15\}!system'
+...
+ok (module does NOT contain deadlock states).
+\end{session}
+
+Now, we use \verb.sal-smc. to check the property \verb.liveness_bug..
+
+\begin{session}
+\% sal-smc -v 3 --assertion='bakery\{5,15\}!liveness_bug'
+...
+Counterexample:
+Step 0:
+...
+========================
+Begin of Cycle
+========================
+...
+\end{session}
+
+Unfortunately, this property is not true. A counterexample for a LTL liveness property
+is always composed of a prefix, and a cycle. For instance, the counterexample for the property
+\verb.liveness_bug. describes a cycle where at least one of the jobs do not perform a transition.
+A simpler counterexample can be produced if we try to verify an instance of the protocol with
+only two jobs.
+
+\begin{session}
+\% sal-smc -v 3 --assertion='bakery\{2,3\}!liveness_bug'
+...
+Counterexample:
+...
+\end{session}
+
+It is also possible to use \verb.sal-bmc. to produce the shortest counterexample.
+
+\begin{session}
+\% sal-bmc -v 3 
+          --iterative 
+          --assertion='bakery\{5,15\}!liveness_bug'
+...
+Counterexample:
+...
+\end{session}
+
+In this example, \verb.sal-bmc. finds the counterexample in less time. Actually, \verb.sal-bmc.
+is usually more efficient for counterexample detection.
+
+Since \verb.liveness_bug. is not a valid property, we can try to prove the weaker liveness property:
+
+\begin{session}
+  liveness: THEOREM 
+    system |- (FORALL (i : Job_Idx):
+                 G(pc[i] = trying => F(pc[i] = critical)));
+\end{session}
+
+This property states that every job trying to enter the critical section will eventually succeed.
+The following command can be used to prove the property:
+
+\begin{session}
+\% sal-smc -v 3 --assertion='bakery\{5,15\}!liveness'
+...
+proved.
+\end{session}
+
+
+\chapter{Synchronous Bus Arbiter}
+
+The synchronous bus arbiter is a classical example in symbolic model checking. The 
+example described here was extracted from McMillan's doctoral thesis. 
+The SAL files for this example are located in the following subdirectory in
+the SAL distribution package: \verb.examples/arbiter.. respectively.
+The purpose of the arbiter is to grant access on each clock cycle to a single client among
+a number of clients contending for the use of a bus (or another resource). The inputs of the circuit
+are a set of request signals, and the output a set of acknowledge signals. Normally, the arbiter
+asserts the acknowledge signal to the client with lowest signal. However, as signals become more 
+frequent, the arbiter is designed to fall back on round robin scheme, so that every requester is
+eventually granted access. This is done by circulating a token in a ring of arbiter cells, with one
+cell per client. The token moves once every clock cycle. If a given client's request persists
+for the time it takes for the token to make a complete circuit, that client is granted immediate
+access to the bus.
+Figure~\ref{fig:arbiter:context} contains the header of the context \verb.arbiter., 
+and the type declarations. The context \verb.arbiter. has a parameter \verb.n. which is the number of 
+clients. The type of \verb.n. is a subtype of \verb.NATURAL., since \verb.n. must be greater than 1.
+
+\begin{session*}\label{fig:arbiter:context}
+arbiter\{n : \{x : NATURAL | x > 1\}\}: CONTEXT =
+BEGIN
+
+  Range: TYPE = [1..n];
+  Array: TYPE = ARRAY Range OF BOOLEAN;
+  
+  ...
+END
+\end{session*}
+
+Figure~\ref{fig:arbiter:cell} contains the specification of a basic cell of the arbiter. Each cell
+has a request input (\verb.req.) and acknowledgement output (\verb.ack.). 
+The grant output (\verb.grant_out.) of cell \emph{i} is passed to cell \emph{i+1}, and indicates that no clients of index less than or equal
+to \emph{i} are requesting. Each cell has a local variable \verb.t. which stores a true value when the cell has the token.
+The \verb.t. local variables form a circular shift register which shifts up one place each clock
+cycle. Each cell also has a local variable \verb.w. (\emph{waiting}) which is set to true when the \verb.req.
+is true and the token is present. The value of \verb.w. remains true while the request persists, until the token
+returns. At this time, the cell's override (\verb.override_out.) and acknowledgement (\verb.ack.) outputs are set
+to true. The override signals propagates to the cells below, negating the grant input of cell 1, and thus preventing
+any other cells from acknowledging at the same time.
+
+\begin{session*}\label{fig:arbiter:cell}
+  cell [initial_t : BOOLEAN]: MODULE =
+    BEGIN
+      INPUT req : BOOLEAN
+      INPUT token_in : BOOLEAN
+      INPUT override_in : BOOLEAN
+      INPUT grant_in : BOOLEAN
+      OUTPUT ack : BOOLEAN
+      OUTPUT token_out : BOOLEAN
+      OUTPUT override_out : BOOLEAN
+      OUTPUT grant_out : BOOLEAN
+      LOCAL t : BOOLEAN
+      LOCAL w : BOOLEAN
+      LOCAL aux : BOOLEAN
+      DEFINITION
+        token_out = t;
+        aux = w AND t;
+        override_out = override_in OR aux;
+        grant_out = grant_in AND NOT(req);
+        ack = req AND (aux OR grant_in)
+      INITIALIZATION
+        w = FALSE; 
+        t = initial_t
+      TRANSITION
+        t' = token_in; 
+        w' = req AND (w OR t)
+    END;
+\end{session*}
+
+Figure~\ref{fig:arbiter:main} describes the composition of \verb.n. instances of the module \verb.cell..
+The auxiliary module \verb.aux_module. is used to provide a constant false value for the input variable
+\verb.override_in. of the first cell. It is also used to ``connect'' the negation of the output
+\verb.override_out. to the input \verb.grant_in. in the last cell. The outputs and inputs of each cells
+are mapped to arrays using the construct \verb.RENAME.. The auxiliary arrays are declared using the 
+\verb.WITH. construct. The construct \verb.||. is the synchronous composition
+operator. So, the full arbiter is the synchronous composition of the auxiliary module, a cell, and the 
+multisynchronous composition of \verb.n-1. cells, since the type of \verb.idx. is the subrange \verb|[2..n]|.
+
+\begin{session*}\label{fig:arbiter:main}
+  aux_module : MODULE = 
+  BEGIN 
+    OUTPUT zero_const : BOOLEAN
+    INPUT aux : BOOLEAN
+    OUTPUT inv_aux : BOOLEAN
+    DEFINITION
+      zero_const = FALSE; 
+      inv_aux = NOT(aux)
+  END;
+
+  arbiter: MODULE =
+    WITH OUTPUT Ack : Array;
+         INPUT Req : Array;
+         OUTPUT Token : Array;
+         OUTPUT Grant : Array;
+         OUTPUT Override : Array
+      (RENAME aux TO Override[n], inv_aux TO Grant[n]
+       IN aux_module)
+      || 
+      (WITH INPUT zero_const : BOOLEAN
+            (RENAME ack TO Ack[1],
+                    req TO Req[1],
+                    token_in TO Token[1],
+                    token_out TO Token[n],
+                    override_in TO zero_const,
+                    override_out TO Override[1],
+                    grant_in TO Grant[1]
+             IN (LOCAL grant_out
+                 IN cell[TRUE])))
+      || 
+      (|| (idx : [2..n]):
+            (RENAME ack TO Ack[idx],
+                    req TO Req[idx],
+                    token_in TO Token[idx],
+                    token_out TO Token[idx - 1],
+                    override_in TO Override[idx - 1],
+                    override_out TO Override[idx],
+                    grant_in TO Grant[idx],
+                    grant_out TO Grant[idx - 1]
+             IN cell[FALSE]));
+\end{session*}
+
+The SAL context \verb.arbiter. is available in the SAL distribution package in the \verb.examples.
+directory.
+
+\section{Model Checking}
+
+The desired properties of the arbiter circuit are:
+\begin{itemize}
+\item No two acknowledge outputs are true simultaneously.
+\begin{session}
+  at_most_one_ack: 
+    THEOREM arbiter |- G((FORALL (i : [1..n - 1]):
+                             (FORALL (j : [i + 1..n]): 
+                               NOT(Ack[i] AND Ack[j]))));
+\end{session}
+\item Every persistent request is eventually acknowledged.
+\begin{session}
+  every_request_is_eventually_acknowledged: 
+    THEOREM arbiter |- (FORALL (i : [1..n]): 
+                          G(F(Req[i] => Ack[i])));
+\end{session}
+\item Acknowledge is not true without a request.
+\begin{session}
+  no_ack_without_request: 
+    THEOREM arbiter |- G((FORALL (i : [1..n]): Ack[i] => Req[i]));
+\end{session}
+\end{itemize}
+
+The following commands can be used to prove the properties for an arbiter
+with 30 cells:
+
+\begin{session}
+\% sal-smc -v 3 --assertion='arbiter\{30\}!at_most_one_ack'
+...
+proved.
+\% sal-smc -v 3 --assertion='arbiter\{30\}!every_request_is_eventually_acknowledged'
+...
+proved.
+\% sal-smc -v 3 --assertion='arbiter\{30\}!no_ack_without_request'
+...
+proved.
+\end{session}
+
+The property \verb.no_ack_without_request. can be proved using the \emph{k-induction} rule in \verb.sal-bmc..
+This induction rule generalizes BMC in that it requires demonstrating the safety property $p$ holds
+in the first $k$ states of any execution, and that if $p$ holds in every state of executions of length $k$, 
+then every successor state also satisfies this invariant. 
+
+\begin{session}
+\% sal-bmc -v 3 -i
+          --assertion='arbiter\{30\}!no_ack_without_request'
+...
+proved.
+\end{session}
+
+Although \verb.at_most_one_ack. is a safety property, it is not feasible to prove it using induction, unless  
+users provide auxiliary lemmas. The option \verb.--display-induction-ce. can be used to force \verb.sal-bmc.
+to display a counterexample for the inductive step.
+
+\begin{session}
+\% sal-bmc -v 3 -i -d 2 --display-induction-ce
+          --assertion='arbiter\{3\}!at_most_one_ack'
+...
+k-induction rule failed, please try to increase the depth.
+Counterexample:
+Step 0:
+...
+\end{session}
+
+Inspecting the counterexample, you can notice that more than one cell has the token. So, we may use the following
+auxiliary lemma to prove the property \verb.at_most_one_ack..
+
+\begin{session}
+  at_most_one_token:
+    THEOREM arbiter |- G((FORALL (i : [1..n - 1]):
+                          (FORALL (j : [i + 1..n]): 
+                           NOT(Token[i] AND Token[j]))));
+\end{session}
+
+The following command instructs \verb.sal-bmc. to use \verb.at_most_one_token. as an auxiliary lemma.
+
+\begin{session}
+\% sal-bmc -v 3 -i -d 1 --lemma=at_most_one_token
+          --assertion='arbiter\{3\}!at_most_one_ack'
+...
+proved.
+\end{session}
+
+It is important to observer that the previous proof is only valid if the property \verb.at_most_one_token. is valid.
+The following command proves the auxiliary lemma \verb.at_most_one_token. using 1-induction.
+
+\begin{session}
+\% sal-bmc -v 3 -i -d 1
+           --assertion='arbiter\{30\}!at_most_one_token'
+...
+proved.
+\end{session}
+
+\end{document}

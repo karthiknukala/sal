@@ -1,0 +1,42 @@
+MCS distributed list-based queuing lock                   
+with atomic compare_and_swap operations                   
+---------------------------------------
+
+Reference:
+  J.M. Mellor-Crummey and M.L. Scott,					  
+  Algorithms for Scalable Synchronization on Shared-Memory Multiprocessors,
+  ACM transactions on computer systems, Vol 9, No 1, 1991.               
+
+This example is based on one proved in the 
+Murphi model checker.
+
+Commands:
+
+- Look for bugs using random simulation (20 paths with 100 steps each). 
+  The option -g is used to perform run time type checking.
+
+% sal-emc -v 3 -s cacheless -d 100 -n 20 -g --assertion='mcslock{3}!th'
+
+- Prove the property for 3 processes
+
+% sal-emc -v 3 --assertion='mcslock{3}!th'
+
+- Prove the property for 3 processes, and check for deadlocks
+
+% sal-emc -v 3 -k --assertion='mcslock{3}!th'
+
+- Prove the property for 3 processes using symmetry reduction
+
+% sal-emc -v 3 -y --assertion='mcslock{3}!th'
+
+- Prove the property for 4/5 processes using symmetry reduction
+
+% sal-emc -v 3 -y --assertion='mcslock{4}!th'
+
+% sal-emc -v 3 -y --assertion='mcslock{5}!th'
+
+- Prove the property for 4 processes using sal-smc
+
+% sal-smc -v 3 --assertion='mcslock{4}!th'
+
+

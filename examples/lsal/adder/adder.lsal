@@ -1,0 +1,37 @@
+(context adder () (N::(subtype (above 1)))
+
+  (define-module single-bit-adder
+    (begin
+      (input cin::bool)
+      (input a::bool)
+      (input b::bool)
+      (output r::bool)
+      (output cout::bool)
+      (definition
+       (= r (xor (xor a b) cin))
+       (= cout (or (and a b) 
+                   (and a cin)
+                   (and b cin))))))
+
+  (define-type Idx (subrange 0 (- N 1)))
+
+  (define-module adder
+    (hide (C)
+      (||
+       (with ((input A::(array Idx bool))
+              (input B::(array Idx bool))
+              (output R::(array Idx bool))
+              (output C::(array Idx bool)))
+             (|| (rename ((a A[0]) (b B[0]) (r R[0]) (cout C[0]))
+                   single-bit-adder)
+                 (|| (idx::(subrange 1 (- N 1)))
+                     (rename ((a A[idx]) (b B[idx]) (r R[idx]) (cin C[(- idx 1)]) (cout C[idx]))
+                       single-bit-adder))))
+       (begin
+         (input C::(array Idx bool))
+         (output cout::bool)
+         (definition
+          (= cout C[(- N 1)]))))))
+  
+  )
+

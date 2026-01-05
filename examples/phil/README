@@ -1,0 +1,24 @@
+Dinning Philosophers
+--------------------
+
+
+- Prove property `th' for 8 philosophers using sal-emc.
+
+% sal-emc -v 3 --assertion='phil{8}!th1' 
+
+- Prove property `th' for 8 philosophers using sal-emc,
+  and symmetry reduction.
+
+% sal-emc -v 3 -y --assertion='phil{8}!th1' 
+
+- Prove property `th' for 8 philosophers using sal-smc.
+
+% sal-smc -v 3 --assertion='phil{8}!th1' 
+
+- Prove property `th' for 40 philosophers using sal-smc,
+  using variable order file p40.ord
+
+% sal-smc -v 3 -io p40.ord --assertion='phil{8}!th1' 
+
+
+

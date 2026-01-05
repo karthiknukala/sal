@@ -1,0 +1,54 @@
+#!/bin/sh
+
+#
+# SAL 3.1, Copyright (C) 2006, 2011, SRI International.  All Rights Reserved.
+#
+# SAL is free software; you can redistribute it and/or 
+# modify it under the terms of the GNU General Public License 
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of 
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+# GNU General Public License for more details. 
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software 
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. 
+#
+#
+
+# This script is used to allow the user to execute SAL after executing make.
+# In other words, even if the user does not install SAL, he can execute it locally.
+DOT_A_LIBS="@DOT_A_LIBS@"
+BIGLOOLIBDIR="@BIGLOOLIBDIR@"
+ARCH="@ARCH@"
+SALENV_BUILD_MODE="@SALENV_BUILD_MODE@"
+
+curr_dir=`pwd`
+
+BIGLOOLIB=$curr_dir/lib/$ARCH-$SALENV_BUILD_MODE:$BIGLOOLIBDIR
+
+echo "#!/bin/sh" > bin/salenv-exec
+echo "exec $curr_dir/bin/@ARCH@-@SALENV_BUILD_MODE@/salenv-exec \"\$@\"" >> bin/salenv-exec
+chmod +x bin/salenv-exec
+
+echo "#!/bin/sh" > bin/salenv-exec-safe
+echo "exec $curr_dir/bin/@ARCH@-@SALENV_BUILD_MODE@/salenv-exec-safe \"\$@\"" >> bin/salenv-exec-safe
+chmod +x bin/salenv-exec-safe
+
+for name in @sal_scripts@
+do 
+	if sed -e "s|__SALENV_DIR__|`pwd`|g;s|__BIGLOO_LIB_DIR__|$BIGLOOLIB|g;s|__DOT_A_LIBS__|$DOT_A_LIBS|g" src/$name.template > bin/$name
+	then
+			echo "Script $name was copied..."
+	else
+			echo "Error: generating script bin/$name..."
+			exit -1
+	fi
+	chmod +x bin/$name; 
+done
+
+echo "You can start SAL typing: `pwd`/bin/salenv"
+

@@ -1,0 +1,17 @@
+Path finder
+-----------
+
+Description:
+Models the Pathfinder scheduling algorithm and explains the
+cause of the recurring reset problem during the mission on Mars
+there is a high priority process, that consumes data produced by
+a low priority process. Data consumption and production happens under
+the protection of a mutex lock the mutex lock conflicts with the
+scheduling priorities which can deadlock the system if
+high_priority_process starts up while low_priority_process has the lock set
+
+Commands
+
+- Detect deadlock states
+
+  % sal-deadlock-checker -v 3 pathfinder system

@@ -1,0 +1,735 @@
+importing context "startup_5_30_TRUE"...
+parsing file "./startup_5_30_TRUE.sal"...
+  parsing XML file "./startup_5_30_TRUE.xml"...
+    XML parser time: 0.2 secs
+  XML preprocessor...
+    preprocessor time: 0.02 secs
+creating abstract syntax tree for context "startup_5_30_TRUE"...
+  ast generation time: 0.11 secs
+type checking context "startup_5_30_TRUE"...
+  type-checker time: 0.36 secs
+flattening modules in the assertion located at [Context: scratch, line(1), column(19)]
+calculating implicit assignments of base module at [Context: startup_5_30_TRUE, line(1292), column(1)]...
+calculating implicit assignments of base module at [Context: startup_5_30_TRUE, line(82), column(1)]...
+calculating implicit assignments of base module at [Context: startup_5_30_TRUE, line(1266), column(1)]...
+calculating implicit assignments of base module at [Context: startup_5_30_TRUE, line(834), column(1)]...
+calculating implicit assignments of base module at [Context: startup_5_30_TRUE, line(1329), column(1)]...
+  assertion flattening time: 0.08 secs
+simplifying abstract syntax tree...
+  simplification time: 0.68 secs
+expanding function applications...
+  expansion time: 0.25 secs
+unfolding quantifiers...
+  unfolding quantifiers time: 3.64 secs
+eliminating common subexpressions in an assertion...
+eliminating common subexpressions in a flat module...
+  eliminating common subexpressions...
+    starting a new iteration of the common subexpression elimination procedure...
+    starting a new iteration of the common subexpression elimination procedure...
+    starting a new iteration of the common subexpression elimination procedure...
+    starting a new iteration of the common subexpression elimination procedure...
+    starting a new iteration of the common subexpression elimination procedure...
+    starting a new iteration of the common subexpression elimination procedure...
+    simplifying result of the common subexpression elimination procedure...
+  eliminating common subexpressions...
+    expression doesn't contain common (shared) subexpressions...
+  eliminating common subexpressions...
+    expression doesn't contain common (shared) subexpressions...
+  eliminating common subexpressions...
+    expression doesn't contain common (shared) subexpressions...
+  eliminating common subexpressions...
+    expression doesn't contain common (shared) subexpressions...
+  eliminating common subexpressions...
+    expression doesn't contain common (shared) subexpressions...
+  flat module -- common subexpression elimination time: 5.97 secs
+  assertion -- common subexpression elimination time: 5.97 secs
+converting flat module to boolean flat module...
+  flat module -> boolean flat module conversion time: 5.76 secs
+converting property to boolean property...
+  property -> boolean property conversion time: 0.24 secs
+simplifying abstract syntax tree...
+  simplification time: 1.18 secs
+slicing the module-models assertion...
+    collecting state variables dependencies...
+  removing irrelevant parts of the specification...
+  original number of vars: 391
+  number of removed vars: 25
+  slicer time: 3.1 secs
+converting flat module to BDD representation (initial states, and transition relation)...
+  creating BDD variables...
+  computing static variable ordering (minimizing support)...
+    collecting state variables dependencies...
+  static order time: 1.51 secs
+  number of BDD variables: 422
+  creating definition section BDDs...
+  creating BDD: set of initial states...
+  creating BDD: transition relation...
+  rearranging clusters...
+  reordering BDD variables...
+    begin BDD reordering (node count: 215666)...
+    SALenv GC... done
+    begin BDD GC (dead node count: 234416)...
+    end BDD GC (dead node count: 0)...
+    end BDD reordering (node count: 36920)...
+  compressing BDD clusters...
+  rearranging clusters...
+    cluster compression time: 0.95 secs
+  reordering BDD variables...
+    begin BDD reordering (node count: 65111)...
+    SALenv GC... done
+    begin BDD GC (dead node count: 27877)...
+    end BDD GC (dead node count: 0)...
+    end BDD reordering (node count: 33510)...
+  compressing BDD clusters...
+  rearranging clusters...
+    cluster compression time: 0.76 secs
+    number of nodes in initial states: 212
+    number of nodes in transition relation: 36120
+    transition relation detailed information:
+      conjunctive cluster
+        monolithic cluster size: 7752 nodes
+        monolithic cluster size: 6963 nodes
+        disjunctive cluster
+          monolithic cluster size: 5183 nodes
+          monolithic cluster size: 4782 nodes
+        total size: 9965 nodes
+        monolithic cluster size: 702 nodes
+        disjunctive cluster
+          monolithic cluster size: 6085 nodes
+          monolithic cluster size: 4653 nodes
+        total size: 10738 nodes
+      total size: 36120 nodes
+  flat-module -> BDD conversion time: 25.7 secs
+proving invariant or producing counterexample using BDDs...
+  using forward search
+  iteration: 1
+  frontier lower bound: 212 nodes, upper bound: 212 nodes
+  using frontier with 212 nodes
+  total bdd node count: 37043
+    size of intermediate product: 210 nodes
+    size of intermediate product: 208 nodes
+    size of intermediate product: 214 nodes
+    size of intermediate product: 207 nodes
+    size of intermediate product: 213 nodes
+    total size of product: 213 nodes
+    maximum intermediate product: 214 nodes
+  iteration: 2
+  frontier lower bound: 213 nodes, upper bound: 387 nodes
+  using frontier with 213 nodes
+  total bdd node count: 38091
+    size of intermediate product: 222 nodes
+    size of intermediate product: 264 nodes
+    size of intermediate product: 4616 nodes
+    size of intermediate product: 1698 nodes
+    size of intermediate product: 1465 nodes
+    total size of product: 1465 nodes
+    maximum intermediate product: 4616 nodes
+  iteration: 3
+  frontier lower bound: 1598 nodes, upper bound: 1928 nodes
+  using frontier with 1465 nodes
+  total bdd node count: 47758
+    size of intermediate product: 1833 nodes
+    size of intermediate product: 1865 nodes
+    size of intermediate product: 26202 nodes
+    size of intermediate product: 4548 nodes
+    size of intermediate product: 2817 nodes
+    total size of product: 2817 nodes
+    maximum intermediate product: 26202 nodes
+  iteration: 4
+  frontier lower bound: 4155 nodes, upper bound: 5649 nodes
+  using frontier with 3919 nodes
+  total bdd node count: 45164
+    size of intermediate product: 4324 nodes
+    size of intermediate product: 4513 nodes
+    size of intermediate product: 48022 nodes
+    size of intermediate product: 9842 nodes
+    size of intermediate product: 5284 nodes
+    total size of product: 5284 nodes
+    maximum intermediate product: 48022 nodes
+  iteration: 5
+  frontier lower bound: 6030 nodes, upper bound: 10585 nodes
+  using frontier with 5952 nodes
+  total bdd node count: 54705
+    size of intermediate product: 6036 nodes
+    size of intermediate product: 6099 nodes
+    size of intermediate product: 46520 nodes
+    size of intermediate product: 12047 nodes
+    size of intermediate product: 7025 nodes
+    total size of product: 7025 nodes
+    maximum intermediate product: 46520 nodes
+  iteration: 6
+  frontier lower bound: 9173 nodes, upper bound: 17627 nodes
+  using frontier with 8946 nodes
+  total bdd node count: 69001
+    size of intermediate product: 9350 nodes
+    size of intermediate product: 9136 nodes
+    size of intermediate product: 55741 nodes
+    size of intermediate product: 16480 nodes
+    size of intermediate product: 10996 nodes
+    total size of product: 10996 nodes
+    maximum intermediate product: 55741 nodes
+  iteration: 7
+  frontier lower bound: 11932 nodes, upper bound: 25725 nodes
+  using frontier with 11932 nodes
+  total bdd node count: 83369
+    size of intermediate product: 12014 nodes
+    size of intermediate product: 11426 nodes
+    size of intermediate product: 59801 nodes
+    size of intermediate product: 24220 nodes
+    size of intermediate product: 24101 nodes
+    total size of product: 24101 nodes
+    maximum intermediate product: 59801 nodes
+  iteration: 8
+  frontier lower bound: 26620 nodes, upper bound: 47158 nodes
+  using frontier with 26620 nodes
+  total bdd node count: 113949
+    size of intermediate product: 27560 nodes
+    size of intermediate product: 22143 nodes
+    size of intermediate product: 155288 nodes
+    size of intermediate product: 38915 nodes
+    size of intermediate product: 39120 nodes
+    total size of product: 39120 nodes
+    maximum intermediate product: 155288 nodes
+  iteration: 9
+  frontier lower bound: 43569 nodes, upper bound: 77350 nodes
+  using frontier with 38673 nodes
+  total bdd node count: 175571
+    SALenv GC... done
+    begin BDD GC (dead node count: 869437)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 38620 nodes
+    size of intermediate product: 31034 nodes
+    size of intermediate product: 191991 nodes
+    size of intermediate product: 53760 nodes
+    size of intermediate product: 49841 nodes
+    total size of product: 49841 nodes
+    maximum intermediate product: 191991 nodes
+  iteration: 10
+  frontier lower bound: 58331 nodes, upper bound: 113550 nodes
+  using frontier with 56302 nodes
+  total bdd node count: 256156
+    size of intermediate product: 55915 nodes
+    size of intermediate product: 46824 nodes
+    size of intermediate product: 243925 nodes
+    size of intermediate product: 77038 nodes
+    size of intermediate product: 69267 nodes
+    total size of product: 69267 nodes
+    maximum intermediate product: 243925 nodes
+  iteration: 11
+  frontier lower bound: 78195 nodes, upper bound: 161468 nodes
+  using frontier with 72258 nodes
+  total bdd node count: 348083
+    size of intermediate product: 70712 nodes
+    size of intermediate product: 61690 nodes
+    size of intermediate product: 256590 nodes
+    size of intermediate product: 100984 nodes
+    size of intermediate product: 88418 nodes
+    total size of product: 88418 nodes
+    maximum intermediate product: 256590 nodes
+  iteration: 12
+  frontier lower bound: 97671 nodes, upper bound: 216196 nodes
+  using frontier with 93378 nodes
+  total bdd node count: 470079
+    SALenv GC... done
+    begin BDD GC (dead node count: 1813416)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 91721 nodes
+    size of intermediate product: 82494 nodes
+    size of intermediate product: 360492 nodes
+    size of intermediate product: 165489 nodes
+    size of intermediate product: 194120 nodes
+    total size of product: 194120 nodes
+    maximum intermediate product: 360492 nodes
+  iteration: 13
+  frontier lower bound: 204119 nodes, upper bound: 367383 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1222681)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 198605 nodes
+  total bdd node count: 632277
+    size of intermediate product: 202463 nodes
+    size of intermediate product: 158575 nodes
+    size of intermediate product: 964153 nodes
+    size of intermediate product: 233703 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1824459)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 237119 nodes
+    total size of product: 237119 nodes
+    maximum intermediate product: 964153 nodes
+  iteration: 14
+  frontier lower bound: 273929 nodes, upper bound: 516529 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 671874)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 260170 nodes
+  total bdd node count: 951174
+    size of intermediate product: 266050 nodes
+    size of intermediate product: 204609 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 598663)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 1288133 nodes
+    size of intermediate product: 297203 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1789084)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 310446 nodes
+    total size of product: 310446 nodes
+    maximum intermediate product: 1288133 nodes
+  iteration: 15
+  frontier lower bound: 327443 nodes, upper bound: 672284 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1041515)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 320871 nodes
+  total bdd node count: 1261798
+    size of intermediate product: 325628 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 288251)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 252160 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 622301)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 1611588 nodes
+    size of intermediate product: 364643 nodes
+    size of intermediate product: 377100 nodes
+    total size of product: 377100 nodes
+    maximum intermediate product: 1611588 nodes
+  iteration: 16
+  frontier lower bound: 390969 nodes, upper bound: 853408 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 3375942)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 383612 nodes
+  total bdd node count: 1629886
+    size of intermediate product: 384776 nodes
+    size of intermediate product: 296724 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 941802)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 1900956 nodes
+    size of intermediate product: 458439 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 2657879)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 462203 nodes
+    total size of product: 462203 nodes
+    maximum intermediate product: 1900956 nodes
+  iteration: 17
+  frontier lower bound: 471147 nodes, upper bound: 1075699 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1431105)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 456534 nodes
+  total bdd node count: 2006047
+    size of intermediate product: 453181 nodes
+    size of intermediate product: 343416 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1025575)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 2242637 nodes
+    size of intermediate product: 514589 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 3114607)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 476802 nodes
+    total size of product: 476802 nodes
+    maximum intermediate product: 2242637 nodes
+  iteration: 18
+  frontier lower bound: 526113 nodes, upper bound: 1320932 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1628771)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 511771 nodes
+  total bdd node count: 2573139
+    size of intermediate product: 499965 nodes
+    size of intermediate product: 380663 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1054149)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 2384986 nodes
+    size of intermediate product: 582742 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 3480780)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 554857 nodes
+    total size of product: 554857 nodes
+    maximum intermediate product: 2384986 nodes
+  iteration: 19
+  frontier lower bound: 541364 nodes, upper bound: 1544933 nodes
+  using frontier with 541364 nodes
+  total bdd node count: 3270432
+    SALenv GC... done
+    begin BDD GC (dead node count: 2180873)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 522081 nodes
+    size of intermediate product: 394988 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1222457)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 2473201 nodes
+    size of intermediate product: 598387 nodes
+    size of intermediate product: 523477 nodes
+    total size of product: 523477 nodes
+    maximum intermediate product: 2473201 nodes
+  iteration: 20
+  frontier lower bound: 538609 nodes, upper bound: 1754776 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 4934118)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 538609 nodes
+  total bdd node count: 3248832
+    size of intermediate product: 520847 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 615959)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 392436 nodes
+    size of intermediate product: 2470419 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1548496)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 607381 nodes
+    size of intermediate product: 533348 nodes
+    total size of product: 533348 nodes
+    maximum intermediate product: 2470419 nodes
+  iteration: 21
+  frontier lower bound: 533243 nodes, upper bound: 1959553 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 4399204)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 533243 nodes
+  total bdd node count: 3655663
+    size of intermediate product: 510882 nodes
+    size of intermediate product: 384033 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1392838)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 2442316 nodes
+    size of intermediate product: 604118 nodes
+    size of intermediate product: 530424 nodes
+    total size of product: 530424 nodes
+    maximum intermediate product: 2442316 nodes
+  iteration: 22
+  frontier lower bound: 538114 nodes, upper bound: 2163089 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 5055157)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 538114 nodes
+  total bdd node count: 4067788
+    size of intermediate product: 511180 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 681639)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 382493 nodes
+    size of intermediate product: 2472513 nodes
+    size of intermediate product: 605033 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 4036041)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 529823 nodes
+    total size of product: 529823 nodes
+    maximum intermediate product: 2472513 nodes
+  iteration: 23
+  frontier lower bound: 525936 nodes, upper bound: 2346957 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1853420)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 525936 nodes
+  total bdd node count: 4445962
+    size of intermediate product: 493243 nodes
+    size of intermediate product: 369234 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1378826)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 2381538 nodes
+    size of intermediate product: 586829 nodes
+    size of intermediate product: 515467 nodes
+    total size of product: 515467 nodes
+    maximum intermediate product: 2381538 nodes
+  iteration: 24
+  frontier lower bound: 515835 nodes, upper bound: 2517155 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 5029915)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 515835 nodes
+  total bdd node count: 4802044
+    size of intermediate product: 480364 nodes
+    size of intermediate product: 358061 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1488502)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 2267439 nodes
+    size of intermediate product: 576099 nodes
+    size of intermediate product: 507228 nodes
+    total size of product: 507228 nodes
+    maximum intermediate product: 2267439 nodes
+  iteration: 25
+  frontier lower bound: 509432 nodes, upper bound: 2687955 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 4626727)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 509432 nodes
+  total bdd node count: 5147983
+    size of intermediate product: 467262 nodes
+    size of intermediate product: 352373 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1384739)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 2182890 nodes
+    size of intermediate product: 562299 nodes
+    size of intermediate product: 494585 nodes
+    total size of product: 494585 nodes
+    maximum intermediate product: 2182890 nodes
+  iteration: 26
+  frontier lower bound: 502528 nodes, upper bound: 2854811 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 4504860)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 502528 nodes
+  total bdd node count: 5496477
+    size of intermediate product: 464550 nodes
+    size of intermediate product: 349819 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1395347)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 2113637 nodes
+    size of intermediate product: 549244 nodes
+    size of intermediate product: 484503 nodes
+    total size of product: 484503 nodes
+    maximum intermediate product: 2113637 nodes
+  iteration: 27
+  frontier lower bound: 489676 nodes, upper bound: 3012382 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 4408487)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 489676 nodes
+  total bdd node count: 5823697
+    size of intermediate product: 452529 nodes
+    size of intermediate product: 339422 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1325501)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 2014198 nodes
+    size of intermediate product: 527231 nodes
+    size of intermediate product: 467728 nodes
+    total size of product: 467728 nodes
+    maximum intermediate product: 2014198 nodes
+  iteration: 28
+  frontier lower bound: 475989 nodes, upper bound: 3162371 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 4234935)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 475989 nodes
+  total bdd node count: 6140454
+    size of intermediate product: 444760 nodes
+    size of intermediate product: 330890 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1190257)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 1930291 nodes
+    size of intermediate product: 504235 nodes
+    size of intermediate product: 444162 nodes
+    total size of product: 444162 nodes
+    maximum intermediate product: 1930291 nodes
+  iteration: 29
+  frontier lower bound: 453085 nodes, upper bound: 3301977 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 4148362)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 453085 nodes
+  total bdd node count: 6431984
+    size of intermediate product: 423145 nodes
+    size of intermediate product: 311728 nodes
+    size of intermediate product: 1833264 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1626258)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 480216 nodes
+    size of intermediate product: 424942 nodes
+    total size of product: 424942 nodes
+    maximum intermediate product: 1833264 nodes
+  iteration: 30
+  frontier lower bound: 434262 nodes, upper bound: 3438013 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 3441445)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 434262 nodes
+  total bdd node count: 6717818
+    size of intermediate product: 408171 nodes
+    size of intermediate product: 298720 nodes
+    size of intermediate product: 1753740 nodes
+    size of intermediate product: 461912 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 3393071)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 410265 nodes
+    total size of product: 410265 nodes
+    maximum intermediate product: 1753740 nodes
+  iteration: 31
+  frontier lower bound: 422426 nodes, upper bound: 3569664 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 1512710)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 422426 nodes
+  total bdd node count: 6991086
+    size of intermediate product: 398393 nodes
+    size of intermediate product: 290509 nodes
+    size of intermediate product: 1709769 nodes
+    size of intermediate product: 446590 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 3475056)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 397135 nodes
+    total size of product: 397135 nodes
+    maximum intermediate product: 1709769 nodes
+  iteration: 32
+  frontier lower bound: 413945 nodes, upper bound: 3696816 nodes
+  using frontier with 413945 nodes
+  total bdd node count: 7640677
+    SALenv GC... done
+    begin BDD GC (dead node count: 1559825)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 395441 nodes
+    size of intermediate product: 288566 nodes
+    size of intermediate product: 1695619 nodes
+    size of intermediate product: 443285 nodes
+    size of intermediate product: 393927 nodes
+    total size of product: 393927 nodes
+    maximum intermediate product: 1695619 nodes
+  iteration: 33
+  frontier lower bound: 409891 nodes, upper bound: 3835672 nodes
+  using frontier with 409839 nodes
+  total bdd node count: 7899703
+    SALenv GC... done
+    begin BDD GC (dead node count: 4434212)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 389904 nodes
+    size of intermediate product: 283855 nodes
+    size of intermediate product: 1662666 nodes
+    size of intermediate product: 434835 nodes
+    size of intermediate product: 386002 nodes
+    total size of product: 386002 nodes
+    maximum intermediate product: 1662666 nodes
+  iteration: 34
+  frontier lower bound: 405148 nodes, upper bound: 3975245 nodes
+  using frontier with 405148 nodes
+  total bdd node count: 8178077
+    SALenv GC... done
+    begin BDD GC (dead node count: 4560448)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 390973 nodes
+    size of intermediate product: 284564 nodes
+    size of intermediate product: 1654438 nodes
+    size of intermediate product: 434038 nodes
+    size of intermediate product: 383907 nodes
+    total size of product: 383907 nodes
+    maximum intermediate product: 1654438 nodes
+  iteration: 35
+  frontier lower bound: 401624 nodes, upper bound: 4105000 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 4445781)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 401624 nodes
+  total bdd node count: 8083940
+    size of intermediate product: 388495 nodes
+    size of intermediate product: 282675 nodes
+    size of intermediate product: 1635761 nodes
+    size of intermediate product: 429745 nodes
+    size of intermediate product: 378857 nodes
+    total size of product: 378857 nodes
+    maximum intermediate product: 1635761 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 4203104)...
+    end BDD GC (dead node count: 0)...
+  iteration: 36
+  frontier lower bound: 398995 nodes, upper bound: 4232819 nodes
+  using frontier with 398995 nodes
+  total bdd node count: 8720160
+    size of intermediate product: 388972 nodes
+    size of intermediate product: 282623 nodes
+    size of intermediate product: 1633073 nodes
+    size of intermediate product: 429091 nodes
+    size of intermediate product: 378267 nodes
+    total size of product: 378267 nodes
+    maximum intermediate product: 1633073 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 4182340)...
+    end BDD GC (dead node count: 0)...
+  iteration: 37
+  frontier lower bound: 397609 nodes, upper bound: 4363960 nodes
+  using frontier with 397609 nodes
+  total bdd node count: 8982317
+    size of intermediate product: 386404 nodes
+    size of intermediate product: 280769 nodes
+    size of intermediate product: 1622706 nodes
+    size of intermediate product: 426171 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 3953866)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 374333 nodes
+    total size of product: 374333 nodes
+    maximum intermediate product: 1622706 nodes
+  iteration: 38
+  frontier lower bound: 397484 nodes, upper bound: 4495368 nodes
+  using frontier with 397484 nodes
+  total bdd node count: 9252975
+    SALenv GC... done
+    begin BDD GC (dead node count: 1391464)...
+    end BDD GC (dead node count: 0)...
+    size of intermediate product: 387538 nodes
+    size of intermediate product: 281326 nodes
+    size of intermediate product: 1626546 nodes
+    size of intermediate product: 427133 nodes
+    size of intermediate product: 375427 nodes
+    total size of product: 375427 nodes
+    maximum intermediate product: 1626546 nodes
+  iteration: 39
+  frontier lower bound: 397685 nodes, upper bound: 4624677 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 4401622)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 397685 nodes
+  total bdd node count: 9155405
+    size of intermediate product: 386633 nodes
+    size of intermediate product: 280920 nodes
+    size of intermediate product: 1623503 nodes
+    size of intermediate product: 426469 nodes
+    size of intermediate product: 374433 nodes
+    total size of product: 374433 nodes
+    maximum intermediate product: 1623503 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 4172527)...
+    end BDD GC (dead node count: 0)...
+  iteration: 40
+  frontier lower bound: 397501 nodes, upper bound: 4750958 nodes
+  using frontier with 397501 nodes
+  total bdd node count: 9788260
+    size of intermediate product: 387525 nodes
+    size of intermediate product: 281321 nodes
+    size of intermediate product: 1626496 nodes
+    size of intermediate product: 427120 nodes
+    size of intermediate product: 375276 nodes
+    total size of product: 375276 nodes
+    maximum intermediate product: 1626496 nodes
+  iteration: 41
+  frontier lower bound: 397537 nodes, upper bound: 4882992 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 4902255)...
+    end BDD GC (dead node count: 0)...
+  using frontier with 397537 nodes
+  total bdd node count: 9686578
+    size of intermediate product: 370463 nodes
+    size of intermediate product: 249873 nodes
+    size of intermediate product: 1483227 nodes
+    size of intermediate product: 384766 nodes
+    size of intermediate product: 334657 nodes
+    total size of product: 334657 nodes
+    maximum intermediate product: 1483227 nodes
+    SALenv GC... done
+    begin BDD GC (dead node count: 4043991)...
+    end BDD GC (dead node count: 0)...
+  number of visited states: 1807533638.0
+  verification time: 873.44 secs
+total execution time: 920.74 secs

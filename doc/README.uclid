@@ -1,0 +1,54 @@
+SAL -> UCLID interface
+----------------------
+
+UCLID (pronounced  "Euclid") is a tool for verifying infinite-state systems. 
+UCLID models systems using an arithmetic of counters, uninterpreted terms, 
+and restricted lambda expressions. In SAL, UCLID is used as a decision 
+procedure for separation logic with uninterpreted function symbols. UCLID is
+*not* part of the SAL distribution package. UCLID can be downloaded from
+the following website:
+
+http://www-2.cs.cmu.edu/~uclid/
+
+The interface between SAL and UCLID was tested using UCLID 1.0.
+
+In SAL, UCLID is used in the sal-inf-bmc tool, when the option '-s unclid' is
+provided. 
+
+Example: Checks the property 'mutex' in the context 'inf-bakery' using UCLID.
+
+   % sal-inf-bmc -v 10 -s uclid inf-bakery mutex
+
+The current version of SAL does not produce counterexamples when UCLID is used.
+
+The default behavior of SAL is to look for an executable called `uclid'. 
+The command used to execute UCLID can be changed using the statement:
+
+(sal/set-uclid-command! "<path-to-uclid>/uclid")
+
+This statement should be included in your `.salrc' file in your home directory.
+
+The procedure `sal/set-uclid-boolean-mode' sets the boolean reasoning mode to be 
+used in UCLID. The available modes are `sat' and `bdd'. The default mode is `sat'.
+For instance, the following statement can be included in your `.salrc' file
+to change the boolean reasoning mode to BDDs.
+
+(sal/set-uclid-boolean-mode! 'bdd)
+
+UCLID supports three different kinds of SAT solvers: `chaff', `grasp', `zchaff'. The
+procedure `sal/set-uclid-sat-checker' sets the SAT checker to be used in UCLID.
+The default SAT checker is `zchaff'. 
+For instance, the following statement can be included in your `.salrc' file
+to change the SAT checker to `grasp'.
+
+(sal/set-uclid-sat-checker! 'grasp)
+
+The flag --enable-ate (array theory elimination) is automatically activated in
+when UCLID is used, since UCLID does not support the array theory.
+
+
+
+
+
+
+

@@ -1,0 +1,22 @@
+Bigloo
+------
+
+SAL is distributed with the Bigloo compiler for your convenience.  So,
+you do not need to download and install Bigloo to be able to use
+SAL. Bigloo is an efficient (open-source) compiler for the Scheme
+programming language. Bigloo is developed and maintained by Manuel
+Serrano. The source code for Bigloo can be downloaded from:
+
+http://www-sop.inria.fr/mimosa/fp/Bigloo/
+
+
+Bigloo description:
+
+Bigloo is a Scheme implementation devoted to one goal: enabling Scheme
+based programming style where C(++) is usually required. Bigloo
+attempts to make Scheme practical by offering features usually
+presented by traditional programming languages but not offered by
+Scheme and functional programming. Bigloo compiles Scheme modules. It
+delivers small and fast stand alone binary executables. Bigloo enables
+full connections between Scheme and C programs, between Scheme and
+Java programs, and between Scheme and C# programs.

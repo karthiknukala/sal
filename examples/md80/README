@@ -1,0 +1,21 @@
+Mode confusion
+--------------
+
+Description: Automation surprises occur when an automated system behaves
+differently than its operator expects. If the actual system behavior and the
+operator's "mental model" are both described as finite state transition 
+systems. Model checking can be used to discover any scenarios that cause
+the behaviors of the two descriptions to diverge from one another.
+These scenarios identify potential surprises and pin point areas where
+design changes, or revisions to training materials or procedures, should
+be considered. 
+
+Commands:
+
+- Prove the property no-surprise
+
+  % sal-smc -v 3 md80 no_surprise 
+
+- Prove the property no-surprise using induction
+
+  % sal-bmc -v 3 --induction md80 no_surprise 

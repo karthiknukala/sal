@@ -1,0 +1,52 @@
+Three different specifications of a queuing lock algorithm.
+-----------------------------------------------------------
+Author: Kazuhiro Ogata
+Email: ogata@jaist.ac.jp
+
+The queuing lock algorithm (or simply QLOCK) can be written informally
+as this
+
+     l1: put(queue, i)
+     l2: repeat until top(queue) = i
+         Critical Section
+     cs: get(queue)
+
+Each process i is supposed to repeatedly execute this program. queue
+is a queue of process IDs, which is shared by all
+processes. put(queue,i) puts i into queue at the end, top(queue)
+returns the top of queue, and get(queue) deletes the top form
+queue. Initially queue is empty and each process is at label l1.
+
+In any specification, the queue is modeled as an array data and two
+variables hd and tl. hd and tl point to the top and last elements of
+the queue, respectively, if the queue is not empty.  The capacity of
+the queue is L, which is given as an argument. If hd = tl + 1, the
+queue is empty. If tl = L, the queue is saturated. Initially, hd = 1
+and tl = 0.
+
+1. The first specification (qlock1.sal)
+
+The queue is declared as a global data, which is shared by all
+processes. This specification is based on examples/bakery/bakery.sal. 
+
+2. The second specification (qlock2.sal)
+
+The queue is represented as a module. The module is synchronously
+composed with processes. 
+
+3. The third specification (qlock3.sal)
+
+The queue is represented as a module. The module is asynchronously
+composed with processes.
+
+For each specification, we can do various analyses such as 
+
+% sal-smc -v 3 --assertion='qlockX{2,2}!mutex'
+
+% sal-deadlock-checker -v 3 --module='qlockX{2,2}!system'
+
+% sal-wmc -v 3 --assertion='qlockX{2,2}!reachable'
+
+% sal-smc -v 3 --assertion='qlockX{2,2}!lofree'
+
+where qlockX is qlock1, qlock2, or qlock3.

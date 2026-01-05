@@ -1,0 +1,48 @@
+Documentation
+=============
+
+Tutorial: 
+   salenv_tutorial.ps
+   salenv_tutorial.pdf
+
+Examples:
+   The directory `examples' contains several SAL specifications.
+   Each subdirectory contains a different example. A README
+   file provides a short description of the example, and the 
+   commands that can be used to perform verification/simulation.
+
+Man Pages:
+   The subdirectory `./man' contains man pages for the SAL tools.
+   They can be copied to your MANPATH. You can also use man to
+   access these files without installing them. For instance, to 
+   access the sal-bmc.1, you should type:
+ 
+   % man ./man/sal-bmc.1
+
+   Remark: If this command does not work in your system, check
+   your man documentation by typing:
+   
+   % man man
+
+Limitations:
+   SAL tools only support a subset of the SAL language. Please,
+   read the file 'Limitations.txt'.
+
+SAL tools command line options:
+   Every SAL tool accepts the option --help. It provides a detailed
+   description of the available command line options. For example,
+   the following command describes the options available in sal-smc:
+
+   % sal-smc --help
+  
+Additional Information:
+   Additional information is available online on the SAL website:
+ 
+   http://sal.csl.sri.com/
+
+External tools:
+   SAL can be connected to different tools. The files README.<tool-name>
+   contains instructions regarding the connection with the tool '<tool-name>'.
+   These tools are not part of the SAL distribution, and must be
+   obtained separately from their respective authors.
+

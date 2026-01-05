@@ -1,0 +1,84 @@
+(context arbiter () (n::nat)
+  
+  (define-module (cell initial-t::bool)
+    (begin
+      (input req::bool)
+      (input token_in::bool)
+      (input override_in::bool)
+      (input grant_in::bool)
+      (output ack::bool)
+      (output token_out::bool)
+      (output override_out::bool)
+      (output grant_out::bool)
+      (local t::bool)
+      (local w::bool)
+      (local aux::bool)
+      (definition
+       (= token_out t)
+       (= aux (and w t))
+       (= override_out (or override_in aux))
+       (= grant_out (and grant_in (not req)))
+       (= ack (and req (or aux grant_in))))
+      (initialization 
+       (= w false)
+       (= t initial-t))
+      (transition
+       (= t' token_in)
+       (= w' (and req (or w t))))))
+  
+  (define-type Range (subrange 1 n))
+
+  (define-type Array (array Range bool))
+
+  (define-module arbiter
+    (with ((output Ack::Array)
+           (input  Req::Array)
+           (output Token::Array)
+           (output Grant::Array)
+           (output Override::Array))
+          (|| 
+           ;; auxiliary module
+           (rename ((aux Override[n]) (inv_aux Grant[n]))
+             (begin
+               (output zero_const::bool)
+               (input  aux::bool)
+               (output inv_aux::bool)
+               (definition
+                (= zero_const false)
+                (= inv_aux (not aux)))))
+           ;; first cell
+           (rename ((ack Ack[1]) (req Req[1])
+                    (token_in Token[1]) (token_out Token[n])
+                    (override_in zero_const) (override_out Override[1])
+                    (grant_in Grant[1]))
+             (hide (grant_out)
+                   (cell true)))
+           ;; n-1 cells
+           (|| (idx::(subrange 2 n))
+               (rename ((ack Ack[idx]) (req Req[idx])
+                        (token_in Token[idx]) (token_out Token[(- idx 1)])
+                        (override_in Override[(- idx 1)]) (override_out Override[idx])
+                        (grant_in Grant[idx]) (grant_out Grant[(- idx 1)]))
+                 (cell false))))))
+
+  (theorem at-most-one-ack 
+    (|- arbiter 
+        (AG (for-all (i::(subrange 1 (- n 1)))
+             (for-all (j::(subrange (+ i 1) n))
+               (not (and Ack[i] Ack[j])))))))
+
+  (theorem no-ack-without-request
+    (|- arbiter
+        (AG (for-all (i::(subrange 1 n)) 
+             (implies Ack[i] Req[i])))))
+
+  (theorem every-request-is-eventually-acknowledged
+    (|- arbiter (for-all (i::(subrange 1 n)) 
+									(G (F (implies Req[i] Ack[i]))))))
+
+	(theorem at-most-one-token
+		(|- arbiter
+				(G (for-all (i::(subrange 1 (- n 1)))
+						 (for-all (j::(subrange (+ i 1) n))
+							 (not (and Token[i] Token[j])))))))
+  )

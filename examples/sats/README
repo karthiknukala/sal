@@ -1,0 +1,38 @@
+Modeling and Verification of an Air Traffic
+Concept of Operations
+
+Author: Cesar A. Munoz
+
+Reference: 
+Cesar Munoz, Gilles Dowek, Victor Carreno,
+"Modeling and Verification of an Air Traffic
+Concept of Operations", International Symposium
+on Software Testing and Analysis, ISTTA, 2004.
+
+WEB: http://research.nianet.org/~munoz
+
+- Prove property correctness1 using sal-emc
+
+% sal-emc -v 3 sats correctness1
+
+- Prove property correctness1 using sal-emc and
+  breadth-first search
+
+% sal-emc -v 3 -s bfs sats correctness1
+
+- Prove property correctness1 using sal-emc and
+  dynamic compilation
+
+% sal-emc -v 3 -c sats correctness1
+
+- Check the property using random simultation 
+  (20 paths of 100 steps each). The option -g
+  performs runtime type checking
+ 
+% sal-emc -v 3 -s cacheless -g -n 20 -d 100 sats correctness1
+
+- Prove property correctness1, and checks for deadlocks
+
+% sal-emc -v 3 -k sats correctness1
+  
+

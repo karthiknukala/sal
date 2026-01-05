@@ -1,0 +1,26 @@
+Extra stuff
+-----------
+
+sal-mode.el:
+  SAL mode for Emacs.
+
+lsal-mode.el: 
+  LSAL mode for Emacs.
+
+pp-extra.scm: 
+  Pretty printing extensions for sets and queues. Use this
+  file as an extra argument for any SALenv
+  tool. .../examples/util/README contains an example.
+
+heuristic-reordering.scm: 
+  Try the reorder BDD variables during the construction of the set of
+  reachable states.
+
+user-guided-reordering.scm:
+  Ask the user if he wants to reorder the BDD variables during the
+  construction of the set of reachable states.
+
+save-var-order.scm: 
+  Save the BDD variable order in a file after
+  each forced BDD variable reordering.
+

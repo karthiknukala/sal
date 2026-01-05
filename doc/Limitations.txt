@@ -1,0 +1,33 @@
+Limitations of the SAL tools
+----------------------------
+
+- Dependent types are not supported.
+
+- The following tools support only finite state systems:
+  sal-smc, sal-wmc, sal-bmc, sal-path-finder, sal-simulator,
+  sal-deadlock-checker.
+
+- Recursive functions can only be used if they can be
+  statically unfolded. Remark: SAL uses an infinite loop
+  detector that will prevent it to enter in a loop, if this
+  restriction is not met.
+
+- The left hand side of a RENAME must be a variable.
+  For instance, the following RENAME is not supported:
+
+    RENAME a[x].1 TO B[x][y] IN module1
+
+  The following work around can be used:
+
+    RENAME tmp_var TO B[x][y] IN
+       BEGIN
+         OUTPUT tmp_var : T1
+         INPUT a : T2
+         DEFINITION
+           tmp_var = a[x].1
+       END
+       ||
+       module1
+
+  where, T1 is the type of "a[x].1", and T2 the type of  "a".
+

@@ -1,0 +1,99 @@
+;; -*- Mode: Scheme -*- 
+
+;;
+;; SAL 3.1, Copyright (C) 2006, 2011, SRI International.  All Rights Reserved.
+;;
+;; SAL is free software; you can redistribute it and/or 
+;; modify it under the terms of the GNU General Public License 
+;; as published by the Free Software Foundation; either version 2
+;; of the License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of 
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+;; GNU General Public License for more details. 
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program; if not, write to the Free Software 
+;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. 
+;;
+
+;; -*- Mode: Scheme -*- 
+;================================
+; Fast Cache Tables
+; A cache table is similar to a hash-table,
+; but without conflict resolution, that is,
+; each slot contains only one element instead
+; of a list.
+
+;+++
+; Build a new set of cache table functions that are optimized to handle
+; a specific kind of key
+; @code{type-prefix} is a prefix used to name the functions produced by
+; this macro.
+; @code{hash-proc} is a function that receives an element and returns
+; a hashcode.
+; @code{equal-proc} is a function that receives two elements and returns
+; true if they are equal.
+; The following functions are produced:
+; @itemize @bullet
+; @item (make-<type-prefix> size)
+; @item (<type-prefix>/put! ctable key value)
+; @item (<type-prefix>/get ctable key)
+; @item (<type-prefix>/for-each ctable proc)
+; @item (<type-prefix>/size ctable)
+; @end itemize
+; @lisp
+; (make-fast-cache-type number-id-table (lambda (num) num) =)
+; (define ct (make-number-id-table 100))
+; (number-id-table/put! ct 10 "aaa")
+; (number-id-table/get ct 10)
+;   @result{} (10 . "aaa")
+; (number-id-table/get ct 20)
+;   @result{} #f
+; (number-id-table/put! ct 20 "bbb")
+; (number-id-table/get ct 20)
+;   @result{} (20 . "bbb")
+; (number-id-table/put! ct 120 "ddd")
+; (number-id-table/get ct 20)
+;   @result{} #f
+; (number-id-table/get ct 120)
+;   @result{} (120 . ddd)
+; (number-id-table/size ct)
+;   @result{} 2
+; (number-id-table/put! ct 30 "ccc")
+; (number-id-table/size ct)
+;   @result{} 3
+; (number-id-table/for-each print ct)
+;   @result{} (10 . aaa)
+;   @result{} (120 . ddd)
+;   @result{} (30 . ccc)
+; @end lisp
+(define-macro (make-fast-cache-type type-prefix hash-proc equal-proc)
+  (let ((make-fun (symbol-append 'make- type-prefix))
+        (put-fun (symbol-append type-prefix '/put!))
+        (get-fun (symbol-append type-prefix '/get))
+        (foreach-fun (symbol-append type-prefix '/for-each))
+        (size-fun (symbol-append type-prefix '/size)))
+    `(begin
+       (define (,make-fun initial-size)
+         (make-vector initial-size #f)) 
+       (define (,put-fun cache key value)     
+         (let* ((capacity (vector-length cache))
+                (index (modulo (,hash-proc key) capacity)))
+           (vector-set! cache index (cons key value))))
+       (define (,get-fun cache key)
+         (let* ((capacity (vector-length cache))
+                (index (modulo (,hash-proc key) capacity))
+                (val (vector-ref cache index)))
+           (and val
+                (,equal-proc (car val) key)
+                val)))
+       (define (,foreach-fun cache proc)
+         (fast-cache/for-each cache proc))
+       (define (,size-fun cache)
+         (fast-cache/size cache))
+       )))
+
+;===
+

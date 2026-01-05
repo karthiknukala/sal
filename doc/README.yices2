@@ -1,0 +1,43 @@
+SAL -> Yices2 interface
+-----------------------
+
+Yices is a SAT and SMT solver developed by SRI International. Yices 1
+is the detault backend solver for SAL, and it is used by sal-bmc and
+sal-inf-bmc.
+
+Since SAL version 3.2, we have added support for SAL to use the newer
+version of Yices, namely Yices 2, that is available at 
+http://yices.csl.sri.com/.
+
+To use Yices 2 has backend solver for SAL:
+
+1) download the Yices 2 distribution suitable for your OS at
+
+    http://yices.csl.sri.com/download-yices2.shtml
+
+   then unpack the tarfile in a directory of your choice.
+
+   Unlike Yices 1, the Yices 2 distribution contains different
+   executables (yices-sat is the SAT solver, and yices is the 
+   SMT solver).
+
+2) Assuming you've installed Yices 2 in a directory such as 
+    /home/lambda/yices-2.0.0/  then both Yices 2 solvers will
+    be in /home/lambda/yices-2.0.0/bin.
+
+  For SAL to find these solvers at run time: edit (or create) the file 
+   .salrc file in your home directory and add the following lines
+
+   (sal/set-yices2-sat-command! "/home/lambda/yices-2.0.0/bin/yices-sat")
+   (sal/set-yices2-command! "/home/lambda/yices-2.0.0/bin/yices")
+
+  Adjust this to your own installation. On Cygwin, the Yices 2 solvers
+  have an '.exe' suffix.
+
+3) To select Yices 2 instead of Yices 1 when using sal-bmc or sal-inf-bmc,
+   use the command-line option -s yices2.
+
+
+
+
+

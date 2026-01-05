@@ -1,0 +1,18 @@
+(context math () ()
+  
+  (define (gcd::nat m::nat n::nat)
+    (if (= n 0) 
+      m
+      (let ((r::nat (mod m n)))
+        (if (= r 0)
+          n
+          (gcd n r)))))
+  
+  (define (lcm::nat m::nat n::nat)
+    (cond
+     ((= n m) m)
+     ((= (mod m n) 0) m)
+     ((= (mod n m) 0) n)
+     (else (* (div m (gcd m n)) n))))
+
+  )

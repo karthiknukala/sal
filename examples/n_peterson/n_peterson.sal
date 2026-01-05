@@ -1,0 +1,59 @@
+n_peterson { n : natural } : context =
+begin
+
+	pid : type = scalarset(n);
+  priority : type = [0..n];
+  pc : type = {l0, l1, l2, l3, l4};
+
+  lifted_pid : type = datatype
+                         undef,
+                         lift(val:pid)
+                      end;
+
+  proc [ i : pid ] : module =
+  begin
+    local pc : pc
+    local localj : priority
+    global q : array pid of priority
+    global turn : array priority of lifted_pid
+    initialization
+      pc = l0;
+      localj = 0;
+      q[i] = 0;
+    transition
+      [
+	       exec_inc_j_and_while:
+           pc = l0 --> pc' = l1; localj' = 1;
+         []
+         execute_assign_qi_with_j:
+           pc = l1 --> pc' = l2; q'[i] = localj
+         []
+         execute_assign_turnj_i:
+           pc = l2 --> turn'[localj] = lift(i); pc' = l3;   
+         []
+         execute_wait_until:
+           pc = l3 and ((forall(k : pid): k /= i => q[k] < localj)
+                        or
+                        turn[localj] /= lift(i))
+           -->
+           localj' = localj + 1;
+           pc' = if localj + 1 < n then l1 else l4 endif;
+         []
+         execute_critical_and_assign_qi_0:
+           pc = l4 --> pc' = l0; q'[i] = 1;
+      ]
+  end;
+
+  setup : module =
+  begin
+    global turn : array priority of lifted_pid
+    initialization
+      turn = [[idx:priority] undef];
+    transition
+      [ false --> ]    
+  end;
+
+  system : module = setup [] ([] (i : pid): proc[i]);  
+
+  mutex : theorem system |- G(forall(i, j: pid): i /= j => pc[i] /= l4 or pc[j] /= l4);
+end

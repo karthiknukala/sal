@@ -1,0 +1,58 @@
+(context pcp-generic () (NumberOfTasks::nat 
+                         NumberOfSemaphores::nat
+                         max-budget::nat
+                         tasks::(@ TaskDescriptors (pcp-task ((subrange 1 NumberOfSemaphores)) (NumberOfTasks)))
+                         budgets::(array (subrange 1 NumberOfTasks) (subrange 0 max-budget)))
+
+  (define-type Semaphore (subrange 1 NumberOfSemaphores))
+
+  (import (set (Semaphore) ()))
+  (import (pcp-task (Semaphore) (NumberOfTasks)))
+  (import (pcp-rsrc (Semaphore) (NumberOfTasks tasks)))
+  (import (pcp-scheduler (Semaphore) (NumberOfTasks tasks)))
+
+  (define (uses?::bool j::JobIdx s::Semaphore)
+    (contains? tasks[j].semaphores s))
+  
+  (define-module (job id::JobIdx)
+    (begin
+      (input turn::Turn)
+      (output status::JobStatus)
+      (global rsrc::RSRC)
+      (output pc::(subrange 1 budgets[id]))
+      ;; (local t::nat)
+      (initialization
+       (= status finished)
+       (= pc 1))
+      (transition
+       ;;      (= t' 0)
+       ([]
+        (label job-body
+          ([] (s::Semaphore) ((and (< pc budgets[id])
+                                   (turn? turn' id)
+                                   (uses? id s))
+                              -->
+                              (= status' (if (= pc 1) started status))
+                              (in rsrc' (set-list (lock rsrc id s)
+                                                  (step rsrc id)
+                                                  (unlock rsrc id s)))
+                              (= pc' (+ pc 1)))))
+        (label job-finished
+          ((and (= pc budgets[id])
+                (turn? turn' id))
+           -->
+           (= rsrc' (unlock-all rsrc id))
+           (= status' finished)
+           (= pc' 1)))
+        ))))
+  
+  (define-module system
+    (|| scheduler
+        (with ((output job-status::(array JobIdx JobStatus))
+               (output job-pc::(array JobIdx (subrange 0 max-budget))))
+              ([]
+               ([] (j::JobIdx) (rename ((status job-status[j])
+                                        (pc job-pc[j]))
+                                 (job j)))
+               idle-process))))
+  )

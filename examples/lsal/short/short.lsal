@@ -1,0 +1,29 @@
+(context short () ()
+  
+  (import ltllib)
+
+  (define-type State (scalar ready busy))
+  
+  (define-module main
+    (begin
+      (input request::bool)
+      (output state::State)
+      (initialization
+       (= state ready))
+      (transition
+       (in state' (cond
+                   ((and (= state ready) request)
+                    (set-list busy))
+                   (else
+                    (set-list ready busy)))))))
+
+  (theorem th1
+    (|- main (AG (implies request (AF (= state busy))))))
+
+  (theorem th2
+    (|- main (G (implies request (F (= state busy))))))
+
+  (theorem th3 
+    (|- main (responds-to (= state busy) request)))
+
+  )

@@ -1,0 +1,845 @@
+C_COPYRIGHT([
+
+ SAL 
+ Copyright (C) 2006, 2011, SRI International.  All Rights Reserved.
+
+ This program is free software; you can redistribute it and/or 
+ modify it under the terms of the GNU General Public License 
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ GNU General Public License for more details. 
+ 
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software 
+ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. 
+
+])
+
+AC_PREREQ(2.50)
+AC_INIT(src/sxml-package.scm)
+
+salenv_version_major="3"
+salenv_version_minor="3"
+salenv_version="$salenv_version_major.$salenv_version_minor"
+AC_SUBST(salenv_version)
+AC_SUBST(salenv_version_minor)
+AC_SUBST(salenv_version_major)
+
+
+#
+# DOT_A_LIBS contains the extra .a libraries used to build the SAL runtime.
+# I need this variable because I will copy them into the distribution package.
+# They are included in the distribution package because of the explicit state
+# model checker
+#
+DOT_A_LIBS="" 
+
+
+dnl
+dnl CSL_CHECK_DOT_A_LIB(list, directory, decl, code, script)
+dnl ----------------------------------------------------------------
+dnl try to find usable versions of static libraries
+dnl - list is a list of library names (separated by spaces) to search for
+dnl - if directory is empty, then default library paths are searched otherwise
+dnl   the libraries are assumed to be in directory/lib
+dnl - decl and code are C-code fragments for checking libraries
+dnl
+dnl the following C-code is compiled and linked against the candidate 
+dnl libraries and executed.
+dnl  
+dnl     #include <string.h>
+dnl     #include <stdlib.h>
+dnl     <decl>
+dnl     int main() {
+dnl        <code>;
+dnl        return 0;
+dnl     }
+dnl 
+dnl if executing this returns 0 then the libraries are used
+dnl 
+dnl Otherwise <script> is executed
+dnl
+AC_DEFUN([CSL_CHECK_DOT_A_LIB],
+[   
+AC_MSG_NOTICE([Searching for $1])
+if test -z "$2"; then
+   #
+   # Some (non-GNU) versions of ld do not recognize --verbose
+   # use LD_LIBRARY_PATH as default in such cases.
+   #
+   if ld --verbose > /dev/null 2>&1; then 
+      search_libs=`ld --verbose | grep SEARCH_DIR | sed -e 's,SEARCH_DIR(\"\?,,g' -e 's,\"\?);,,g'`
+   else
+      search_libs=`echo $LD_LIBRARY_PATH | sed -e 's,:, ,g'`
+   fi
+   #
+   # Add Homebrew paths for macOS (ARM and Intel)
+   #
+   if test -d /opt/homebrew/lib; then
+      search_libs="/opt/homebrew/lib $search_libs"
+   fi
+   if test -d /usr/local/lib; then
+      search_libs="/usr/local/lib $search_libs"
+   fi
+   #
+   # Add other paths in -L options from $LDFLAGS
+   #   
+   prev_l_opt=false
+   for ld_arg in $LDFLAGS; do
+     if test "$prev_l_opt" = "true"; then
+        search_libs="$search_libs $ld_arg"
+     else 
+        if test "$ld_arg" = "-L"; then
+           prev_l_opt=true 
+        else
+           libprefix=`echo $ld_arg | cut -c -2`
+           body=`echo $ld_arg | cut -c 3-`
+           if test "$libprefix" = "-L"; then
+             search_libs="$search_libs $body"
+           else
+             libprefix=`echo $ld_arg | cut -c -15`
+             body=`echo $ld_arg | cut -c 16-`
+             if test "$libprefix" = "--library-path"; then
+               search_libs="$search_libs $body"
+             fi
+           fi   
+        fi
+     fi
+   done
+else
+   #
+   # if $2 is given then search in $2/lib and $2/lib64
+   #
+   search_libs=""
+   if test -d $2/lib; then 
+      search_libs="$2/lib $search_libs"
+   fi
+   if test -d $2/lib64; then
+      search_libs="$2/lib64 $search_libs"
+   fi
+fi
+olibs=$LIBS
+ocppflags=$CPPFLAGS
+LIBDIR=""
+LIBPARENTDIR=""
+for ldir in $search_libs; do
+    AC_MSG_CHECKING([for $1 in $ldir])
+    found_all="true"
+    for target_lib in $1; do 
+        if test ! -f $ldir/$target_lib; then
+           found_all="false"
+        fi
+    done
+    if test "$found_all" = "true"; then
+       AC_MSG_RESULT(found)
+       currlibs=""
+       for target_lib in $1; do
+         currlibs="$currlibs $ldir/$target_lib"
+       done
+       LIBS="$currlibs $olibs"
+       tmppath=`dirname $ldir`
+       CPPFLAGS="-I$tmppath/include $ocppflags"
+       AC_TRY_RUN([#include<string.h>
+#include<stdlib.h>
+$3
+int main() {
+  $4
+  ;
+  return 0;
+}], target_lib_ok=yes, target_lib_ok=no, target_lib_ok=no)
+       AC_MSG_CHECKING([$1 at $ldir])
+       if test $target_lib_ok = yes; then
+         AC_MSG_RESULT(yes)
+         LIBDIR=$ldir
+         LIBPARENTDIR=`dirname $ldir`
+         break
+       else
+         AC_MSG_RESULT(no)
+       fi
+    else
+       AC_MSG_RESULT([not found])
+    fi
+done
+LIBS=$olibs 
+CPPFLAGS=$ocppflags
+if test -z "$LIBDIR"; then
+   $5
+else
+   # Only update LIBS/DOT_A_LIBS/CPPFLAGS if the library was found
+   currlibs=""
+   for target_lib in $1; do
+       currlibs="$currlibs $LIBDIR/$target_lib"
+   done
+   LIBS="$currlibs $LIBS"
+   DOT_A_LIBS="$currlibs $DOT_A_LIBS"
+   CPPFLAGS="-I$LIBPARENTDIR/include $CPPFLAGS"
+fi
+])
+
+
+
+
+dnl
+dnl CSL_CHECK_STATIC_GMP(ligmp,includedir)
+dnl ------------------------------------
+dnl try to find the full path to a usable libgmp.a, use $1 if it's not empty
+dnl if $2 is not empty, then the checks are compiled with -I$2 
+dnl
+dnl if everything works, then set STATIC_GMP to the fullpath of libgmp.a
+dnl and set STATIC_GMP_INCLUDE_DIR to $2
+dnl
+dnl Based on CSL_CHECK_DOT_A_LIB
+dnl
+AC_DEFUN([CSL_CHECK_STATIC_GMP],
+[
+AC_MSG_NOTICE([Trying to find a usable libgmp.a])
+save_cppflags=$CPPFLAGS
+save_libs=$LIBS
+#
+# add extra -I option, must be first in CPPFLAGS
+#
+testincludedir=""
+if test "x$2" != x; then
+   if test -f $2/gmp.h; then
+      CPPFLAGS="-I$2 $CPPFLAGS"
+      testincludedir=$2
+   else
+      AC_MSG_ERROR([*** gmp.h not found in $2. Check --with-static-gmp-include-dir option ***])
+   fi
+fi
+#
+# if $1 is not given, search for it in library paths
+# 
+if test -z "$1"; then
+   #
+   # Some (non-GNU) versions of ld do not recognize --verbose
+   # use LD_LIBRARY_PATH as default in such cases.
+   #
+   # On ARM Macs (M1/M2/M3), Homebrew installs to /opt/homebrew
+   # Add common Homebrew paths for both Intel and ARM Macs
+   #
+   if ld --verbose > /dev/null 2>&1; then 
+      search_libs=`ld --verbose | grep SEARCH_DIR | sed -e 's,SEARCH_DIR(\"\?,,g' -e 's,\"\?);,,g'`
+   else
+      search_libs=`echo $LD_LIBRARY_PATH | sed -e 's,:, ,g'`
+   fi
+   # Add Homebrew paths for macOS
+   if test -d /opt/homebrew/lib; then
+      search_libs="/opt/homebrew/lib $search_libs"
+   fi
+   if test -d /usr/local/lib; then
+      search_libs="/usr/local/lib $search_libs"
+   fi
+   if test -d /opt/local/lib; then
+      search_libs="/opt/local/lib $search_libs"
+   fi
+   #
+   # Add other libraries from $LDFLAGS
+   #
+   prev_l_opt=false
+   for ld_arg in $LDFLAGS; do
+     if test "$prev_l_opt" = "true"; then
+        search_libs="$search_libs $ld_arg"
+     else 
+        if test "$ld_arg" = "-L"; then
+           prev_l_opt=true 
+        else
+           libprefix=`echo $ld_arg | cut -c -2`
+           body=`echo $ld_arg | cut -c 3-`
+           if test "$libprefix" = "-L"; then
+             search_libs="$search_libs $body"
+           else
+             libprefix=`echo $ld_arg | cut -c -15`
+             body=`echo $ld_arg | cut -c 16-`
+             if test "$libprefix" = "--library-path"; then
+               search_libs="$search_libs $body"
+             fi
+           fi   
+        fi
+     fi
+   done
+   #
+   # now $search_libs contain all the directories to search
+   #
+   for ldir in $search_libs; do
+       AC_MSG_CHECKING([for libgmp.a in $ldir])
+       if test -f $ldir/libgmp.a; then
+          AC_MSG_RESULT(found)
+          testlib=$ldir/libgmp.a
+          LIBS="$testlib -lm"
+          AC_MSG_CHECKING([whether $testlib is usable])
+          AC_RUN_IFELSE([
+
+#include <gmp.h>
+int main() {
+   mpz_t tst;
+   mpz_init(tst);
+   mpz_clear(tst);
+   if ((__GNU_MP_VERSION < 4) || 
+       ((__GNU_MP_VERSION == 4) && (__GNU_MP_VERSION_MINOR < 1))) {
+     return 1;
+   }
+   return 0;
+}
+         ],run_ok=yes,run_ok=no,run_ok=no)
+         #
+         AC_MSG_RESULT([$run_ok])
+         if test $run_ok = yes; then
+            STATIC_GMP=$testlib
+            STATIC_GMP_INCLUDE_DIR=$testincludedir
+            break
+         fi
+      else
+        AC_MSG_RESULT(no)
+      fi
+   done
+#
+#
+else
+  #
+  # User gave option --with-static-gmp=xxx
+  # Check whether the specified xxx actually works
+  #
+  testlib=$1
+  AC_MSG_CHECKING([for $testlib])
+  if test -f $testlib; then
+     AC_MSG_RESULT(found)
+     LIBS="$testlib -lm"
+     AC_MSG_CHECKING([whether $testlib is usable])
+     AC_RUN_IFELSE([
+
+#include <gmp.h>
+int main() {
+   mpz_t tst;
+   mpz_init(tst);
+   mpz_clear(tst);
+   if ((__GNU_MP_VERSION < 4) ||
+       ((__GNU_MP_VERSION == 4) && (__GNU_MP_VERSION_MINOR < 1))) {
+     return 1;
+   }
+   return 0;
+}
+     ],run_ok=yes,run_ok=no,run_ok=no)
+     #
+     AC_MSG_RESULT([$run_ok])
+     if test $run_ok = yes; then
+        STATIC_GMP=$testlib
+        STATIC_GMP_INCLUDE_DIR=$testincludedir
+     fi
+   else
+     AC_MSG_RESULT(no)
+     AC_MSG_ERROR([*** $testlib was not found: check option --with-static-gmp ***])
+   fi
+fi
+if test "x$STATIC_GMP" = x; then
+   AC_MSG_ERROR([*** No usable libgmp.a library was found: try --with-static-gmp option ***])
+fi
+#
+# restore CPPFLAGS and LIBS
+#
+CPPFLAGS=$save_cppflags
+LIBS=$save_libs
+])
+
+
+
+#
+# Root directory, Architecture, OS
+#
+pwd=`pwd`
+SALENV_BOOTDIR=$pwd
+ARCH=`./config.guess`
+posixos=`./os`
+
+MINGW32="False"
+case "$ARCH" in
+     *mingw32)
+        MINGW32="True"
+        ;;
+esac
+
+
+dnl
+dnl Configure flags and options
+dnl
+
+SALENV_BUILD_MODE="release"
+AC_ARG_ENABLE(debug, [AS_HELP_STRING([--enable-debug],[compile with debugging information [default=don't]])],
+if test "x$enable_debug" = xyes; then
+  SALENV_BUILD_MODE="debug"
+fi)
+
+
+SALENV_STATIC="no"
+AC_ARG_ENABLE(static, [AS_HELP_STRING([--enable-static],[turn on static compilation mode [default=dynamic]])],
+if test "x$enable_static" = xyes; then
+  SALENV_STATIC="yes"
+fi)
+
+
+# --enable-dynamic overrides --enable-static
+SALENV_ENABLE_DYNAMIC="no"
+AC_ARG_ENABLE(dynamic, [AS_HELP_STRING([--enable-dynamic],[turn on dynamic link libraries [default=don't]])],
+if test "x$enable_dynamic" = xyes; then
+  SALENV_ENABLE_DYNAMIC="yes"
+  SALENV_STATIC="no" 
+fi)
+
+
+BIGLOO_TRACE="#f"
+AC_ARG_ENABLE(trace, [AS_HELP_STRING([--enable-trace],[turn on tracing for salenv [default=don't]])],
+if test "x$enable_trace" = xyes; then
+  BIGLOO_TRACE="#t"
+fi)
+
+
+AC_ARG_ENABLE(profile, [AS_HELP_STRING([--enable-profile],[compile for profiling [default=don't]])],
+if test "x$enable_profile" = xyes; then
+   SALENV_BUILD_MODE="profile"
+fi)
+
+
+AC_ARG_ENABLE(bench, [AS_HELP_STRING([--enable-bench],[compile with maximal optimization level [default=don't]])],
+if eval "test x$enable_bench = xyes"; then
+  SALENV_BUILD_MODE="bench"
+fi)
+
+
+USE_ICS="no"
+AC_ARG_ENABLE(ics, [AS_HELP_STRING([--enable-ics],[use ICS in SAL [default=don't]])],
+if eval "test x$enable_ics = xyes"; then
+   USE_ICS="yes"
+fi)
+
+
+USE_YICES="yes"
+AC_ARG_ENABLE(yices, [AS_HELP_STRING([--disable-yices],[don't use Yices in SAL [default=use]])],
+if eval "test x$enable_yices = xno"; then
+   USE_YICES="no"
+fi)
+
+
+static_libgmp=""
+AC_ARG_WITH(static-gmp,[AS_HELP_STRING([--with-static-gmp=path-to-ligmp.a],[Path to static libgmp.a library])],
+if test "x$withval" != x ; then
+   static_libgmp=$withval
+fi)
+
+static_includegmp=""
+AC_ARG_WITH(static-gmp-include-dir,
+            [AS_HELP_STRING([--with-static-gmp-include-dir=directory],
+                            [Location of include file gmp.h compatible with libgmp.a (use only on cygwin)])],
+if test "x$withval" != x ; then
+   static_includegmp=$withval
+fi)
+
+
+AC_ARG_WITH(cudd, [AS_HELP_STRING([--with-cudd=/path/to/cudd],[Directory where cudd is installed])])
+
+AC_ARG_WITH(ics, [AS_HELP_STRING([--with-ics=/path/to/ics],[Full path to ICS executable])],
+if test $USE_ICS = no; then
+   AC_MSG_WARN([*** ICS support is disabled. Ignoring --with-ics option ***]);
+fi
+)
+
+AC_ARG_WITH(yices, [AS_HELP_STRING([--with-yices=/path/to/yices],[Full path to Yices executable])],
+if test $USE_YICES = no; then
+   AC_MSG_WARN([*** YICES support is disabled. Ignoring --with-yices option ***]);
+fi
+)
+
+dnl
+dnl CHECKING PROGRAMS
+dnl -----------------
+
+AC_PROG_CC(gcc)
+AC_PROG_CXX(g++)
+AC_PROG_MAKE_SET
+
+AC_CHECK_PROG(AR, ar, ar)
+# ar on AIX needs to know the object file format 
+case "$target" in
+  powerpc64*-*-aix*)
+    AR="$AR -X 64"
+    ;;
+esac   
+
+AC_CHECK_TOOL(RANLIB, ranlib, :)
+
+
+#
+# Check BIGLOO
+#
+# Updated for modern Bigloo 4.x and ARM64 Macs
+requiredbigloo=4.0a
+bigloohttp="https://www-sop.inria.fr/indes/fp/Bigloo/"
+AC_CHECK_PROG(BIGLOO,[bigloo -help],bigloo,no)
+if test "$BIGLOO" = no; then
+  AC_MSG_ERROR([*** Cannot find bigloo-scheme compiler - please download it from $bigloohttp ***])
+fi
+BIGLOOFLAGS=""
+
+
+#
+# CHECKING BIGLOO Version
+# Support both old and new version formats
+#
+AC_MSG_CHECKING([bigloo version])
+BIGLOO_VERSION=`bigloo -q -eval "(begin (print *bigloo-version*) (exit 0))" 2>/dev/null`
+AC_MSG_RESULT([$BIGLOO_VERSION])
+
+# Check if version is acceptable (4.0a or newer recommended, but allow 3.x)
+bigloo -q -eval "(exit (if (or (string>=? *bigloo-version* \"$requiredbigloo\") (string>=? *bigloo-version* \"3.0\")) 0 1))" 2>/dev/null
+if test $? != "0"; then
+  AC_MSG_WARN([*** Bigloo version $BIGLOO_VERSION may be too old. Release $requiredbigloo or more recent is recommended. ***])
+fi
+
+
+#
+# GETTING BIGLOO Library Directory
+#
+AC_MSG_CHECKING([bigloo library directory])
+BIGLOOLIBDIR=`bigloo -q -eval "(begin (print *default-lib-dir*) (exit 0))"`
+AC_MSG_RESULT($BIGLOOLIBDIR)
+
+
+#
+# Check bdepend/bgdldepend
+#
+AC_MSG_CHECKING(for bgldepend)
+if (LD_LIBRARY_PATH=$BIGLOOLIBDIR:$LD_LIBRARY_PATH; BIGLOOLIB=$BIGLOOLIBDIR; bgldepend) > /dev/null 2> /dev/null; then
+   BDEPEND=bgldepend
+   AC_MSG_RESULT(yes)
+else 
+   AC_MSG_RESULT(no)
+   AC_MSG_CHECKING(for bdepend)
+   if (LD_LIBRARY_PATH=$BIGLOOLIBDIR:$LD_LIBRARY_PATH; BIGLOOLIB=$BIGLOOLIBDIR; bdepend) > /dev/null 2> /dev/null; then
+     BDEPEND=bdepend
+     AC_MSG_RESULT(yes)
+   else
+     AC_MSG_RESULT(no)
+     AC_MSG_ERROR([*** Cannot find bdepend or bgldepend - please reinstall the bigloo compiler ***])
+   fi
+fi
+
+
+#
+# Check ICS and set ICS_BIN_DIR
+#
+ICS_BIN_DIR=""
+if test $USE_ICS = yes; then
+   AC_MSG_CHECKING(ics)
+   found=yes
+   if test -z "$with_ics"; then
+      ICS_EXE=`which ics 2>&1` || found=no
+   else
+      ICS_EXE=$with_ics      
+   fi
+
+   if test $found = yes && test -x $ICS_EXE; then
+      AC_MSG_RESULT(found)
+      AC_MSG_CHECKING(whether ics runs)
+      if $ICS_EXE -version > /dev/null 2> /dev/null; then
+         AC_MSG_RESULT(yes)
+         ICS_BIN_DIR=`dirname $ICS_EXE`
+      else
+         AC_MSG_RESULT(no)
+         AC_MSG_ERROR([*** Error executing ICS ($ICS_EXE) ***])
+      fi
+   else
+      AC_MSG_RESULT(not found)
+      AC_MSG_ERROR([*** Cannot find ICS. Please download it at http://ics.csl.sri.com or use --disable-ics ***])
+   fi
+fi
+
+
+#
+# Check Yices and set YICES_BIN_DIR
+# 
+YICES_BIN_DIR=""
+if test $USE_YICES = yes; then
+   found=yes
+   AC_MSG_CHECKING(yices)
+   if test -z "$with_yices"; then
+      YICES_EXE=`which yices 2>&1` || found=no
+   else
+      YICES_EXE=$with_yices
+   fi
+
+   if test $found = yes && test -x $YICES_EXE; then
+     AC_MSG_RESULT(found)
+     AC_MSG_CHECKING(whether yices runs)
+     if $YICES_EXE --version > /dev/null 2> /dev/null; then
+        AC_MSG_RESULT(yes)
+        YICES_BIN_DIR=`dirname $YICES_EXE`
+     else
+        AC_MSG_RESULT(no)
+	AC_MSG_ERROR([*** Error executing Yices ($YICES_EXE) ***])
+     fi
+   else
+     AC_MSG_RESULT(not found)
+     AC_MSG_ERROR([*** Cannot find Yices. Please download it at http://yices.csl.sri.com or use --disable-yices ***])
+   fi
+fi
+
+dnl
+dnl CHECKING LIBRARIES
+dnl ------------------
+AC_CHECK_HEADER([sys/stat.h],, AC_MSG_ERROR([*** sys/stat.h header file was not found. ***]))
+AC_CHECK_HEADER([assert.h],, AC_MSG_ERROR([*** assert.h header file was not found. ***]))
+AC_CHECK_HEADER([string.h],, AC_MSG_ERROR([*** string.h header file was not found. ***])) 
+AC_CHECK_HEADER([sys/times.h], CPPFLAGS="-DHAS_SYS_TIMES $CPPFLAGS",)
+
+
+#
+# CHECKING STATIC GMP LIBRARY
+# ---------------------------
+AC_CHECK_HEADER([gmp.h],
+    GMP='gmp',
+    AC_MSG_ERROR([*** GMP libray header files not found. Try to set the environment variable (CPPFLAGS) ***]))
+
+#
+# Search for libgmp.a version 4.1.x or newer
+# ------------------------------------------
+# set full path in STATIC_GMP
+#
+# optionally, the user may provide an include directory where gmp.h is located
+# This mostly for compiling on cygwin because the default version of gmp.h
+# (say in /usr/include) may be for a dynamically loadable library. 
+# On cygwin, gmp.h for libgmp.a is different from gmp.h for libgmp.dll.
+#
+# If the include directory is given and the version is OK then
+# it's copied in STATIC_GMP_INCLUDE_DIR.
+#
+STATIC_GMP=""
+STATIC_GMP_INCLUDE_DIR=""
+AC_SUBST(STATIC_GMP)
+AC_SUBST(STATIC_GMP_INCLUDE_DIR)
+
+if test "$posixos" = cygwin; then
+  #
+  # On cygwin: print a warning if user gave --with-gmp=xxx but not
+  # --with-static-gmp-include-dir=yyy
+  if test "x$static_libgmp" != x && test "x$static_includegmp" = x ; then
+     AC_MSG_WARN([*** cygwin may need static-gmp-include-dir to be specified ***])
+  fi
+fi
+
+CSL_CHECK_STATIC_GMP($static_libgmp,$static_includegmp)
+
+#
+# Add to DOT_A_LIB, LIBS, and CPPFLAGS
+#
+DOT_A_LIBS="$STATIC_GMP $DOT_A_LIBS"
+LIBS="$STATIC_GMP $LIBS"
+if test "x$STATIC_GMP_INCLUDE_DIR" != x; then
+  CPPFLAGS="-I$STATIC_GMP_INCLUDE_DIR $CPPFLAGS"
+fi
+
+#
+# END GMP SEARCH
+#
+
+
+#
+# CUDD (requires -lm)
+#
+AC_CHECK_LIB(m, atan, LIBS="-lm $LIBS", 
+	     AC_MSG_ERROR([*** Math library (libm) not found. Try to set the environment variable LDFLAGS ***]))
+
+#
+# CUDD detection - support both CUDD 3.x (single library) and older versions
+#
+CUDD_VERSION=""
+if test -z "$with_cudd"; then
+   # First try CUDD 3.x (single libcudd.a, no util.h)
+   AC_MSG_NOTICE([Searching for CUDD 3.x (single library)])
+   CSL_CHECK_DOT_A_LIB([libcudd.a], $with_cudd,
+                       [
+                         #include<stdio.h>
+                         #include<cudd.h>
+                       ],
+                       [
+                         DdManager * manager = Cudd_Init(0,0,CUDD_UNIQUE_SLOTS,CUDD_CACHE_SLOTS,0);
+                         return 0;
+                       ],
+                       CUDD_VERSION="")
+   if test -n "$LIBDIR"; then
+      CUDD_VERSION="3"
+      AC_MSG_NOTICE([Found CUDD 3.x])
+   else
+      # Fall back to old CUDD (multiple libraries)
+      AC_MSG_NOTICE([CUDD 3.x not found, searching for legacy CUDD])
+      CSL_CHECK_DOT_A_LIB([libcudd.a libst.a libutil.a libmtr.a libepd.a], $with_cudd,
+                          [
+                            #include<stdio.h>
+                            #include<util.h>
+                            #include<cudd.h>
+                          ],
+                          [
+                            DdManager * manager = Cudd_Init(0,0,CUDD_UNIQUE_SLOTS,CUDD_CACHE_SLOTS,0);
+                            return 0;
+                          ],
+                          AC_MSG_ERROR([*** CUDD libraries or include files were not found ***]))
+      CUDD_VERSION="2"
+   fi
+else
+  # Check for user-specified CUDD location
+  # First try CUDD 3.x structure
+  if test -f "$with_cudd/lib/libcudd.a"; then
+     AC_MSG_CHECKING([CUDD 3.x library at $with_cudd])
+     LIBS="$with_cudd/lib/libcudd.a $LIBS"
+     CPPFLAGS="-I$with_cudd/include $CPPFLAGS"
+     AC_TRY_RUN([
+        #include<stdio.h>
+        #include<cudd.h>
+        int main()
+        {
+            DdManager * manager = Cudd_Init(0,0,CUDD_UNIQUE_SLOTS,CUDD_CACHE_SLOTS,0);
+            return 0;
+        }], CUDD_FOUND=yes, CUDD_FOUND=no, CUDD_FOUND=no)
+     if test "$CUDD_FOUND" = "yes"; then
+        AC_MSG_RESULT(yes)
+        CUDD_VERSION="3"
+        DOT_A_LIBS="$with_cudd/lib/libcudd.a $DOT_A_LIBS"
+     else
+        AC_MSG_RESULT(no)
+     fi
+  fi
+  # Fall back to old CUDD structure
+  if test -z "$CUDD_VERSION"; then
+     AC_MSG_CHECKING([legacy CUDD library at $with_cudd])
+     LIBS="$with_cudd/cudd/libcudd.a $with_cudd/st/libst.a $with_cudd/util/libutil.a $with_cudd/mtr/libmtr.a $with_cudd/epd/libepd.a $LIBS" 
+     CPPFLAGS="-I$with_cudd/include $CPPFLAGS"
+     AC_TRY_RUN([
+        #include<stdio.h>
+        #include<util.h>
+        #include<cudd.h>
+        int main()
+        {
+            DdManager * manager = Cudd_Init(0,0,CUDD_UNIQUE_SLOTS,CUDD_CACHE_SLOTS,0);
+            return 0;
+        }], CUDD_FOUND=yes, CUDD_FOUND=no, CUDD_FOUND=no)
+     if test "$CUDD_FOUND" = "yes"; then
+        AC_MSG_RESULT(yes)
+        CUDD_VERSION="2"
+     else
+        AC_MSG_RESULT(no)
+        AC_MSG_ERROR([*** CUDD libraries or include files were not found at $with_cudd.])
+     fi
+  fi
+fi
+
+# Define preprocessor macro for CUDD version
+if test "$CUDD_VERSION" = "3"; then
+   CPPFLAGS="-DCUDD_VERSION_3 $CPPFLAGS"
+fi
+AC_SUBST(CUDD_VERSION)
+
+dnl
+dnl Set scripts
+dnl 
+salenv_exec="salenv-exec"
+salenv_doc_db="salenv.doc.db"
+sal_front_end_code="sal-wfc-front-end.scm lsal2xml-front-end.scm sal2bool-front-end.scm sal-path-finder-front-end.scm sal-smc-front-end.scm sal-bmc-core-front-end.scm sal-bmc-front-end.scm sal-inf-bmc-front-end.scm sal-script-util.scm sal-deadlock-checker-front-end.scm sal-simulator-front-end.scm sal-wmc-front-end.scm ltl2buchi-front-end.scm sal-emc-front-end.scm sal-path-explorer-front-end.scm sal-atg-core.scm sal-atg-front-end.scm sal-atg-core2.scm"
+sal_core_scripts="salenv salenv-safe sal-wfc lsal2xml sal2bool sal-smc sal-bmc sal-inf-bmc sal-path-finder sal-deadlock-checker sal-sim sal-wmc ltl2buchi sal-emc sal-path-explorer sal-atg sal-atg2"
+if eval "test x$SALENV_STATIC = xyes"; then
+   sal_scripts=$sal_core_scripts
+else
+   sal_scripts="$sal_core_scripts sal-sld sal-sc"
+fi
+
+
+dnl
+dnl Build sal-version.scm and version.py
+dnl 
+salenv_date=`date`
+echo ";; Automatically generated file (don't edit)" > src/sal-version.scm
+echo "(module sal-version" >> src/sal-version.scm
+echo "        (export (salenv/build-date)" >> src/sal-version.scm
+echo "                (salenv/version))" >> src/sal-version.scm
+echo "        (eval (export-exports)))" >> src/sal-version.scm
+echo "" >> src/sal-version.scm
+echo "(define (salenv/build-date) \"$salenv_date\")" >> src/sal-version.scm
+echo "" >> src/sal-version.scm
+echo "(define (salenv/version) \"$salenv_version\")" >> src/sal-version.scm
+
+echo "# Automatically generated file (don't edit)" > gui/version.py
+echo "BUILD_DATE=\"$salenv_date\"" >> gui/version.py
+echo "" >> gui/version.py
+echo "VERSION=\"$salenv_version\"" >> gui/version.py
+echo "" >> gui/version.py
+echo "def GetBuildDate(): " >> gui/version.py
+echo "    return BUILD_DATE" >> gui/version.py
+echo "" >> gui/version.py
+echo "def GetVersion(): " >> gui/version.py
+echo "    return VERSION" >> gui/version.py
+
+dnl
+dnl Build version.texi
+dnl 
+echo "@c -- Automatically generated file (don't edit) -------------------------------- @c" > doc/version.texi
+echo "@c -- Version and Date ----------------------------------------------------------@c" >> doc/version.texi
+echo "@set salenvvers $salenv_version" >> doc/version.texi
+echo "@set salenvdate $salenv_date" >> doc/version.texi
+
+dnl
+dnl Force the recompilation of the following files.
+dnl They are configuration dependent.
+dnl
+touch src/compile-and-load.scm 
+
+dnl
+dnl Extract DOT_A support lib names
+dnl
+DOT_A_LIB_NAMES=""
+for lib in $DOT_A_LIBS
+do
+   DOT_A_LIB_NAMES="$DOT_A_LIB_NAMES `basename $lib`"
+done
+
+AC_SUBST(ARCH)
+AC_SUBST(posixos)
+AC_SUBST(LIBS)
+AC_SUBST(CPPFLAGS)
+AC_SUBST(SALENV_BUILD_MODE)
+AC_SUBST(SHELL)
+AC_SUBST(salenv_exec)
+AC_SUBST(salenv_doc_db)
+AC_SUBST(sal_front_end_code)
+AC_SUBST(sal_scripts)
+AC_SUBST(BIGLOO)
+AC_SUBST(BDEPEND)
+AC_SUBST(SED)
+AC_SUBST(BIGLOOLIBDIR)
+AC_SUBST(SALENV_BOOTDIR)
+AC_SUBST(BIGLOO_TRACE)
+AC_SUBST(CUDD_FOUND)
+AC_SUBST(SALENV_ENABLE_DYNAMIC)
+AC_SUBST(SALENV_STATIC)
+AC_SUBST(DOT_A_LIBS)
+AC_SUBST(DOT_A_LIB_NAMES)
+AC_SUBST(ICS_BIN_DIR)
+AC_SUBST(YICES_BIN_DIR)
+AC_SUBST(USE_ICS)
+AC_SUBST(USE_YICES)
+
+if test $USE_ICS = yes; then
+   echo "--------------------------------"
+   echo "Using ICS:"
+   $ICS_BIN_DIR/ics -version
+   echo ""
+fi
+
+if test $USE_YICES = yes; then
+   echo "--------------------------------"
+   echo -n "Using YICES:"
+   $YICES_BIN_DIR/yices --version
+   echo ""
+fi
+
+AC_OUTPUT(src/trace.scm src/trace.macros doc/Makefile Makefile distribution/build-binary-distribution.sh distribution/build-source-distribution.sh install/bin-INSTALL install/bin-install.sh install/local-install.sh install/source-INSTALL install/mac/Info.plist install/mac/Description.plist install/mac/Welcome.txt gui/config.py install/mac/postflight)

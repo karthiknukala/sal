@@ -1,0 +1,28 @@
+SAL -> ICS interface
+--------------------
+
+ICS (Integrated Canonizer and Solver) is an efficient decision procedure for a
+fragment of first-order equational logic. The ICS executable is part of the SAL 
+distribution package. The full ICS distribution package can be downloaded 
+from the following website:
+
+http://ics.csl.sri.com/
+
+Remark: SAL and ICS share the same license agreement.
+Remark: ICS is included in the SAL distribution package.
+
+ICS is used in the tools sal-bmc and sal-inf-bmc. ICS is also the default
+decision procedure used by these tools. 
+
+Example: Checks the property 'mutex' in the context 'inf-bakery' using ICS.
+
+   % sal-inf-bmc -v 10 inf-bakery mutex
+
+The default behavior of SAL is to look for an executable called `ics'. 
+The command used to execute ICS can be changed using the statement:
+
+(sal/set-ics-command! "<path-to-ics>/ics")
+
+This statement should be included in your `.salrc' file in your home directory.
+
+

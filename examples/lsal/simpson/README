@@ -1,0 +1,29 @@
+Simpson's four-slot protocol
+----------------------------
+
+Description: Simpson's four-slot fully asynchronous communication mechanism allows
+             single reader and writer processes to access a shared memory in such
+             a way that interference between concurrent reads and writes is avoided,
+             the reader always accesses the most recent data stored by the writer,
+             and neither process need wait for the other.  In computer science
+             parlance, it is a means for implementing a wait-free atomic register.
+
+Commands:
+
+- Prove the mutual-exclusion property
+
+  % sal-smc -v 3 four-slot mutex
+
+- Produce a counterexample for an invalid version of the Simpson's protocol
+
+  % sal-smc -v 3 four-slot-with-bug mutex
+
+- Produce a counterexample using BMC
+
+  % sal-bmc -v 3 four-slot-with-bug mutex
+
+- Produce the shortest counter-example using BMC
+
+  % sal-bmc -v 3 --iterative four-slot-with-bug mutex
+
+

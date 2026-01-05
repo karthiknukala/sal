@@ -1,0 +1,34 @@
+(context pcp-task (Semaphore) (NumberOfTasks::nat)
+  
+  (import (set (Semaphore) ()))
+
+  (define-type TaskDescriptor (record priority::nat 
+                                      period::nat 
+                                      semaphores::Set))
+
+  (define-type JobIdx (subrange 1 NumberOfTasks))
+
+  (define-type TaskDescriptors (array JobIdx TaskDescriptor))
+
+  (define (priority::nat j::JobIdx t::TaskDescriptors)
+    t[j].priority)
+
+  (define (period::nat j::JobIdx t::TaskDescriptors)
+    t[j].period)
+
+  ;; In the Prioriry Ceiling Protocol, each semaphore "S" is assigned a fixed ceiling
+  ;; that is equal to the highest priority among the tasks that need access to "S".
+  ;; The function "ceiling" computes the ceiling of the given semaphore.
+  (define (ceiling-aux::nat s::Semaphore t::TaskDescriptors j::JobIdx max::nat)
+    (if (<= j NumberOfTasks)
+      (let ((result::nat (ceiling-aux s t (+ j 1) max)))
+        (if (and (contains? t[j].semaphores s)
+                 (> t[j].priority result))
+          t[j].priority
+          result))
+      max))
+
+  (define (ceiling::nat s::Semaphore t::TaskDescriptors)
+    (ceiling-aux s t 1 0))
+
+  )

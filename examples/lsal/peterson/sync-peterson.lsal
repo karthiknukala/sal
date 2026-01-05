@@ -1,0 +1,63 @@
+(context sync-peterson () ()
+
+	(define-type PC (scalar trying critical sleeping))
+		
+  (define-module (process tval::bool)
+    (begin
+      (input pc2::PC x2::bool)
+      (output pc1::PC x1::bool)
+			(local flag::bool)
+      (initialization
+       (= pc1 sleeping))
+      (transition
+       ([]
+        (label wakening
+          ((= pc1 sleeping)
+           -->
+           (= pc1' trying)
+					 (= x1' (= x2 tval))))
+        (label entering-critical
+          ((and (= pc1 trying) (or (= pc2 sleeping) (= x1 (/= x2 tval))))
+           -->
+           (= pc1' critical)))
+        (label leaving-critical
+          ((= pc1 critical)
+           -->
+           (= pc1' sleeping)
+           (= x1' (= x2 tval))))
+				;; I need the else, otherwise the system would deadlock
+				(else --> (= flag' (not flag)))))))
+
+	(define-module system
+		(|| (process false)
+				(rename ((pc2 pc1) (pc1 pc2)
+								 (x2 x1) (x1 x2))
+					(process true))))
+
+	(theorem mutex
+    (|- system (G (not (and (= pc1 critical) (= pc2 critical))))))
+		 
+	(theorem invalid
+    (|- system (G (not (and (= pc1 trying) (= pc2 critical))))))
+
+  (theorem livenessbug 
+    (|- system (G (F (= pc2 critical)))))
+
+  (theorem livenessbug2
+    (|- system (G (implies (= pc2 trying) (F (= pc2 critical))))))
+
+  (theorem livenessbug3
+    (|- system (implies (G (F (= pc2 trying))) (G (F (= pc2 critical))))))
+
+  (theorem liveness1
+    (|- system (implies (G (F (and flag.1
+																	 (X flag.1))))
+												(G (F (= pc1 critical))))))
+
+  (theorem liveness2
+    (|- system (implies (G (F (and flag.2
+																	 (X flag.2))))
+												(G (F (= pc2 critical))))))
+
+
+	)	

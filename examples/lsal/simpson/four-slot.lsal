@@ -1,0 +1,107 @@
+(context four-slot () ()
+  
+  (define-type item (subrange 0 3))
+
+  (define-module reader
+    (begin
+      (input latest::bool
+             index::(array bool bool)
+             slot::(array bool (array bool item))
+             wpc::(subrange 0 4))
+      (output reading::bool
+              rpair::bool
+              rindex::bool
+              rpc::(subrange 0 3))
+      (local out::item)
+      (initialization
+       (= reading false)
+       (= rpair false)
+       (= rindex false)
+       (= out 0)
+       (= rpc 0))
+      (transition
+       ([]
+        ((and (= rpc 0) (/= wpc 4))
+         -->
+         (= rpair' latest)
+         (= rpc' 1))
+        ((and (= rpc 0) (= wpc 4))
+         -->
+         (in rpair' (set-list true false))
+         (= rpc' 1))
+        ((= rpc 1)
+         -->
+         (= reading' rpair)
+         (= rpc' 2))
+        ((and (= rpc 2) (/= wpc 3))
+         -->
+         (= rindex' index[rpair])
+         (= rpc' 3))
+        ((and (= rpc 2) (= wpc 3))
+         -->
+         (in rindex' (set-list true false))
+         (= rpc' 3))
+        ((= rpc 3)
+         -->
+         (= out' slot[rpair][rindex])
+         (= rpc' 0))
+        ))))
+  
+  (define-module writer
+    (begin
+      (input reading::bool
+             rpc::(subrange 0 3))
+      (output latest::bool
+              index::(array bool bool)
+              slot::(array bool (array bool item))
+              wpair::bool
+              windex::bool
+              wpc::(subrange 0 4))
+      (initialization
+       (= latest false)
+       (= wpair false)
+       (= windex false)
+       (= wpc 0)
+       (= index[true] false)
+       (= index[false] false)
+       (= slot (mk-array (idx::bool) (mk-array (idx::bool) 0))))
+      (transition
+       ([]
+        (label ini
+          ((and (= wpc 0) (/= rpc 1))
+           -->
+           (= wpair' (not reading))
+           (= wpc' 1)))
+        ([] (arb::bool)
+            ((and (= wpc 0) (= rpc 1))
+             -->
+             (= wpair' arb)
+             (= wpc' 1)))
+        ((= wpc 1)
+         -->
+         (= windex' (not index[wpair]))
+         (= wpc' 2))
+        ([] (val::item)
+            ((= wpc 2)
+             -->
+             (= slot'[wpair][windex] val)
+             (= wpc' 3)))
+        ((= wpc 3)
+         -->
+         (= index'[wpair] windex)
+         (= wpc' 4))
+        ((= wpc 4)
+         -->
+         (= latest' wpair)
+         (= wpc' 0))
+        ))))
+  
+  (define-module system 
+    ([] reader writer))
+
+  (lemma mutex
+    (|- system (G (implies (and (= wpc 2) (= rpc 3))
+                           (or (/= wpair rpair) (/= windex rindex))))))
+
+  )
+  

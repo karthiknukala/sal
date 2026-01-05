@@ -1,0 +1,258 @@
+Suzuki-Kasami Distributed Mutual Exclusion Algorithm (SKDMXA) that is
+proposed in [1] is analyzed.
+---------------------------------------------------------------------
+Author: Kazuhiro Ogata
+Email: ogata@jaist.ac.jp
+
+[1] I. Suzuki and T. Kasami: A distributed mutual exclusion algorithm,
+ACM TOCS, 3(4):344-349, 1985
+
+This directory contains the three files.
+
+1. skdmxa.sal - A finite model of the algorithm: Each node makes
+   requests a finite times to enter its critical section. This model
+   does not satisfy the lockout (starvation) freedom property.
+
+2. fix_skdmxa.sal - A fixed version of the above model. This model
+   satisfies the lockout (starvation) freedom property.
+
+3. inf_skdmxa.sal - A infinite model of the algorithm: Each node makes
+   requests an unbounded times to enter its critical
+   section. k-induction is used to prove that this model satisfies the
+   mutual exclusion property. 
+
+First the algorithm is briefly described.  The program executed by
+each node i \in {1,...,N} can be described as this
+
+ procedure P1;
+ begin
+   requesting := true;
+   if not have_privilege then
+   begin
+     rn[i] := rn[i] + 1;
+     for all j in {1,2,...,N} - {i} do
+       send request(i,rn[i]) to node j;
+     wait until privilege(queue,ln) is received;
+     have_privilege := true
+   end;
+   Critical Section;
+   ln[i] := rn[i];
+   for all j in {1,2,...,N} - {I} do
+     if not in(queue,j) and (rn[j] = ln[j] + 1) then
+       queue := append(queue,j);
+   if queue =/= empty then
+   begin
+     have_privilege := false;
+     send privilege(tail(queue),ln) to node head(queue)
+   end;
+   requesting := false
+ end;
+
+ procedure P2; { requesting(j,n) is received; P2 is indivisible }
+ begin
+   rn[j] := max(rn[j],n);
+   if have_privilege and not requesting and (rn[j] = ln[j] + 1) then
+   begin
+     have_privilege := false;
+     send privilege(queue,ln) to node j
+   end
+ end;
+
+where N is the number of nodes, requesting and have_privilege are
+Boolean variables, rn and ln are integer arrays of size N, and queue
+is the queue of integers. For each node i \in {1,...,N}, initially,
+requesting is false, have_privilege is true if i = 1 and false
+otherwise, rn[j] and ln[j] for each j \in {1,...,N} are 0, and queue
+is empty. 
+
+Basically, rn[j] is the number of requests made by node j and ln[j] is
+the number of the accomplished ones of them. 
+
+The basic idea in the algorithm is to transfer the privilege for
+entering a critical section with a single privilege message. 
+
+Next the common part of the three models is described.  The algorithm
+is modeled with 13 sets of transitions (try, set_req, check_priv,
+inc_req_no, send_req, wait_priv, exit, complete_req, update_queue,
+check_queue, transfer_priv, reset_req, and receive_req), each of which
+denotes part of the algorithm as this
+
+try:
+ procedure P1;
+ begin
+
+set_req:
+   requesting := true;
+
+check_priv:
+   if not have_privilege then
+   begin
+
+inc_req_no:
+     rn[i] := rn[i] + 1;
+
+send_req: (denoting one iteration of the loop)
+     for all j in {1,2,...,N} - {i} do
+       send request(i,rn[i]) to node j;
+
+wait_priv:
+     wait until privilege(queue,ln) is received;
+     have_privilege := true
+   end;
+
+   Critical Section;
+
+exit: (leaving the ciritical section)
+
+complete_req:
+   ln[i] := rn[i];
+
+update_queue: (denoting one iteration of the loop)
+   for all j in {1,2,...,N} - {I} do
+     if not in(queue,j) and (rn[j] = ln[j] + 1) then
+       queue := append(queue,j);
+
+check_queue:
+   if queue =/= empty then
+   begin
+
+transfer_priv:
+     have_privilege := false;
+     send privilege(tail(queue),ln) to node head(queue)
+   end;
+
+reset_req:
+   requesting := false
+ end;
+
+receive_req:
+ procedure P2; { requesting(j,n) is received; P2 is indivisible }
+ begin
+   rn[j] := max(rn[j],n);
+   if have_privilege and not requesting and (rn[j] = ln[j] + 1) then
+   begin
+     have_privilege := false;
+     send privilege(queue,ln) to node j
+   end
+ end;
+
+The first 12 sets of transitions are related to 12 labels (rem, l1,
+l2, l3, l4, l5, cs, l6, l7, l8, l9, and l10). If a node is at rem, l1,
+l2, l3, l4, l5, cs, l6, l7, l8, l9, and l10, then the node is ready to
+execute try, set_req, check_priv, inc_req_no, send_req, wait_priv,
+exit, complete_req, update_queue, check_queue, transfer_priv,
+reset_req, and receive_req, respectively. 
+
+The following types are defined.
+
+  Node_Id: TYPE = [1..N];
+
+  Queue_Idx: TYPE = [0..(L+1)];
+
+Node_Id denotes node IDs, and Queue_Idx denotes indexes of arrays used
+to model queues. N is the number of nodes, and L is the capacity of
+queues. 
+
+The queue is modeled as an array data and a pointer tl as this
+
+  Queue: TYPE = [# data: ARRAY Queue_Idx OF Node_Id,
+                   tl: Queue_Idx #];
+
+tl points an element into which a next item is put. If tl is 1, the
+queue is empty, and if tl is L+1, the queue is saturated. If the queue
+is not empty, data[1] is the top element.  L should be greater than or
+equal to the number N of nodes.
+
+The algorithm involves two kinds of messages: request and privilege
+messages. The types for these messages are defined as this
+
+  Request: TYPE = [# node: Node_Id, no: Bnat #]; 
+
+  Privilege: TYPE = [# queue: Queue, done: ARRAY Node_Id OF Bnat #]; 
+
+
+The network is modeled as two channels for each ordered pair
+(i,j) of nodes. The capacity of each channel is 1. Channels are
+modeled as arrays as this
+
+    GLOBAL reqmedium : ARRAY Node_Id OF ARRAY Node_Id OF ReqMsg
+
+    GLOBAL privmedium : ARRAY Node_Id OF ARRAY Node_Id OF PrivMsg
+
+The two types ReqMsg and PrivMsg are defined as this
+
+  ReqMsg: TYPE = [# new: BOOLEAN, req: Request #];
+
+  PrivMsg: TYPE = [# new: BOOLEAN, priv: Privilege #];
+
+A channel is empty if the corresponding new field is false, and
+contains a message otherwise. 
+
+Then each model is described.
+
+1. A finite model of the algorithm (skdmxa.sal).
+
+In order to make the state space finite, the number of requests made by
+each node should be finite. Then, each node is supposed to make
+requests M times to enter its critical section. 
+
+The finite model where N = 2, L = 2 and M = 2 is analyzed as follows:
+
+  sal-emc -v 3 --assertion='skdmxa{2,2,2}!mutex'
+
+  sal-smc -v 3 --assertion='skdmxa{2,2,2}!mutex'
+
+  sal-wmc -v 3 --assertion='skdmxa{2,2,2}!reachable'
+
+  sal-deadlock-checker -v 3 --module='skdmxa{2,2,2}!system'
+
+  sal-smc -v 3 --assertion='skdmxa{2,2,2}!lofree'
+
+The first one checks if the finite model satisfies the mutual
+exclusion property, the second one checks if there exists an execution
+path such that each node enters its critical section, the third one
+checks if there exist any deadlock states, and the last one checks if
+the finite model satisfies the lockout freedom property. The results
+of the first three analyses are as expected. But, the last analysis
+finds a counterexample. Any model checker of SAL 2.1 does not suppose
+any fairness to model-check liveness properties. In the last analysis,
+wait_priv and receive_req are given weak fairness.
+
+2. A fixed finite model of the algorithm (fix_skdmxa.sal).
+
+Counterexamples given by the last analysis of the previous model
+indicate that a node should not receive any request messages if the
+node is at l7, l8 or l10. Therefore, NOT(pc = l7) AND NOT(pc = l8) AND
+NOT(pc = l10) is added to the guard of receive_req. 
+
+As the previous model, the fixed finite model where N = 2, L = 2 and M
+= 2 is analyzed as follows: 
+
+  sal-emc -v 3 --assertion='skdmxa{2,2,2}!mutex'
+
+  sal-smc -v 3 --assertion='skdmxa{2,2,2}!mutex'
+
+  sal-wmc -v 3 --assertion='skdmxa{2,2,2}!reachable'
+
+  sal-deadlock-checker -v 3 --module='skdmxa{2,2,2}!system'
+
+  sal-smc -v 3 --assertion='skdmxa{2,2,2}!lofree'
+
+For this model, all the results are as expected.
+
+3. A infinite model of the algorithm (inf_skdmxa.sal). 
+
+In this model, each node can make requests an unbounded times to enter
+its critical section. Therefore, the state space can be infinite, and
+only the infinite bounded model checker can be used to analyze the
+model. k-induction is used to prove that the model satisfies the
+mutual exclusion property as this
+
+  sal-inf-bmc -v 3 -i -ice -d 1 -l lemma1 -l lemma2 --assertion='inf_skdmxa{2,2}!mutex'
+
+The two lemmas are used. They are proved with k-induction as this
+
+  sal-inf-bmc -v 3 -i -ice -d 1 --assertion='inf_skdmxa{2,2}!lemma1'
+
+  sal-inf-bmc -v 3 -i -ice -d 1 -l lemma1 --assertion='inf_skdmxa{2,2}!lemma2'
+

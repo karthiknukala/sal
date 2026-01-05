@@ -1,0 +1,136 @@
+(context dme () (num-cells::nat)
+
+	(define-module (and-gate-init init-out::bool)
+		(begin
+			(input in1::bool)
+			(input in2::bool)
+			(output out::bool)
+			(initialization
+			 (= out init-out))
+			(transition
+			 (in out' (set-list out (and in1 in2))))))
+			
+	(define-module and-gate (and-gate-init false))
+
+	(define-module or-gate
+		(begin
+			(input in1::bool)
+			(input in2::bool)
+			(output out::bool)
+			(initialization
+			 (= out false))
+			(transition
+			 (in out' (set-list out (or in1 in2))))))
+
+	(define-module c-element
+		(begin
+			(input in1::bool)
+			(input in2::bool)
+			(output out::bool)
+			(initialization
+			 (= out false))
+			(transition
+			 (in out' (if (= in1 in2)
+									(set-list in1 out)
+									(set-list out))))))
+
+	(define-module mutex-half
+		(begin 
+			(input inp::bool)
+			(input other-out::bool)
+			(output out::bool)
+			(initialization
+			 (= out false))
+			(transition
+			 ([]
+				((not (and out' other-out'))
+				 -->
+				 (in out' (set-list inp out)))))))
+
+	(define-module user
+		(begin
+			(output req::bool)
+			(input ack::bool)
+			(initialization
+			 (= req false))
+			(transition
+			 (in req' (set-list (not ack) req)))))
+
+	;; outputs left-ack, req
+	;; inputs  left-req, ack, u-ack
+	(define-module (cell token::bool)
+		(hide (not-left-ack not-u-ack not-h-out not-j-out not-e-out not-f-out not-m-out not-n-out u-req
+            a-out b-out c-out d-out e-out f-out g-out h-out i-out j-out k-out l-out m-out n-out p-out q-out r-out)
+					(|| (begin
+								(output req::bool)
+								(input q-out::bool)
+								(output left-ack::bool)
+								(output not-left-ack::bool)
+								(input r-out::bool)
+								(output u-ack::bool)
+								(output not-u-ack::bool)
+								(input h-out::bool)
+								(output not-h-out::bool)
+								(input j-out::bool)
+								(output not-j-out::bool)
+								(input e-out::bool)
+								(output not-e-out::bool)
+								(input f-out::bool)
+								(output not-f-out::bool)
+								(input m-out::bool)
+								(output not-m-out::bool)
+								(input n-out::bool)
+								(output not-n-out::bool)
+								(input p-out::bool)
+								(definition
+								 (= req p-out)
+								 (= u-ack r-out)
+								 (= not-u-ack (not u-ack))
+								 (= left-ack q-out)
+								 (= not-left-ack (not left-ack))
+								 (= not-h-out (not h-out))
+								 (= not-j-out (not j-out))
+								 (= not-e-out (not e-out))
+								 (= not-f-out (not f-out))
+								 (= not-m-out (not m-out))
+								 (= not-n-out (not n-out))
+								 ))
+							(rename ((ack u-ack) (req u-req)) user) ;; u
+							(rename ((inp u-req) (other-out b-out) (out a-out)) mutex-half) ;; a
+							(rename ((inp left-req) (other-out a-out) (out b-out)) mutex-half) ;; b
+							(rename ((in1 a-out) (in2 not-left-ack) (out c-out)) and-gate) ;; c
+							(rename ((in1 b-out) (in2 not-u-ack) (out d-out)) and-gate) ;; d
+							(rename ((in1 c-out) (in2 d-out) (out g-out)) or-gate) ;; g
+							(rename ((in1 c-out) (in2 i-out) (out e-out)) c-element) ;; e
+							(rename ((in1 d-out) (in2 i-out) (out f-out)) c-element) ;; f
+							(rename ((in1 g-out) (in2 j-out) (out h-out)) c-element) ;; h
+							(rename ((in1 g-out) (in2 not-h-out) (out k-out)) and-gate) ;; k
+							(rename ((in1 h-out) (in2 not-j-out) (out i-out)) and-gate) ;; i
+							(rename ((in1 k-out) (in2 m-out) (out l-out)) and-gate) ;; l
+							(rename ((in1 l-out) (in2 ack) (out j-out)) or-gate) ;; j
+							(rename ((in1 k-out) (in2 n-out) (out p-out)) and-gate) ;; p
+							(rename ((in1 not-e-out) (in2 not-m-out) (out n-out)) (and-gate-init (not token))) ;; n
+							(rename ((in1 not-f-out) (in2 not-n-out) (out m-out)) (and-gate-init token)) ;; m
+							(rename ((in1 e-out) (in2 m-out) (out r-out)) and-gate) ;; r 
+							(rename ((in1 f-out) (in2 n-out) (out q-out)) and-gate) ;; q
+							)))
+
+	(define-type IDX (subrange 1 num-cells))
+
+	(define-module system 
+		(with ((output Req::(array IDX bool))
+					 (output Ack::(array IDX bool))
+					 (output U-Ack::(array IDX bool)))
+					([] (i::(subrange 1 num-cells))
+					 (rename ((req Req[i]) 
+										(left-req Req[(if (= i 1) num-cells (- i 1))])
+										(ack Ack[i])
+										(left-ack Ack[(if (= i 1) num-cells (- i 1))])
+										(u-ack U-Ack[i])) 
+						 (cell (= i 1))))))
+
+	(theorem mutex (|- system (G (for-all (i::(subrange 1 (- num-cells 1)))
+																 (for-all (j::(subrange (+ i 1) num-cells))
+																	 (not (and Ack[i] Ack[j])))))))
+
+	)

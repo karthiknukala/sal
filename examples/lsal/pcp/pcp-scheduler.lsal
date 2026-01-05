@@ -1,0 +1,184 @@
+(context pcp-scheduler (Semaphore) (NumberOfTasks::nat task-descriptors::(@ TaskDescriptors (pcp-task (Semaphore) (NumberOfTasks))))
+
+  (import (pcp-task (Semaphore) (NumberOfTasks)))
+  (import (pcp-rsrc (Semaphore) (NumberOfTasks task-descriptors)))
+  (import (set (JobIdx) ()))
+  (import math)
+  
+  (define (job-period::nat j::JobIdx)
+    (period j task-descriptors))
+
+  ;; maximum period should be the lcm of the period of each task.
+  (define (compute-max-period::nat result::nat i::nat)
+    (if (<= i NumberOfTasks)
+      (compute-max-period (lcm result (job-period i)) (+ i 1))
+      result))
+
+  (define max-period::nat
+    (cond
+     ((= NumberOfTasks 0)
+      1)
+     ((= NumberOfTasks 1)
+      (job-period 1))
+     (else
+      (compute-max-period (job-period 1) 2))))
+
+  (define-type ClockRange (subrange 0 (- max-period 1)))
+
+  (define (adjust::ClockRange val::nat)
+    (if (< val max-period)
+      val
+      (- val max-period)))
+  
+  ;; In the absence of blocking, jobs of high priority are executed first
+  (define (precedes?::bool j::JobIdx k::JobIdx)
+    (>= (job-priority j) (job-priority k)))
+
+  (define-type JobState (scalar sleeping starting executing))
+  (define-type JobStatus (scalar started finished))
+
+  (define (ready-to-execute?::bool j::JobIdx job-state::(array JobIdx JobState))
+    (or (= job-state[j] starting)
+        (= job-state[j] executing)))
+
+  (define (top-job?::bool j::JobIdx rsrc::RSRC job-state::(array JobIdx JobState))
+    (and (ready-to-execute? j job-state)
+         (for-all (k::JobIdx) (implies (ready-to-execute? k job-state)
+                                       (precedes? j k)))))
+
+  (define (eligible?::bool j::JobIdx rsrc::RSRC job-state::(array JobIdx JobState))
+    (or (and (top-job? j rsrc job-state)
+             (not (blocked? rsrc j)))
+        (exists (k::JobIdx) 
+          (and (top-job? k rsrc job-state)
+               (blocked? rsrc k)
+               (contains? (blk rsrc k) j)))))
+
+  (define (lock::RSRC r::RSRC j::JobIdx s::Semaphore)
+    (alloc-step (wakeup r j) j s))
+
+  (define (unlock::RSRC r::RSRC j::JobIdx s::Semaphore)
+    (release-step (wakeup r j) j s))
+
+  (define (unlock-all::RSRC r::RSRC j::JobIdx)
+    (release-all-step r j))
+  
+  (define (step::RSRC r::RSRC j::JobIdx)
+    (wakeup r j))
+
+  (define-type Turn (datatype
+                     (job-turn job-turn-id::JobIdx)
+                     idle-turn))
+
+  (define (turn?::bool t::Turn j::JobIdx)
+    (and (job-turn? t)
+         (= (job-turn-id t) j)))
+
+  (define-module scheduler
+    (begin
+      (output clock::ClockRange)
+      (output dispatch::(array JobIdx ClockRange))
+      (output job-state::(array JobIdx JobState))
+      (input  job-status::(array JobIdx JobStatus))
+      (output turn::Turn)
+      (input  rsrc::RSRC)
+      (initialization
+       (= clock 0)
+       (= turn idle-turn)
+       (= dispatch (mk-array (j::JobIdx) 0))
+       (= job-state (mk-array (j::JobIdx) sleeping)))
+      (transition
+       (= clock' (adjust (+ clock 1)))
+       (= job-state' (mk-array (j::JobIdx)
+                               (cond
+                                ((and (= job-state[j] sleeping)
+                                      (= dispatch[j] clock))
+                                 starting)
+                                ((= job-state[j] starting)
+                                 (if (= job-status[j] started)
+                                   executing
+                                   starting))
+                                ((= job-state[j] executing)
+                                 (if (= job-status[j] finished)
+                                   (if (= dispatch[j] clock)
+                                     starting
+                                     sleeping)
+                                   executing))
+                                (else
+                                 sleeping))))
+       (= dispatch' (mk-array (j::JobIdx)
+                              (if (= dispatch[j] clock)
+                                (adjust (+ dispatch[j]
+                                           (job-period j)))
+                                dispatch[j])))
+       ([]
+        ([] (j::JobIdx) ((eligible? j rsrc job-state') 
+                         -->
+                         (= turn' (job-turn j))))
+        (else
+         -->
+         (= turn' idle-turn)))
+       )))
+       
+
+  (define (deadline-missed?::bool dispatch::(array JobIdx ClockRange) job-state::(array JobIdx JobState) clock::ClockRange)
+    (exists (j::JobIdx) (and (= dispatch[j] clock)
+                             (/= job-state[j] starting))))
+
+  (define (deadlock?::bool job-state::(array JobIdx JobState) t::Turn)
+    (and (idle-turn? t)
+         (exists (j::JobIdx) (ready-to-execute? j job-state))))
+
+  (define-module idle-process
+    (begin
+      (input turn::Turn)
+      (global rsrc::RSRC)
+      (initialization
+       (= rsrc initial-rsrc))
+      (transition
+       ([]
+        ((idle-turn? turn')
+         -->
+         (= rsrc' rsrc))))))
+
+  ;;
+  ;; Every Job module should have:
+  ;; - a "turn" input port of type JobIdx. 
+  ;; - a "init" input port of type 
+  ;;
+  (define-type SimplePC (scalar l1 l2 l3))
+
+  (define-module (simple-job id::JobIdx)
+    (begin
+      (input turn::Turn)
+      (output status::JobStatus)
+      (global rsrc::RSRC)
+      (output pc::SimplePC)
+      (initialization
+       (= status finished)
+       (= pc l1))
+      (transition
+       ([]
+        ((and (= pc l1) (turn? turn' id))
+         -->
+         (= status' started)
+         (= pc' l2))
+        ((and (= pc l2) (turn? turn' id))
+         -->
+         (= pc' l3))
+        ((and (= pc l3) (turn? turn' id))
+         -->
+         (= pc' l1)
+         (= status' finished)))
+       )))
+
+  (define-module simple-system
+    (|| scheduler
+        ([]
+         (with ((output job-status::(array JobIdx JobStatus)))
+               ([] (j::JobIdx) (rename ((status job-status[j]))
+                                 (hide (pc) (simple-job j)))))
+         idle-process)))
+         
+
+  )

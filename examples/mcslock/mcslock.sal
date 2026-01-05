@@ -1,0 +1,128 @@
+%%  MCS distributed list-based queuing lock                   
+%%  with atomic compare_and_swap operations                   
+%%
+%% This specification is based on a Murphi
+%% example.
+%%
+%% References: 						       	       	  
+%% J.M. Mellor-Crummey and M.L. Scott,					  
+%% Algorithms for Scalable Synchronization on Shared-Memory Multiprocessors,
+%% ACM transactions on computer systems, Vol 9, No 1, 1991.               
+mcslock {N:NATURAL} : CONTEXT =
+BEGIN
+
+   PID : TYPE = SCALARSET(N);
+   PC : TYPE = { L0,  %% : non critical section; 
+		                  %% : acquire => R->next := nil
+		             L1,  %% :            predecessor := fetch_and_store( L,R )
+		             L2,  %%              if (predecessor != nil)
+		             L3,  %% :               R->locked := true
+		             L4,  %% :               predecessor->next := R
+		             L5,  %% : 		           repeat while R->locked
+		             L6,  %% : critical section; 
+ 		                  %% : release => if (R->next = nil)
+		             L7,  %% :	             if compare_and_swap (L,R,nil)
+		                  %% :		              return
+		             L8,  %% :		           repeat while R->next = nil
+		             L9   %% : R->next->locked := false
+ 		           };
+
+   LIFTED_PID : TYPE = DATATYPE
+                         undef,
+                         lift(val:PID)
+                       END;
+    
+   PT_QNODE : TYPE = [# nil : BOOLEAN, p : LIFTED_PID #];
+   QNODE : TYPE = [# next : PT_QNODE, locked : BOOLEAN #];
+
+   nil_pt_qnode : PT_QNODE = (# nil := TRUE, p := undef #);
+   mk_pt_qnode(i : PID) : PT_QNODE = (# nil := FALSE, p := lift(i) #);
+
+   proc [i : PID] : MODULE =
+   BEGIN
+     LOCAL pc : PC
+     LOCAL localpred : PT_QNODE
+     GLOBAL R : ARRAY PID OF QNODE
+     GLOBAL lock : PT_QNODE
+     INITIALIZATION
+        pc        = L0;
+        localpred = nil_pt_qnode;
+     TRANSITION
+     [
+      execute_non_critical_and_assign_next_nil:
+        pc = L0 --> pc' = L1; 
+                    R'[i].next = nil_pt_qnode;
+        []
+      execute_assign_pred_FandS_L_I_lock_nil:
+        pc = L1 AND lock.nil -->
+           pc'        = L2;
+           localpred' = nil_pt_qnode;
+           lock'      = mk_pt_qnode(i);
+        []
+      execute_assign_pred_FandS_L_I_not_lock_nil:
+        pc = L1 AND NOT lock.nil -->
+           pc'        = L2;
+           localpred' = mk_pt_qnode(val(lock.p));
+           lock'      = mk_pt_qnode(i);
+        []
+      execute_if_pred_nil:
+        pc = L2 -->
+           pc' = IF localpred.nil THEN L6 ELSE L3 ENDIF;
+        []
+      execute_assign_Ilocked_true: 
+        pc = L3 -->
+           pc'          = L4;
+           R'[i].locked = TRUE;
+        []
+      execute_assign_prednext_I:
+        pc = L4 -->
+           pc'                       = L5;
+           R'[val(localpred.p)].next = mk_pt_qnode(i);   
+        []
+      execute_repeat_while_Ilocked:
+        pc = L5 -->
+           pc' = IF NOT R[i].locked THEN L6 ELSE pc ENDIF;
+        []
+      execute_critical_and_if_Inext_nil:
+        pc = L6 -->
+           pc' = IF R[i].next.nil THEN L7 ELSE L9 ENDIF;
+        []
+      execute_if_CandS_L_I_nil_lock_p_eq_i:
+        pc = L7 AND lock.p = lift(i) -->
+           pc'   = L0;
+           lock' = nil_pt_qnode;
+        []
+      execute_if_CandS_L_I_nil_lock_p_neq_i:
+        pc = L7 AND lock.p /= lift(i) -->
+           pc'   = L8;
+        []
+      execute_repeat_while_Inext_nil:
+        pc = L8 -->
+           pc'   = IF NOT R[i].next.nil THEN L9 ELSE pc ENDIF;
+        []
+      execute_assign_Inextlocked_false:
+        pc = L9 -->
+          pc'                         = L0;
+          R'[val(R[i].next.p)].locked = FALSE;
+     ]
+   END;
+
+   setup : MODULE =
+   BEGIN
+     GLOBAL R : ARRAY PID OF QNODE
+     GLOBAL lock : PT_QNODE
+     INITIALIZATION
+       (FORALL (i:PID): R[i].next = nil_pt_qnode;
+                        R[i].locked = FALSE);
+       lock = nil_pt_qnode;
+     TRANSITION
+       [ FALSE --> ]
+   END;
+
+   system : MODULE = setup [] 
+                    ([] (i : PID): proc[i]);
+
+   th : THEOREM system |- G(FORALL(i1:PID, i2:PID):
+                               i1 /= i2 => NOT(pc[i1] = L6 AND pc[i2] = L6));
+   
+END

@@ -1,0 +1,524 @@
+;; -*- Mode: Scheme -*- 
+
+;;
+;; SAL 3.1, Copyright (C) 2006, 2011, SRI International.  All Rights Reserved.
+;;
+;; SAL is free software; you can redistribute it and/or 
+;; modify it under the terms of the GNU General Public License 
+;; as published by the Free Software Foundation; either version 2
+;; of the License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of 
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+;; GNU General Public License for more details. 
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program; if not, write to the Free Software 
+;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. 
+;;
+
+;;
+;; Some of the comments and descriptions below are copied from the
+;; Bigloo documentation of its pattern-matching facilities.
+;;
+;; Copyright (c) 1992 - 2010 Manuel Serrano
+;;
+
+
+;==============================================
+; SXML Macros
+;
+
+
+;----------------------------------
+; Pattern Matching
+;
+; Pattern matching is a key feature of most modern functional programming languages since it allows
+; clean and secure code to be written.
+; The macros in this chapter provides pattern matching capabilities 
+; for SXML nodes. These macros are similar (but not equal) to the @code{match-case} macro family.
+; 
+
+;+++
+; The argument @code{key} must be a SXML node, and each clause has the form
+; @lisp
+; (pattern s-expression...)
+; @end lisp
+; Semantics: A match-case expression is evaluated as follows. key is evaluated and the 
+; result is compared with each successive pattern. If the pattern in some clause yields a match,
+; then the expressions in that clause are evaluated from left to right in an environment where the
+; pattern variables are bound to the corresponding subparts of the datum, and the result of the
+; last expression in that clause is returned as the result of the match-case expression. 
+; If no pattern in any clause matches the datum, then, the result is false.
+; Important: We do not support nonlinear patterns such as @code{match-case}. 
+; @lisp
+; (define n (list->sxml '(TUPLETYPE (TYPENAME NATURAL) 
+;                                   (TYPENAME INTEGER))))
+; (sxml/match n 
+;   ((TUPLETYPE ?t1 ?t2 ?t3) 
+;      (print "<" t1 ", " t2 ", " t3 ">"))
+;   ((TUPLETYPE (TYPENAME ?id1) (TYPENAME ?id2)) 
+;      (print "<" id1 ", " id2 ">")))
+;   @result{} <NATURAL, INTEGER>
+; @end lisp
+;
+; The syntax for @code{<pattern>} is:
+; @table @samp
+; @item @code{?-}
+; anything
+;
+; @item @code{?<id>}
+; anything, and binds id as a variable.
+;
+; @item @code{(kwote <atom>)}
+; any expression eq? to @code{<atom>}.
+;
+; @item @code{(<tag> <child1> ... <child2>)}
+; a SXML node with the given @code{<tag>} and children. 
+; @code{<tag>} is a symbol, a pattern variable (@code{?<id>}), or @code{?-}.
+; @code{<childi>} is a pattern.
+;
+; @item @code{(<tag> . ?<children-id>)}
+; a SXML node with the given @code{tag} and binds @code{children-id} as a variable.
+; This pattern is useful if you don't know the number of children of 
+; a sxml node. @code{children-id} is bound to a list with the children nodes.
+; After the tag, the user can add an additional test @code{(?? <pred>)}, where
+; @code{<pred>} is a predicate that receives the current node as argument.
+; This additional test is useful to check check attributes.
+; Example:
+; @lisp
+; (sxml/match n 
+;   ((APPLICATION (?? (lambda (n) 
+;                       (sxml/attribute n 'INFIX)))
+;                 ?- ?-)
+;     (print "infix application.")))
+; @end lisp
+;
+; @item @code{(and <pat1> ... <patn>)}
+; if all of @code{<pati>} match.
+;
+; @item @code{(or <pat1> ... ...<patn>)}
+; if any of @code{<pat1>} through @code{<patn>} matches.
+;
+; @item @code{(not <pat>)}
+; if @code{<pat>} doesn't match.
+;
+; @item @code{(when <pat> <sexpr>)}
+; if @code{<pat>} matches and @code{<sexpr>} evaluates to true.
+;
+; @item @code{(as <pat> ?<id>)}
+; if @code{<pat>} matches and binds @code{<id>} to the current node.
+;
+; @item @code{(? <predicate>)}
+; if @code{<predicate>} is true.
+;
+; @end table
+; Remark: @code{and}, @code{or}, @code{not}, @code{when}, @code{as} and @code{kwote} must be quoted (with @code{(kwote <atom>)}) 
+; in order to be treated as literals. This is the only justification for having the
+; kwote pattern since, by convention, any atom which is not a keyword is quoted.
+; Remark: the scope of a pattern variable is the whole @code{sxml/match} command, and
+; not the associated clause. 
+(define-macro (sxml/match key . clauses)
+  (let ((root (gensym))
+        (pattern-var? (lambda (elem)
+                        (and (symbol? elem)
+                             (not (memq elem '(?- ?)))
+                             (eq? (string-ref (symbol->string elem) 0) #\?))))
+        (get-var-name (lambda (pattern-var)
+                        (let ((aux (symbol->string pattern-var)))
+                          (string->symbol (substring aux 1 (string-length aux)))))))
+    (letrec ((collect-variables (lambda (clauses)
+                                  (let ((vars '()))
+                                    (for-each (lambda (clause)
+                                                (let loop ((x (car clause)))
+                                                  (cond
+                                                   ((list? x)
+                                                    (for-each loop x))
+                                                   ((pair? x)
+                                                    (loop (car x))
+                                                    (loop (cdr x)))
+                                                   ((pattern-var? x)
+                                                    (pushnew! (get-var-name x)
+                                                              vars)))))
+                                              clauses)
+                                    vars)))
+             (gen-sxml-pattern (lambda (curr tag pred children)
+                                 (unless (or (symbol? tag)
+                                             (and (list? tag)
+                                                  (eq? (car tag) 'or)))
+                                   (error 'sxml/match "Invalid pattern, tag must be a symbol, or a list of symbols." tag))
+                                 (let ((tag (if (list? tag) (cdr tag) tag)))
+                                   `(and
+                                     ,(cond
+                                       ((list? tag)
+                                        `(sxml/tag-equals*? ,curr (quote ,tag)))
+                                       ((pattern-var? tag)
+                                        `(set! ,(get-var-name tag) (sxml/tag ,curr)))
+                                       (else
+                                        `(sxml/tag-equals? ,curr (quote ,tag))))
+                                     ,@(if pred
+                                         `((,pred ,curr))
+                                         '())
+                                     ,(gen-children curr children)))))
+             (gen-pattern (lambda (curr pattern)
+                            (match-case pattern
+                              (((kwote or) . ?patterns)
+                               `(or ,@(map (lambda (p) (gen-pattern curr p)) patterns)))
+                              (((kwote and) . ?patterns)
+                               `(and ,@(map (lambda (p) (gen-pattern curr p)) patterns)))
+                              (((kwote not) ?pattern)
+                               `(not ,(gen-pattern curr pattern)))
+                              (((kwote ?) ?pred)
+                               `(,pred ,curr))
+                              (((kwote kwote) ?symbol)
+                               `(eq? (quote ,symbol) ,curr))
+                              ((when ?pattern ?condition)
+                               `(and ,(gen-pattern curr pattern) ,condition))
+                              ((kwote ?-)
+                               #t)
+                              (((kwote ?-) . ?children)
+                               (gen-children curr children))
+                              ((((kwote ?) ?pred) . ?children)
+                               `(and
+                                 (,pred (sxml/tag ,curr))
+                                 ,(gen-children curr children)))
+                              ((as ?pattern ?var)
+                               (unless (pattern-var? var)
+                                 (error 'sxml/match "Invalid pattern, the syntax of the `as' constructor is: (as <pattern> <pattern-variable>)" #unspecified))
+                               `(and ,(gen-pattern curr pattern)
+                                     (set! ,(get-var-name var) ,curr)))
+                              ((? pattern-var?)
+                               `(set! ,(get-var-name pattern) ,curr))
+                              ((or (? symbol?)
+                                   (? string?)
+                                   (? number?))
+                               `(sxml/equal? ,(if (symbol? pattern)
+                                                `(quote ,pattern)
+                                                pattern)
+                                             ,curr))
+                              (((or ((kwote kwote) ?tag) ?tag) ((kwote ??) ?pred) . ?children)
+                               (gen-sxml-pattern curr tag pred children))
+                              (((or ((kwote kwote) ?tag) ?tag) . ?children)
+                               (gen-sxml-pattern curr tag #f children))
+                              )))
+             (gen-children (lambda (curr children)
+                             (cond
+                              ((null? children)
+                               `(null? (sxml/children ,curr)))
+                              ((eq? children '?-)
+                               ;; ignore children
+                               #t)
+                              ((pattern-var? children)
+                               `(set! ,(get-var-name children) (sxml/children ,curr)))
+                              ((pair? children)
+                               (let ((children-var (gensym)))
+                                 `(let ((,children-var (sxml/children ,curr)))
+                                    ,(let loop ((children children))
+                                       (cond 
+                                        ((null? children)
+                                         `(null? ,children-var))
+                                        ((eq? children '?-)
+                                         ;; ignore children
+                                         #t)
+                                        ((pattern-var? children)
+                                         `(set! ,(get-var-name children) ,children-var))
+                                        ((pair? children)
+                                         (let* ((curr-child (car children))
+                                                (curr-code (cond
+                                                            ((eq? curr-child '?-)
+                                                             ;; ignore child
+                                                             #t)
+                                                            ((pattern-var? curr-child)
+                                                             `(set! ,(get-var-name curr-child) (car ,children-var)))
+                                                            ((or (symbol? curr-child)
+                                                                 (string? curr-child)
+                                                                 (number? curr-child))
+                                                             `(sxml/equal? ,(if (symbol? curr-child)
+                                                                              `(quote ,curr-child)
+                                                                              curr-child)
+                                                                           (car ,children-var)))
+                                                            (else
+                                                             (let ((aux (gensym)))
+                                                               `(let ((,aux (car ,children-var)))
+                                                                  ,(gen-pattern aux curr-child))))))
+                                                (rest (cdr children))
+                                                (rest-code `(and (set! ,children-var (cdr ,children-var)) ,(loop rest))))
+                                           (if curr-code
+                                             `(and (not (null? ,children-var)) ,curr-code ,rest-code)
+                                             `(and (not (null? ,children-var)) ,rest-code))))
+                                        (else 
+                                         (error 'sxml/match "Invalid pattern" children)))))))
+                              (else (error 'sxml/match "Invalid pattern" children)))))
+             (gen-clause (lambda (clause)
+                           (let ((pattern (car clause))
+                                 (body (cdr clause)))
+                             `(,(gen-pattern root pattern) ,@body)))))
+      `(let ((,root ,key)
+             ,@(map (lambda (var)
+                      `(,var #unspecified))
+                    (collect-variables clauses)))
+         (cond ,@(map gen-clause clauses))))))
+
+;+++
+; This macro is similar to @code{(sxml/match key . clauses)}, but it produces an 
+; error if none of the patterns match.
+(define-macro (sxml/match-or-fail key . clauses)
+  (let ((aux (gensym)))
+    `(let ((,aux ,key))
+       (sxml/match ,aux
+         ,@clauses
+         (?- (error 'sxml/match-or-fail "Invalid abstract syntax tree." (if (sxml-node? ,aux) (sxml->list ,aux) ,aux)))))))
+
+;+++
+; Expand a lambda-expression expecting an argument which, once applied to an expression, 
+; behaves exactly like a @code{sxml/match} expression.
+; @lisp
+; (define n (list->sxml '(TUPLETYPE (TYPENAME NATURAL)
+;                                   (TYPENAME INTEGER))))
+; (define matcher (sxml/match-lambda
+;   ((TUPLETYPE ?t1 ?t2 ?t3) 
+;      (print "<" t1 ", " t2 ", " t3 ">"))
+;   ((TUPLETYPE (TYPENAME ?id1) (TYPENAME ?id2)) 
+;      (print "<" id1 ", " id2 ">"))))
+; (matcher n)
+;   @result{} <NATURAL, INTEGER>
+; @end lisp
+(define-macro (sxml/match-lambda . clauses)
+  (let ((key (gensym)))
+    `(lambda (,key)
+       (sxml/match ,key ,@clauses))))
+
+;+++
+; This macro is similar to @code{(sxml/match-lambda . clauses)}, but it produces an 
+; error if none of the patterns match.
+(define-macro (sxml/match-lambda-or-fail . clauses)
+  (let ((key (gensym)))
+    `(lambda (,key)
+       (sxml/match-or-fail ,key ,@clauses))))
+
+;--------------
+
+;+++
+; Build a SXML node using a template.
+; Remark: template->sxml is faster than list->sxml, since it 
+; does not need to create an intermediate data structure (list).
+;
+; The syntax for @code{<template>} is:
+; @lisp
+; template ::=  ,<sexpr>
+;             | <atom>
+;             | (<tag> . <children>)
+;
+; tag ::= <symbol>
+;
+; <children> ::=  <entry>
+;               | <entry> <children>
+;
+; <entry> ::=  <template>
+;            | ,@@<sexpr>
+;            | (<== <sexpr>)
+;            | <keyword> <atom>
+;
+; <atom> ::=  <number>
+;           | <string>
+;           | <boolean>
+;           | <symbol>
+; @end lisp
+; @table @samp
+; @item @code{,<sexpr>}
+;   return the value of the s-expression @code{<sexpr>}.
+; @item @code{<atom>}
+;   return the atom
+; @item @code{(<tag> . <children>)}
+;   build a SXML with tag @code{<tag>}, the children an
+;   attributes are specified by @code{<children>}.
+; @item @code{,@@<sexpr>}
+;   expands the elements in the list returned by @code{<sexpr>}.
+; @item @code{(<== <expr>)}
+;   copy the attributes of the SXML node returned by @code{<expr>}.
+; @item @code{<keyword> <atom>}
+;   add an attribute named @code{keyword} to the SXML node.
+; @end table
+;
+; Example:
+; @lisp
+; (define n1 (template->sxml (TYPENAME NATURAL)))
+; (sxml/pp n1)
+;   @result{} (TYPENAME NATURAL)
+; (define n2 (template->sxml (TYPENAME REAL)))
+; (define l (list n1 n1))
+; (define n3 (template->sxml (TUPLETYPE PLACE: "10 3 10 20"
+;                                       ,n2 ,@@l (TYPENAME INTEGER))))
+; (sxml/pp n3)
+;   @result{} (TUPLETYPE
+;   @result{}   (TYPENAME REAL)
+;   @result{}   (TYPENAME NATURAL)
+;   @result{}   (TYPENAME NATURAL)
+;   @result{}   (TYPENAME INTEGER))
+; (sxml/attribute n3 'PLACE)
+;   @result{} 10 3 10 20
+; @end lisp 
+(define-macro (template->sxml template)
+  (let loop ((template template))
+    (match-case template
+     ((unquote ?id)
+      id)
+     ((or (? number?) (? boolean?) (? string?))
+      template)
+     ((? symbol?)
+      `(quote ,template))
+     ((quote ?sexpr)
+      `(quote ,sexpr))
+     ((?tag . ?children)
+      (let ((attributes '(list ))
+            (children-nodes '(list )))
+        (let inner-loop ((children (reverse children)))
+          (unless (null? children)
+            (let ((curr-child (car children))
+                  (rest (cdr children)))
+              (if (and (not (null? rest))
+                       (keyword? (car rest)))
+                (let* ((str-key (keyword->string (car rest)))
+                       (len (string-length str-key))
+                       (key (string->symbol (substring str-key 
+                                                       (if (eq? (string-ref str-key 0) #\:) 1 0)
+                                                       (if (eq? (string-ref str-key (- len 1)) #\:)
+                                                         (- len 1)
+                                                         len)))))
+                  (set! attributes `(cons (cons (quote ,key) 
+                                                ,(cond
+                                                  ((symbol? curr-child)
+                                                   `(quote ,curr-child))
+                                                  ((and (list? curr-child) (not (null? curr-child)) (eq? (car curr-child) 'unquote))
+                                                   (cadr curr-child))
+                                                  (else
+                                                   curr-child)))
+                                          ,attributes))
+                  (inner-loop (cdr rest)))
+                (begin
+                  (match-case curr-child
+                   ((unquote-splicing ?c)
+                    (set! children-nodes `(append ,c ,children-nodes)))
+                   ((<== ?c)
+                    (set! attributes `(append (sxml/attributes ,c) ,attributes)))
+                   (?elem
+                    (set! children-nodes `(cons ,(loop elem) ,children-nodes))))
+                  (inner-loop rest))))))
+        (cond 
+         ((symbol? tag)
+          `(make-sxml-node (quote ,tag) ,attributes ,children-nodes))
+         ((and (list? tag) (= (length tag) 2) (eq? (car tag) 'unquote))
+          `(make-sxml-node ,(cadr tag) ,attributes ,children-nodes))
+         (else
+          (error ,template->sxml "Invalid template, invalid tag" tag))))))))
+
+;--------------------------------------------------------------------
+; Rewriter
+
+;+++
+; Build a SXML bottom up rewriter.
+; @code{flags} is an associative list that contains some options.
+; The available options are:
+; @itemize @bullet
+; @item @code{trace?} - prints a message when a rewrite rule is applied.
+; @item @code{exhaustive?} - apply rewrite rules exhaustively.
+; @end itemize
+; @code{sxml} is a SXML node to be rewritten.
+; @code{clauses} is a set of rewrite rules,  and each clause has the form
+; @lisp
+; (pattern s-expression...)
+; @end lisp
+; The @code{s-expression} must return a SXML node that is the result of
+; the rewriting step.
+; The syntax for @code{pattern} is the same used in the macro @code{sxml/match}.
+; @lisp
+; (define n (template->sxml (FUNCTIONTYPE
+;                             (TUPLETYPE (TYPENAME NATURAL)
+;                                        (TYPENAME NATURAL))
+;                             (ARRAYTYPE (TYPENAME NATURAL) 
+;                                        (TYPENAME INTEGER)))))
+;
+; (sxml/pp 
+;  (sxml/core-bottom-up-rewriter () n ((TYPENAME ?id) id)))                             
+;  @result{} (FUNCTIONTYPE
+;              (TUPLETYPE NATURAL NATURAL)
+;              (ARRAYTYPE NATURAL INTEGER))
+; @end lisp
+(define-macro (sxml/core-bottom-up-rewriter flags sxml . clauses)
+  (let* ((rewriter (gensym))
+         (curr (gensym))
+         (loop (gensym))
+         (children (gensym))
+         (child-modified? (gensym))
+         (child (gensym))
+         (new-child (gensym))
+         (new-children (gensym))
+         (new-curr (gensym))
+         (outer-loop (gensym))
+         (result (gensym))
+         (exhaustive? (cond ((assq 'exhaustive? flags) => cdr) (else #f)))
+         (trace? (cond ((assq 'trace? flags) => cdr) (else #f)))
+         )
+    `(let ((,rewriter (lambda (sxml-current-node)
+                        (let ((,result (sxml/match sxml-current-node
+                                         ,@clauses
+                                         (?- sxml-current-node))))
+                          ,(if trace?
+                             `(begin
+                                (unless (eq? sxml-current-node ,result)
+                                  (print "Rewriting")
+                                  (print "FROM:")
+                                  (sxml/pp sxml-current-node)
+                                  (print "-------------------------")
+                                  (print "TO:")
+                                  (sxml/pp ,result)
+                                  (print "========================="))
+                                ,result)
+                             result)))))
+       (let ,outer-loop ((,curr ,sxml))
+         (let ((,new-curr 
+                (let ,loop ((,curr ,curr))
+                  (if (sxml-node? ,curr)
+                    (let ((,child-modified? #f)
+                          (,children (sxml/children ,curr))
+                          (,new-children '()))
+                      (for-each (lambda (,child)
+                                  (let ((,new-child (,loop ,child)))
+                                    (unless (eq? ,new-child ,child)
+                                      (set! ,child-modified? #t))
+                                    (set! ,new-children (cons ,new-child ,new-children))))
+                                ,children)
+                      (let ((,new-curr (if ,child-modified?
+                                         (make-sxml-node-based-on ,curr (reverse! ,new-children))
+                                         ,curr)))
+                        (,rewriter ,new-curr)))
+                    (,rewriter ,curr)))))
+           ,(if exhaustive? 
+              `(if (eq? ,curr ,new-curr)
+                 ,curr
+                 (,outer-loop ,new-curr))
+              new-curr))))))
+
+;+++
+; This macro is equivalent to:
+; @lisp
+; (sxml/core-bottom-up-rewriter () sxml clauses)
+; @end lisp
+(define-macro (sxml/bottom-up-rewriter sxml . clauses)
+  `(sxml/core-bottom-up-rewriter () ,sxml ,@clauses))
+
+;+++
+; This macro is equivalent to:
+; @lisp
+; (sxml/core-bottom-up-rewriter ((exhaustive? . #t)) sxml clauses)
+; @end lisp
+(define-macro (sxml/exhaustive-bottom-up-rewriter sxml . clauses)
+  `(sxml/core-bottom-up-rewriter ((exhaustive? . #t)) ,sxml ,@clauses))
+
+
+;--- End of Rewriter section
+
+;=== End of the Chapter
+
+

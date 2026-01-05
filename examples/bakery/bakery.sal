@@ -1,0 +1,132 @@
+bakery{N : nznat, B : nznat}: context =
+begin
+  Job_Idx: type = [1..N];
+
+  Ticket_Idx: type = [0..B];
+
+  Next_Ticket_Idx: type = [1..(B + 1)];
+
+  %% RSRC models the system resources
+  RSRC: type =  [# data: array Job_Idx of Ticket_Idx,
+                   next_ticket: Next_Ticket_Idx #];
+
+  %% min_non_zero_ticket returns
+  %% 0 - if the ticket of each job is 0
+  %% n, where n is the minimal non zero ticket
+  %% min_non_zero_ticket_aux is a recursive auxiliary function used
+  %% by min_non_zero_ticket
+  min_non_zero_ticket_aux(rsrc : RSRC, idx : Job_Idx) : Ticket_Idx =
+   if idx = N then rsrc.data[idx]
+   else let curr: Ticket_Idx = rsrc.data[idx],
+            rest: Ticket_Idx = min_non_zero_ticket_aux(rsrc, idx + 1)
+        in if curr = 0 then rest
+           elsif rest = 0 then curr
+           else min(curr, rest) 
+           endif 
+   endif;
+
+  min_non_zero_ticket(rsrc : RSRC) : Ticket_Idx =
+    min_non_zero_ticket_aux(rsrc, 1);
+
+  %% return true if a job is allowed to enter the critical section
+  can_enter_critical?(rsrc : RSRC, job_idx : Job_Idx): boolean =
+    let min_ticket: Ticket_Idx = min_non_zero_ticket(rsrc),
+        job_ticket: Ticket_Idx = rsrc.data[job_idx]
+    in job_ticket <= min_ticket;
+
+  %% the number of tickets was exhausted
+  saturated?(rsrc : RSRC): boolean =
+    rsrc.next_ticket = B + 1;
+
+  %% when next_ticket is called by job_idx:
+  %% - a new ticket is issued to job_idx, that is, the entry 
+  %%    rsrc.data[job_idx] is updated with the value rsrc.next_ticket
+  %% - the value of rsrc.next_ticket is incremented
+  %% Remark: if rsrc is saturated, then return rsrc
+  next_ticket(rsrc : RSRC, job_idx : Job_Idx): RSRC =
+    if saturated?(rsrc) then rsrc
+    else rsrc with .data[job_idx] := rsrc.next_ticket
+              with .next_ticket := rsrc.next_ticket + 1
+    endif;
+
+  %% reset a job ticket
+  reset_job_ticket(rsrc : RSRC, job_idx : Job_Idx): RSRC =
+    rsrc with .data[job_idx] := 0;
+
+  %% the ticket counter can be reseted, if the ticket of
+  %% each job is zero
+  can_reset_ticket_counter?(rsrc : RSRC): boolean  =
+    (forall (j : Job_Idx): rsrc.data[j] = 0);
+
+  reset_ticket_counter(rsrc : RSRC): RSRC =
+    rsrc with .next_ticket := 1;
+
+  Job_PC: type = {sleeping, trying, critical};
+
+
+  job [job_idx : Job_Idx]: module =
+    begin
+      global rsrc : RSRC
+      local pc : Job_PC 
+      initialization 
+        pc = sleeping
+      transition
+        [
+         wakening: 
+           (pc = sleeping) and not(saturated?(rsrc))
+           --> pc' = trying; 
+               rsrc' = next_ticket(rsrc, job_idx)
+         []
+         entering_critical_section: 
+           (pc = trying) and can_enter_critical?(rsrc, job_idx)
+           --> pc' = critical
+         []
+         leaving_critical_section: 
+           pc = critical --> pc' = sleeping; 
+                             rsrc' = reset_job_ticket(rsrc, job_idx)
+        ]
+    end;
+
+
+  controller: module =
+    begin
+      global rsrc : RSRC
+      initialization
+        rsrc = (# data := [[j : Job_Idx] 0], next_ticket := 1#)
+      transition
+        [
+          reseting_ticket_counter: 
+            can_reset_ticket_counter?(rsrc)
+            --> rsrc' = reset_ticket_counter(rsrc)
+        ]
+    end;
+
+  system: module =
+     controller 
+     [] 
+     ([] (job_idx : Job_Idx): job[job_idx]);
+
+  mutex: theorem system
+                 |- G(not (exists (i : Job_Idx, j : Job_Idx):
+                             i /= j and pc[i] = critical and pc[j] = critical));
+
+  invalid: theorem system
+                 |- G(not (exists (i : Job_Idx, j : Job_Idx, k : Job_Idx):
+                             i /= j and pc[i] = critical and pc[j] = trying and pc[j] = trying));
+
+  %% invalid property
+  liveness_bug: theorem system
+                        |- (forall (i : Job_Idx): G(F(pc[i] = critical)));
+
+  liveness: theorem system
+                    |- (forall (i : Job_Idx):
+                         G(pc[i] = trying => F(pc[i] = critical)));
+
+  liveness2: theorem system
+                     |- (forall (i : Job_Idx):
+                          G(F(pc[i] = trying)) => G(F(pc[i] = critical)));
+
+  aux: theorem system
+               |- G((forall (i : Job_Idx):
+                      (pc[i] = trying) => rsrc.data[i] > 0));
+END

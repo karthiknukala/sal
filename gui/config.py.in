@@ -1,0 +1,41 @@
+#
+# SAL 3.1, Copyright (C) 2006, 2011, SRI International.  All Rights Reserved.
+#
+# SAL is free software; you can redistribute it and/or 
+# modify it under the terms of the GNU General Public License 
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of 
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+# GNU General Public License for more details. 
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software 
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. 
+#
+#
+
+sal_front_end_code = "@sal_front_end_code@"
+sal_scripts = "@sal_scripts@"
+salenv_exec = "@salenv_exec@"
+ARCH = "@ARCH@"
+SALENV_BUILD_MODE= "@SALENV_BUILD_MODE@"
+EXEEXT="@EXEEXT@"
+ICS_BIN_DIR="@ICS_BIN_DIR@"
+
+bindir="../bin/%s-%s" % (ARCH, SALENV_BUILD_MODE)
+
+def GetFrontEndCode(): 
+		return sal_front_end_code.split(' ')
+def GetScripts(): 
+		return sal_scripts.split(' ')
+def GetBinDir():
+    return bindir
+def GetICSBinDir():
+    return ICS_BIN_DIR
+def GetSALExec():
+    return salenv_exec
+def GetExeExt():
+    return EXEEXT

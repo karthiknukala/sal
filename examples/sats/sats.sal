@@ -1,0 +1,444 @@
+sats : CONTEXT =
+BEGIN
+
+  defs  : CONTEXT = satsdefs;
+  props : CONTEXT = satsprops;
+
+  InitialTransition : MODULE =
+  BEGIN
+    GLOBAL AmmState : defs!AMM
+
+    INITIALIZATION
+      AmmState.nextseq  = defs!first_seq;
+      AmmState.nextmahf = defs!right;
+  END;
+
+  SideTransition[side:defs!Side] : MODULE = 
+  BEGIN
+    GLOBAL ThisSide : defs!SCASide
+    GLOBAL Opposite : defs!SCASide
+    GLOBAL AmmState : defs!AMM
+    GLOBAL FinalSeg : defs!SCAFinal
+
+    LOCAL  state    : defs!State
+  
+    DEFINITION
+      state = defs!new_state(ThisSide,Opposite,FinalSeg,AmmState)
+
+    INITIALIZATION
+      ThisSide.holding3   = defs!empty;
+      ThisSide.holding2   = defs!empty;
+      ThisSide.lez        = defs!empty;
+      ThisSide.base       = defs!empty;
+      ThisSide.maz        = defs!empty;
+      ThisSide.departure  = defs!empty
+    
+    TRANSITION [
+
+    %% A vertical entry is allowed into the SCA only if 
+    %% 1. there are less than 2 aircraft either at the fix or assigned 
+    %%    to the fix as a missed approach holding fix, 
+    %% 2. no aircraft assigned to that fix as a missed approach holding fix on 
+    %%    the approach, 
+    %% 3. no aircraft on missed approach zone at that fix, 
+    %% 4. no aircraft on lateral entry zone at that fix, and
+    %% 5. no aircraft holding at 3kft.
+    %% The aircraft gets an aircraft to follow, the last aircraft in sequence, 
+    %% or none if it becomes the first aircraft in sequence.
+    %% It also gets as missed approach holding fix the opposite side of its 
+    %% leader, or the same side as its initial approach fix if it becomes 
+    %% the first in sequence.
+
+    VerticalEntry:
+      defs!virtual(state,side) < 2 AND
+      NOT defs!on_approach?(state,side) AND
+      defs!length(ThisSide.maz) = 0 AND
+      defs!length(ThisSide.lez) = 0 AND
+      defs!length(ThisSide.holding3) = 0 
+        -->
+      ThisSide'.holding3 = defs!add(ThisSide.holding3,
+                                    defs!new_aircraft(state,side));
+      AmmState'.nextseq  = defs!next_seq(AmmState.nextseq);
+      AmmState'.nextmahf = defs!opposite(defs!new_aircraft(state,side));
+
+    []
+
+    %% A lateral entry is allowed into the SCA only if 
+    %% 1. no aircraft at the initial approach fix,
+    %% 2. no aircraft on lateral entry zone at that fix, 
+    %% 3. no aircraft in missed approach zone at that fix, and
+    %% 4. no aircraft has been assigned to the fix as a missed approach holding 
+    %%    fix.
+    %% The aircraft gets an aircraft to follow, the last aircraft in sequence, 
+    %% or none if it becomes the first aircraft in sequence.
+    %% It also gets as missed approach holding fix the opposite side of its 
+    %% leader, or the same side as its initial approach fix if it becomes 
+    %% the first in sequence.
+
+    LateralEntry: 
+      defs!virtual(state,side) =  0 
+        -->
+      ThisSide'.lez = defs!add(ThisSide.lez,
+                               defs!new_aircraft(state,side));
+      AmmState'.nextseq  = defs!next_seq(AmmState.nextseq);
+      AmmState'.nextmahf = defs!opposite(defs!new_aircraft(state,side));
+
+    []
+
+    %% An aircraft holding at 3kft is allowed to descend and hold at 2kft 
+    %% only if there is no aircraft holding at 2kft.
+
+    HoldingPatternDescend:
+      defs!length(ThisSide.holding3) /= 0 AND
+      defs!length(ThisSide.holding2) = 0 
+        -->
+      ThisSide'.holding3 = defs!rest(ThisSide.holding3);
+      ThisSide'.holding2 = defs!add(ThisSide.holding2,
+                                    defs!first(ThisSide.holding3));
+
+    []
+
+    %% An aircraft holding at 2kft is allowed to initiate the approach only if 
+    %% 1. there are less than two aircraft on base, and
+    %% 2. it is the first aircraft in sequence or its leader is already on the T
+
+    VerticalApproachInitiation:
+      defs!length(ThisSide.holding2) /= 0 AND
+      (defs!length(Opposite.base) <= 1 AND
+        (defs!first_seq?(defs!first(ThisSide.holding2)) OR 
+         defs!on_approach_seq?(state,
+                        defs!leader_seq(defs!first(ThisSide.holding2)))))
+        -->
+      ThisSide'.holding2 = defs!rest(ThisSide.holding2);
+      ThisSide'.base     = defs!add(ThisSide.base,
+                                    defs!first(ThisSide.holding2));
+
+    []
+
+    %% An aircraft in lateral entry is allowed  to initiate the approach only if 
+    %% 1. there are less than two aircraft on base, and
+    %% 2. it is the first aircraft in sequence or its leader is already on the 
+    %%    approach.
+    %% Otherwise, the aircraft must hold at 2kft.
+
+    LateralApproachInitiation1:
+      defs!length(ThisSide.lez) /= 0 AND
+      (defs!length(Opposite.base) <= 1 AND
+        (defs!first_seq?(defs!first(ThisSide.lez)) OR 
+         defs!on_approach_seq?(state,
+                        defs!leader_seq(defs!first(ThisSide.lez)))))
+        -->
+      ThisSide'.lez  = defs!rest(ThisSide.lez);
+      ThisSide'.base = defs!add(ThisSide.base,
+                                defs!first(ThisSide.lez));
+
+    []
+
+    LateralApproachInitiation2:
+      defs!length(ThisSide.lez) /= 0 
+        -->
+      ThisSide'.lez      = defs!rest(ThisSide.lez);
+      ThisSide'.holding2 = defs!add(ThisSide.holding2,
+                                    defs!first(ThisSide.lez));
+
+    []
+ 
+    %% An aircraft that goes on the intermediate segment is either the first 
+    %% aircraft in seqence or its leader is already on the final approach.
+    %% Note: This is not really a rule, but an hypothesis that the SATS
+    %%       environment satisfies. It has to be discharged in a geometric model.
+
+    Merging:
+      defs!length(ThisSide.base) /= 0 AND
+      (defs!first_seq?(defs!first(ThisSide.base)) OR 
+       defs!on_zone?(FinalSeg.inter,
+                     defs!leader_seq(defs!first(ThisSide.base))) OR
+       defs!on_zone?(FinalSeg.final,
+                     defs!leader_seq(defs!first(ThisSide.base))))
+        -->      
+      ThisSide'.base  = defs!rest(ThisSide.base);
+      FinalSeg'.inter = defs!add(FinalSeg.inter,
+                                 defs!first(ThisSide.base));
+
+    []
+
+    %% The first aircraft in the final approach is the only aircraft allowed
+    %% to perform a missed approach. It goes to the missed approach holding
+    %% fix that has been previously assigned to it. The aircraft gets reassigned:
+    %% 1. new follow notification: last aircraft to enter the SCA or None if the
+    %%    aircraft is first in sequence, and
+    %% 2. new missed approach holding fix assignement: opposite side of its 
+    %%    leader or 
+    %%    it keeps its original assignement if the aircraft becomes the first 
+    %%    in sequence.  
+
+    MissedApproach:
+      defs!length(FinalSeg.final) /= 0 AND 
+      defs!first(FinalSeg.final).mahf = side
+        -->
+      ThisSide'.holding3  = defs!decrease(ThisSide.holding3);
+      ThisSide'.holding2  = defs!decrease(ThisSide.holding2);
+      ThisSide'.lez       = defs!decrease(ThisSide.lez);
+      ThisSide'.maz       = defs!add(defs!decrease(ThisSide.maz),
+                                     defs!reassign(state,
+                                                   defs!first(FinalSeg.final)));
+      ThisSide'.base      = defs!decrease(ThisSide.base);
+      Opposite'.holding3  = defs!decrease(Opposite.holding3);
+      Opposite'.holding2  = defs!decrease(Opposite.holding2);
+      Opposite'.lez       = defs!decrease(Opposite.lez);
+      Opposite'.maz       = defs!decrease(Opposite.maz);
+      Opposite'.base      = defs!decrease(Opposite.base);
+      FinalSeg'.inter     = defs!decrease(FinalSeg.inter);
+      FinalSeg'.final     = defs!decrease(defs!rest(FinalSeg.final));
+      AmmState'.nextmahf  = defs!opposite(defs!reassign(state,
+                                          defs!first(FinalSeg.final)));
+    
+    []
+
+    %% An aircraft in missed approach goes to its missed approach holding fix 
+    %% at the lowest available altitude. If an aircraft is holding at 3kft, 
+    %% but the holding pattern at 2kft is available, the lowest available 
+    %% altitude is 3kft. 
+ 
+    LowestAvailableAltitude1:
+      defs!length(ThisSide.maz) /= 0 AND
+      defs!length(ThisSide.holding3) = 0 AND
+      defs!length(ThisSide.holding2) = 0
+        -->
+      ThisSide'.maz      = defs!rest(ThisSide.maz);
+      ThisSide'.holding2 = defs!add(ThisSide.holding2,
+                                    defs!first(ThisSide.maz));
+    
+    [] 
+
+    LowestAvailableAltitude2:
+      defs!length(ThisSide.maz) /= 0 AND
+      defs!length(ThisSide.holding3) = 0 AND
+      defs!length(ThisSide.holding2) /= 0
+        -->
+      ThisSide'.maz      = defs!rest(ThisSide.maz);
+      ThisSide'.holding3 = defs!add(ThisSide.holding3,
+                                    defs!first(ThisSide.maz));
+ 
+    [] 
+
+    LowestAvailableAltitude3:
+      defs!length(ThisSide.maz) /= 0 AND
+      defs!length(ThisSide.holding3) /= 0 AND
+      defs!length(ThisSide.holding2) = 0
+        -->
+      ThisSide'.maz      = defs!rest(ThisSide.maz);
+      ThisSide'.holding2 = defs!add(ThisSide.holding2,
+                                    defs!first(ThisSide.holding3));
+      ThisSide'.holding3 = defs!add(defs!rest(ThisSide.holding3),
+                                    defs!first(ThisSide.maz));
+
+    [] 
+
+    %% A departure operation is allowed only if no aircraft is on final
+    %% segment or waiting at the runway, and either
+    %% 1. no aircraft on departure zones, or
+    %% 2. only one aircraft on departure zone, opposite departure fix,
+    %%    at a distance of 3nm or greater from runway, or
+    %% 3. only one aircraft on departure zone, same departure fix,
+    %%    at a distance of 10nm or greater from runway.
+
+    DepartureInitiation:
+      defs!length(FinalSeg.final) + 
+      defs!length(FinalSeg.runway) = 0 AND
+      defs!length(ThisSide.departure) + 
+      defs!length(Opposite.departure) < 2 AND
+      (defs!length(ThisSide.departure) + 
+       defs!length(Opposite.departure) = 0 OR
+       (defs!length(Opposite.departure) > 0 AND
+        defs!d3nm?(defs!first(Opposite.departure))) OR
+       (defs!length(ThisSide.departure) > 0 AND
+        defs!d10nm?(defs!first(ThisSide.departure))))
+        -->
+      FinalSeg'.runway = defs!add(FinalSeg.runway,
+                                  defs!new_departure(side));
+
+    []
+
+    %% Aircraft that have initiate a departure are allowed to takeoff.
+
+    Takeoff:
+      defs!length(FinalSeg.runway) /= 0 AND 
+      defs!d0nm?(defs!first(FinalSeg.runway)) AND
+      defs!first(FinalSeg.runway).mahf = side 
+        -->
+      FinalSeg'.runway    = defs!rest(FinalSeg.runway);
+      ThisSide'.departure = defs!add(ThisSide.departure,
+                                     defs!first(FinalSeg.runway));
+
+    []
+
+    %% Aircraft in the departure zone eventually leave the SCA.
+
+    Departing1:
+      defs!length(ThisSide.departure) /= 0 AND
+      defs!d10nm?(defs!first(ThisSide.departure)) 
+        -->
+      ThisSide'.departure = defs!rest(ThisSide.departure)
+
+    []
+
+    Departing2:
+      defs!length(ThisSide.departure) /= 0 AND
+      NOT defs!d10nm?(defs!first(ThisSide.departure)) 
+        -->
+      ThisSide'.departure = defs!move(ThisSide.departure)
+
+    ]
+  END;
+
+  RightTransition : MODULE =
+    RENAME ThisSide TO ScaRight, Opposite TO ScaLeft IN
+    SideTransition[defs!right];
+
+  LeftTransition : MODULE =
+    RENAME ThisSide TO ScaLeft, Opposite TO ScaRight IN
+    SideTransition[defs!left];
+
+  FinalTransition : MODULE =
+  BEGIN
+    GLOBAL AmmState  : defs!AMM
+    GLOBAL ScaRight,
+           ScaLeft   : defs!SCASide
+    GLOBAL FinalSeg  : defs!SCAFinal
+
+    INITIALIZATION
+      FinalSeg.inter  = defs!empty;
+      FinalSeg.final  = defs!empty;
+      FinalSeg.runway = defs!empty
+
+    TRANSITION [
+
+    %% The first aircraft in the intermediate segment may exit the SCA only if
+    %% it is the first in sequence.
+
+    Exit: 
+      defs!length(FinalSeg.inter) /= 0 AND
+      defs!first_seq?(defs!first(FinalSeg.inter))
+        -->
+      ScaRight'.holding3 = defs!decrease(ScaRight.holding3);
+      ScaRight'.holding2 = defs!decrease(ScaRight.holding2);
+      ScaRight'.lez      = defs!decrease(ScaRight.lez);
+      ScaRight'.maz      = defs!decrease(ScaRight.maz);
+      ScaRight'.base     = defs!decrease(ScaRight.base);
+      ScaLeft'.holding3  = defs!decrease(ScaLeft.holding3);
+      ScaLeft'.holding2  = defs!decrease(ScaLeft.holding2);
+      ScaLeft'.lez       = defs!decrease(ScaLeft.lez);
+      ScaLeft'.maz       = defs!decrease(ScaLeft.maz);
+      ScaLeft'.base      = defs!decrease(ScaLeft.base);
+      FinalSeg'.inter    = defs!decrease(defs!rest(FinalSeg.inter));
+      AmmState'.nextseq  = IF AmmState.nextseq = defs!no_seq THEN defs!no_seq
+                           ELSE AmmState.nextseq - 1
+                           ENDIF
+
+    []
+
+    %% The first aircraft in the intermediate segment may go to the
+    %% final segment and prepare to land.
+
+    FinalSegment:
+      defs!length(FinalSeg.inter) /= 0 
+        -->
+      FinalSeg'.inter = defs!rest(FinalSeg.inter);
+      FinalSeg'.final = defs!add(FinalSeg.final,defs!first(FinalSeg.inter));
+
+    []
+
+    %% The first aircraft in the final segment may land if there is no
+    %% aircraft in the runway.
+
+    Landing:
+      defs!length(FinalSeg.final) /= 0 AND 
+      defs!length(FinalSeg.runway) = 0 
+        -->
+      ScaRight'.holding3 = defs!decrease(ScaRight.holding3);
+      ScaRight'.holding2 = defs!decrease(ScaRight.holding2);
+      ScaRight'.lez      = defs!decrease(ScaRight.lez);
+      ScaRight'.maz      = defs!decrease(ScaRight.maz);
+      ScaRight'.base     = defs!decrease(ScaRight.base);
+      ScaLeft'.holding3  = defs!decrease(ScaLeft.holding3);
+      ScaLeft'.holding2  = defs!decrease(ScaLeft.holding2);
+      ScaLeft'.lez       = defs!decrease(ScaLeft.lez);
+      ScaLeft'.maz       = defs!decrease(ScaLeft.maz);
+      ScaLeft'.base      = defs!decrease(ScaLeft.base);
+      FinalSeg'.inter    = defs!decrease(FinalSeg.inter);
+      FinalSeg'.final    = defs!decrease(defs!rest(FinalSeg.final));
+      FinalSeg'.runway   = defs!add(FinalSeg.runway,defs!first(FinalSeg.final));
+      AmmState'.nextseq  = IF AmmState.nextseq = defs!no_seq THEN defs!no_seq
+                           ELSE AmmState.nextseq - 1
+                           ENDIF;
+
+    []
+
+    %% A landed aircraft eventually leaves the runway.
+
+    Taxing:
+      defs!length(FinalSeg.runway) /= 0 AND 
+      defs!first_seq?(defs!first(FinalSeg.runway))
+        -->
+      FinalSeg'.runway = defs!rest(FinalSeg.runway);
+
+    ]
+  END;
+
+  main : MODULE =
+    InitialTransition []
+    RightTransition []  
+    LeftTransition [] 
+    FinalTransition;
+
+  correctness : THEOREM 
+    main |- G(props!invariant(defs!new_state(ScaRight,ScaLeft,
+                                             FinalSeg,AmmState)));
+
+  correctness1 : THEOREM 
+    main |- G(props!four_arrivals(defs!new_state(ScaRight,ScaLeft,
+                                                 FinalSeg,AmmState)));
+
+  correctness2 : THEOREM 
+    main |- G(props!well_assigned(defs!new_state(ScaRight,ScaLeft,
+                                                 FinalSeg,AmmState)));
+
+  correctness3 : THEOREM 
+    main |- G(props!non_crowded_sca(defs!new_state(ScaRight,ScaLeft,
+                                                   FinalSeg,AmmState)));
+
+  correctness4 : THEOREM 
+    main |- G(props!safe_len(defs!new_state(ScaRight,ScaLeft,
+                                            FinalSeg,AmmState).thisside));
+
+  correctness5 : THEOREM 
+    main |- G(props!safe_len(defs!new_state(ScaRight,ScaLeft,
+                                            FinalSeg,AmmState).opposite));
+
+  correctness6 : THEOREM 
+    main |- G(props!smooth_merging(defs!new_state(ScaRight,ScaLeft,
+                                                  FinalSeg,AmmState)));
+
+  correctness7 : THEOREM 
+    main |- G(props!smooth_merging(defs!symm(defs!new_state(ScaRight,ScaLeft,
+                                                            FinalSeg,AmmState))));
+
+  correctness8 : THEOREM 
+    main |- G(props!safe_landing(defs!new_state(ScaRight,ScaLeft,
+                                                FinalSeg,AmmState)));
+
+  correctness9 : THEOREM 
+    main |- G(props!no_incursion(defs!new_state(ScaRight,ScaLeft,
+                                                FinalSeg,AmmState)));
+
+  correctness10 : THEOREM 
+    main |- G(props!safe_departure(defs!new_state(ScaRight,ScaLeft,
+                                                  FinalSeg,AmmState).thisside));
+
+  correctness11 : THEOREM 
+    main |- G(props!safe_departure(defs!new_state(ScaRight,ScaLeft,
+                                                  FinalSeg,AmmState).opposite));
+
+
+END

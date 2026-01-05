@@ -1,0 +1,61 @@
+Bakery Protocol (using lisp-like syntax)
+---------------
+
+Description: The basic idea is that of a bakery, where customers (jobs) take numbers,
+             and whoever has the lowest number gets service next. Here, of course,
+             ``service'' means entry to the critical section. The `bakery' context
+             is parametric. The parameter `N' specifies the maximum number of customers,
+             and `B' the maximum ticket number. The field `next-ticket' stores the
+             value of the next ticket to be granted. When, the value of the next-ticket
+             exceeds the value of B, we say the system is saturated. In this case, the system
+             stops to grant tickets, and waits all customers with tickets to enter 
+             (and leave) the critical section, after that the `next-ticket' counter is reset
+             to zero. The contexts bakery-with-bug?.lsal contain buggy versions of the protocol.
+
+Commands:
+
+- Generate an execution trace up to depth 20 steps, for: 4 customers, and maximum ticket value equals to 15.
+
+  % sal-path-finder -v 3 --depth=20 --module="(@ system (bakery () (4 15)))"
+
+- Generate an execution trace up to depth 20 steps, for: 6 customers, and maximum ticket value equals to 31.
+
+  % sal-path-finder -v 3 --depth=20 --module="(@ system (bakery () (6 31)))"
+
+- Prove the mutual exclusion property, for: 5 customers, and maximum ticket value equals to 15.
+
+  % sal-smc -v 3 --assertion="(@ mutex (bakery () (5 15)))"
+
+- Counterexample for invalid specification, for: 5 customers, and maximum ticket value equals to 15.
+
+  % sal-smc -v 3 --assertion="(@ mutex (bakery-with-bug () (5 15)))"
+
+- Check the totality of the transition relation, for: 5 customers, and maximum ticket value equals to 15.
+
+  % sal-deadlock-checker -v 3 --module="(@ system (bakery () (5 15)))"
+
+- Generate a counterexample for an invalid liveness property
+
+  % sal-smc -v 3 --assertion="(@ liveness-bug (bakery () (3 7)))"
+
+  % sal-smc -v 3 --assertion="(@ liveness-bug (bakery () (5 15)))"
+
+- Generate a counterexample for an invalid liveness property using sal-bmc
+
+  % sal-bmc -v 3 --assertion="(@ liveness-bug (bakery () (3 7)))"
+
+  % sal-bmc -v 3 --iterative --assertion="(@ liveness-bug (bakery () (5 15)))"
+
+- Prove a liveness property
+
+  % sal-smc -v 3 --assertion="(@ liveness (bakery () (3 7)))"
+
+  % sal-smc -v 3 --assertion="(@ liveness (bakery () (5 15)))"
+
+- Prove a liveness property using different (faster) configurations.
+
+  % sal-smc -v 3 --monolithic --assertion="(@ liveness (bakery () (5 15)))"
+
+  % sal-smc -v 3 --cluster-size=8192 --assertion="(@ liveness (bakery () (5 15)))"
+
+  % sal-smc -v 3 --cluster-size=8192 --disable-counter-examples --assertion="(@ liveness (bakery () (5 15)))"

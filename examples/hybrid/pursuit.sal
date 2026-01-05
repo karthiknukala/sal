@@ -1,0 +1,121 @@
+%% Pursuit game
+%% From: Symbolic analysis of hybrid systems
+%% Alur, Henzinger, ... 
+
+pursuit: CONTEXT =
+BEGIN
+states: TYPE = {clockwise, counter, rescued};
+
+TransitionType : TYPE = {regular, elapse};
+
+% alternating between state transition step and elapse step
+
+next_trans_type(t: TransitionType): TransitionType =
+    IF t = regular THEN elapse ELSE regular ENDIF;
+
+transition_module: MODULE =
+BEGIN
+  OUTPUT
+    delta: REAL,
+    trans: TransitionType,
+    p_aux: REAL
+  TRANSITION
+    delta' IN { x : REAL | x >= 0 };
+    trans' = next_trans_type(trans);
+    p_aux' IN { x : REAL | x >= 0 }
+END;
+
+game: MODULE =
+BEGIN
+  INPUT
+    delta: REAL,
+    trans: TransitionType,
+    p_aux: REAL
+  OUTPUT
+    e: REAL,  % position of the evader
+    p: REAL,  % position of the pursuer 
+    t: REAL,  % clock
+    state: states
+  INITIALIZATION
+    state = clockwise;
+    e = 20;
+    p = 10;
+    t = 2
+
+TRANSITION
+[
+    % clockwise -> clockwise (1)
+    trans = regular AND state = clockwise AND 
+    t = 2 AND e /= 0 AND e /= 40 AND 5*p - 6*e + 40 < 0 
+    -->
+      t' = 0
+
+ [] % clockwise -> clockwise (2)
+    trans = regular AND state = clockwise AND 
+    (e = 40 OR p = 0 OR p = 40)
+    -->
+      e' = IF e = 40 THEN 0 ELSE e ENDIF;
+      p' = IF p = 40 THEN 0 ELSIF p = 0 THEN 40 ELSE p ENDIF
+
+ [] % clockwise -> rescued (3)
+    trans = regular AND state = clockwise AND (e = 0 OR e = 40)
+    -->
+      state' = rescued
+
+ [] % clockwise -> counter (4)
+    trans = regular AND state = clockwise AND 
+    t = 2 AND e /= 0 AND e /= 40 AND 5*p - 6*e + 40 >= 0 
+    -->
+      state' = counter;
+      t' = 0
+
+ [] % counter -> rescued (5)
+    trans = regular AND state = counter AND (e = 0 OR e = 40) 
+    -->
+      state' = rescued      
+
+ [] % counter -> counter (6)
+    trans = regular AND state = counter AND
+    (e = 0 OR p = 0 OR p = 40) 
+    -->
+      e' = IF e = 0 THEN 40 ELSE e ENDIF;
+      p' = IF p = 40 THEN 0 ELSIF p = 0 THEN 40 ELSE p ENDIF      
+
+ [] % counter -> counter (7)
+    trans = regular AND state = counter AND
+    t = 2 AND e /= 0 AND e /= 40 AND 5*p - 6*e + 40 >= 0 
+
+    -->
+      t' = 0
+
+ [] % counter -> clockwise (8)
+    trans = regular AND state = counter AND
+    t = 2 AND e /= 0 AND e /= 40 AND 5*p - 6*e + 40 < 0 
+    -->
+      state' = clockwise;
+      t' = 0
+
+ [] % delay
+    trans = elapse AND delta >= 0 AND
+    (state = clockwise => (t + delta <= 2 AND e + 5*delta >= 0 AND p + 6*delta <= 40)) AND   % invariant
+    (state = counter   => (t + delta <= 2 AND e + 5*delta >= 0 AND p + 6*delta <= 40)) AND   % invariant 
+    (state = clockwise OR state = counter => 
+             (2*p_aux' >= 2*p - delta AND p_aux' <= p + 6*delta)) 
+    -->
+      t' = IF state = rescued THEN t ELSE t + delta ENDIF;
+      e' = IF state = rescued THEN e ELSE e + 5 * delta ENDIF;
+      p' = IF state = rescued THEN p ELSE p_aux' ENDIF
+]
+
+END;
+
+system: MODULE = 
+ transition_module || game;
+
+
+% 
+safety: LEMMA system |- G(e /= p);
+
+wrong: LEMMA system |- G(p = 0);
+
+END

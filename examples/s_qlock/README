@@ -1,0 +1,47 @@
+Specifications of a queuing lock algorithm using
+symmetry reduction
+-----------------------------------------------
+
+Based on the example created by Kazuhiro Ogata.
+His example is located in the directory qlock.
+
+Commands:
+
+- Check the property using random simulation 
+  (10 paths with 200 steps each). The -g
+  option enables runtime type checking.
+
+% sal-emc -v 3 -s cacheless -n 10 -d 200 -g --assertion='s_qlock{4}!mutex' 
+
+- Prove the property mutex for 4 processes
+
+% sal-emc -v 3 --assertion='s_qlock{4}!mutex'
+
+- Prove the property mutex for 4 processes, and 
+  check for deadlocks
+
+% sal-emc -v 3 -k --assertion='s_qlock{4}!mutex'
+
+- Prove the property mutex for 4 processes using
+  symmetry reduction.
+
+% sal-emc -v 3 -y --assertion='s_qlock{4}!mutex'
+
+- Prove the property mutex for 4 processes using
+  symmetry reduction, and breadth-first search
+
+% sal-emc -v 3 -y -s bfs --assertion='s_qlock{4}!mutex'
+
+- Prove the property mutex for 6 processes using
+  symmetry reduction, and dynamic compilation
+
+% sal-emc -v 3 -y -c --assertion='s_qlock{6}!mutex'
+
+- Prove the property mutex for 6 processes using
+  sal-smc.
+
+% sal-smc -v 3 --assertion='s_qlock{6}!mutex'
+
+
+
+

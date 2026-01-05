@@ -1,0 +1,273 @@
+;; -*- Mode: Scheme -*- 
+
+;;
+;; SAL 3.1, Copyright (C) 2006, 2011, SRI International.  All Rights Reserved.
+;;
+;; SAL is free software; you can redistribute it and/or 
+;; modify it under the terms of the GNU General Public License 
+;; as published by the Free Software Foundation; either version 2
+;; of the License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of 
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+;; GNU General Public License for more details. 
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program; if not, write to the Free Software 
+;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. 
+;;
+
+
+;;
+;; BD: added this to attempt to fix the incompatibilities in make-&error
+;; between different versions of bigloo.
+;; - in bigloo3.3: make-&error takes 5 arguments (also in 2.7, 2.8, 2.9)
+;; - in bigloo3.4 and newer: it takes 6 arguments
+;; - versions older than 2.7 did not have notify-error or make-error
+;; The bigloo manual is incorrect. It still specifies 5 arguments
+;;
+;; I'm assuming nobody uses any bigloo older than 2.7 and that all
+;; versions have make-&error
+;;
+;; Update: Feb. 2013: Alas, the make-&error constructor has
+;; disappeared from Bigloo (since version 3.8 or 3.7 not sure). Now we
+;; use (instantiate::&error ...) instead.
+;;
+;; Update: Dec. 2024: Modern Bigloo 4.x uses instantiate::&error with
+;; different field names. The 'stack' field is now optional and
+;; get-trace-stack may not exist. We use a more robust approach.
+;; 
+
+(define-macro (mk-error p m o)
+  (cond-expand
+   (bigloo2   `(make-&error #f #f ,p ,m ,o))
+   ((or bigloo3.0 bigloo3.1 bigloo3.2 bigloo3.3) `(make-&error #f #f ,p ,m ,o))
+   ((or bigloo3.4 bigloo3.5 bigloo3.6 bigloo3.7) `(instantiate::&error (stack (get-trace-stack)) (proc ,p) (msg ,m) (obj ,o)))
+   ;; Bigloo 4.x: use try/catch to handle potential differences
+   (else `(instantiate::&error (fname "unknown") (location 0) (proc ,p) (msg ,m) (obj ,o)))))
+
+(define-macro (optional-arg arg default)
+  `(if (null? ,arg) ,default (car ,arg)))
+
+(define-macro (push! elem alist)
+  `(set! ,alist (cons ,elem ,alist)))
+
+(define-macro (pushnew! elem alist)
+  `(unless (memq ,elem ,alist)
+     (push! ,elem ,alist)))
+
+(define-macro (pop! lst)
+  `(set! ,lst (cdr ,lst)))
+
+(define-macro (compile-if cond code-1 . code-2)
+  (if (eval cond)
+    code-1
+    (if (null? code-2) #unspecified (car code-2))))
+
+(define-macro (compile-case expr . clauses)
+  (let ((clauses (map (lambda (clause) (list (car clause) 
+                                             `(quote (begin 
+                                                       ,@(cdr clause)))))
+                      clauses)))
+    (eval `(case ,expr ,@clauses))))
+
+(define-macro (imply a b)
+  `(or (not ,a) ,b))
+
+(define-macro (xor a b)
+  `(not (eq? ,a ,b)))
+
+(define-macro (cut . slots)
+  (multiple-value-bind
+   (args body)
+   (let loop ((slots slots))
+     (if (null? slots)
+	 (values '() '())
+	 (let ((curr-slot (car slots))
+	       (last? (null? (cdr slots))))
+	   (multiple-value-bind
+	    (args body)
+	    (loop (cdr slots))
+	    (cond 
+	     ((eq? curr-slot '<>)
+	      (let ((new-var (gensym)))
+		(values (cons new-var args) (cons new-var body))))
+	     ((eq? curr-slot '<...>)
+	      (unless last?
+		      (error 'cut "Invalid use of slot <...>." #unspecified))
+	      (let ((new-var (gensym)))
+		(values new-var (cons new-var body))))
+	     (else
+	      (values args (cons curr-slot body))))))))
+   `(lambda ,args ,body)))
+
+
+(define-macro (rec header body)
+  (match-case header
+    ((?name . ?vars)
+     `(letrec ((,name (lambda ,vars ,body))) ,name))
+    (else
+     (unless (symbol? header)
+       (error 'rec "Invalid header." header))
+     `(letrec ((,header ,body)) ,header))))
+
+(define-macro (swap! x y)
+  (let ((aux (gensym)))
+    `(let ((,aux ,x))
+       (set! ,x ,y)
+       (set! ,y ,aux))))
+
+(define-macro (catch kind body)
+  (let ((e-sym (gensym))
+        (p-sym (gensym))
+        (m-sym (gensym))
+        (o-sym (gensym)))
+    `(lambda (,e-sym ,p-sym ,m-sym ,o-sym)
+       (if (eq? ,p-sym ,kind)
+         (,e-sym (,body ,m-sym))
+         (error ,p-sym ,m-sym ,o-sym)))))
+
+(define-macro (catch* kind-list body)
+  (let ((e-sym (gensym))
+        (p-sym (gensym))
+        (m-sym (gensym))
+        (o-sym (gensym)))
+    `(lambda (,e-sym ,p-sym ,m-sym ,o-sym)
+       (if (memq ,p-sym ,kind-list)
+         (,e-sym (,body ,p-sym ,m-sym))
+         (error ,p-sym ,m-sym ,o-sym)))))
+
+(define-macro (finally . body)
+  (let ((e-sym (gensym))
+        (p-sym (gensym))
+        (m-sym (gensym))
+        (o-sym (gensym)))
+    `(lambda (,e-sym ,p-sym ,m-sym ,o-sym)
+       (begin ,@body)
+       (error ,p-sym ,m-sym ,o-sym))))
+
+(define-macro (try-until-success . alts)
+  (when (null? alts)
+    (error 'try-until-success "invalid use of the macro try-until-success" #unspecified))
+  (if (null? (cdr alts))
+    (car alts)
+    (let ((e-sym (gensym))
+          (o-sym (gensym)))
+      `(try 
+        ,(car alts)
+        (lambda (,e-sym previous-exception previous-error-message ,o-sym)
+          (if (app-error? previous-exception)
+            (,e-sym (try-until-success ,@(cdr alts)))
+            (error previous-exception previous-error-message ,o-sym)))))))
+
+(define-macro (type-check fun-name var pred)
+  (if (sal-check-mode)
+    `(unless (,pred ,var)
+       (sign-error "function \"~a\": argument \"~a\" does not satisfy predicate ~a" (quote ,fun-name) (quote ,var) (quote ,pred)))
+    `[assert (,var) (,pred ,var)]))
+
+(define-macro (repeat number-of-times proc)
+  (let ((i-sym (gensym)))
+    `(let loop ((,i-sym 0))
+       (when (< ,i-sym ,number-of-times)
+         (,proc ,i-sym)
+         (loop (+ ,i-sym 1))))))
+
+
+;; BD: removed old-style notify-error (now it's error-notify!)
+;; Bigloo 4.x compatibility: rewrote to use with-handler instead of try with
+;; nested lambdas which caused "Illegal atom in s-expression" errors.
+(define-macro (stop-and-interact prompt-string vars)
+  `(let ((prompt (get-prompter)))
+     (unwind-protect
+      (begin
+        (set-prompter! (lambda (l) 
+                         (display ,prompt-string)
+                         (flush-output-port (current-output-port))))
+        ;; Define variables in dynamic environment
+        (with-handler
+         (lambda (e)
+           (error-notify e)
+           #unspecified)
+         (begin
+           ,@(map (lambda (var)
+                    `(dynamic-define (quote ,var) ,var))
+                  vars)))
+        ;; Start interactive REPL
+        (repl)
+        ;; Update variables from REPL
+        (with-handler
+         (lambda (e)
+           (error-notify e)
+           #unspecified)
+         (begin
+           ,@(map (lambda (var)
+                    `(set! ,var (eval (quote ,var))))
+                  vars))))
+      ;; Cleanup: restore prompter
+      (set-prompter! prompt))))
+
+(define-macro (breakpoint name vars condition)
+  `(when ,condition
+     (print "**** BREAKPOINT REACHED: " ,name " ****")
+     (dump-exec-stack)
+     (print "Available vars: " (quote ,vars))
+     (print "Type (quit) to continue the execution.")
+     (stop-and-interact "break > " ,vars)))
+
+(define-macro (sal-assert name vars condition)
+  ;; Simplified for Bigloo 4.x compatibility - stop-and-interact causes issues
+  ;; with nested macro expansion and procedure objects in quasiquotes
+  (if (sal-check-mode)
+    `(unless ,condition
+       (sign-error "Assertion failed in ~a: ~a expected ~a" ,name (quote ,vars) (quote ,condition)))
+    #unspecified))
+
+;; Simple assert macro - checks conditions and throws error if any is false
+;; This macro is used by generated code with syntax: [assert (vars) condition1 condition2 ...]
+;; In check mode: validates all conditions, reports error with variable values if any is false
+;; In non-check mode: expands to nothing for performance
+(define-macro (assert vars . conditions)
+  (if (sal-check-mode)
+    (if (null? conditions)
+        #unspecified
+        (if (null? (cdr conditions))
+            ;; Single condition
+            `(unless ,(car conditions)
+               (sign-error "Assertion failed: ~a expected ~a" (quote ,vars) (quote ,(car conditions))))
+            ;; Multiple conditions - and them together
+            `(unless (and ,@conditions)
+               (sign-error "Assertion failed: ~a expected ~a" (quote ,vars) (quote (and ,@conditions))))))
+    #unspecified))
+
+;dynamic let for over-riding values of variables and restoring them on exit.    
+(define-macro (dlet decls . forms)
+  (let* ((old-val-vars (map (lambda (_) (gensym)) decls))
+         (save-vals (map (lambda (decl old-val-var)
+                           `(,old-val-var ,(car decl)))
+                         decls
+                         old-val-vars))
+         (assignments (map (lambda (decl)
+                             `(set! ,(car decl) ,(cadr decl)))
+                           decls))
+         (restore-vals (map (lambda (decl old-val-var)
+                              `(set! ,(car decl) ,old-val-var))
+                            decls 
+                            old-val-vars)))
+    `(let ,save-vals
+       (unwind-protect
+        (begin
+          ,@assignments
+          ,@forms)
+        (begin
+          ,@restore-vals)))))   
+
+(define-macro (verbose-message lv msg . args)
+  `(when (<= ,lv *verbosity-level*)
+     (verbose-message-core ,msg ,@args)))
+
+(define-macro (status-message . args)
+  `(when *status-messages?*
+     (status-message-core ,@args)))
+

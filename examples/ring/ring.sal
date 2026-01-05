@@ -1,0 +1,30 @@
+ring {; N:nznat} : CONTEXT =
+BEGIN
+
+  inverter [initial:BOOLEAN] : MODULE =
+  BEGIN
+    INPUT inp:BOOLEAN
+    OUTPUT out:BOOLEAN
+    INITIALIZATION
+      out = initial;
+    TRANSITION
+      out' = inp;
+  END;
+
+  ring : MODULE = 
+  WITH OUTPUT ring_data:ARRAY [1..N] OF BOOLEAN
+    (RENAME inp TO ring_data[N], out TO ring_data[1]
+     IN inverter[true])
+    ||
+    (|| (idx:[2..N]) : RENAME inp TO ring_data[idx - 1], out TO ring_data[idx]
+                       IN inverter[false]);
+
+  every_element_is_eventually_true : THEOREM ring |- (FORALL (idx:[1..N]): G(F(ring_data[idx])));
+
+  only_one_element_is_true : THEOREM ring |- G(EXISTS (idx:[1..N]):
+                                                 ring_data[idx]
+                                                 AND
+                                                 (FORALL (idx2:[1..N]):
+                                                      idx /= idx2 => NOT ring_data[idx2]));
+
+END

@@ -1,0 +1,232 @@
+activeSuspension3: CONTEXT = 
+BEGIN
+abs (a:REAL) : REAL  = 
+ IF a < 0 THEN -(a) ELSE a ENDIF  ;
+
+multirateInv (xold:REAL,xnew:REAL,r:REAL,yold:REAL,ynew:REAL,s:REAL) : BOOLEAN  = 
+ (xnew - xold) / r = (ynew - yold) / s ;
+
+eigenInv (xold:REAL,xnew:REAL) : BOOLEAN  = 
+ 0 < xnew AND xnew < xold OR xold < xnew AND xnew < 0 OR xold = 0 AND xnew = 0 ;
+
+loglb(x:REAL): REAL =
+ IF (    2.7 <= x) THEN 1
+ ELSIF (    1.0 <= x AND x <     2.7) THEN 0 +    0.58*x - 0.58
+ ELSIF (   0.37 <= x AND x <     1.0) THEN -1 +     1.6*x - 0.58
+ ELSIF (   0.14 <= x AND x <    0.37) THEN -2 +     4.3*x - 0.58
+ ELSIF (   0.05 <= x AND x <    0.14) THEN -3 +    12.0*x - 0.58
+ ELSE 0 ENDIF;
+
+logub(x:REAL): REAL =
+ IF (   0.05 <= x AND x <     2.7) THEN loglb(x) + 0.12
+ ELSIF x <    0.05 THEN    20.0*x - 4
+ ELSE    0.37*x + 0 ENDIF;
+
+expTimeBnd1(x:REAL, y:REAL, z:REAL): BOOLEAN =
+ (x <    0.05 OR loglb(x) - logub(y) <= z);
+
+expTimeBnd2(x:REAL, y:REAL, z:REAL): BOOLEAN =
+ (x <    0.05 OR y <    0.05 OR z <= logub(x) - loglb(y));
+
+
+eigenInvTime(xold:REAL,xnew:REAL,lamb:REAL,told:REAL,tnew:REAL):BOOLEAN =
+ tnew >= told AND (
+ (xold = 0 AND xnew = 0) OR
+ (xold > 0 AND xnew >= xold AND
+  expTimeBnd1(xnew, xold, (tnew-told)*lamb) AND
+  expTimeBnd2(xnew, xold, (tnew-told)*lamb)) OR
+ (xold < 0 AND xnew <= xold AND
+  expTimeBnd1(-xnew, -xold, (tnew-told)*lamb) AND
+  expTimeBnd2(-xnew, -xold, (tnew-told)*lamb)) ) ;
+
+modlb(x:REAL, y:REAL): REAL =
+ IF x >= 0 AND y >= 0 THEN (IF x < y THEN y ELSE x ENDIF)
+ ELSIF x >= 0 AND y < 0 THEN (IF x < -y THEN -y ELSE x ENDIF)
+ ELSIF x < 0 AND y >= 0 THEN (IF -x < y THEN y ELSE -x ENDIF)
+ ELSE (IF -x < -y THEN -y ELSE -x ENDIF) ENDIF;
+
+modub(x:REAL, y:REAL): REAL =
+ IF x >= 0 AND y >= 0 THEN x+y
+ ELSIF x >= 0 AND y < 0 THEN x-y
+ ELSIF x < 0 AND y >= 0 THEN y-x
+ ELSE -x-y ENDIF;
+
+phase(x:REAL, y:REAL): REAL =
+ IF x >= 0 AND y > 0 THEN 0 ELSIF x > 0 AND y <= 0 THEN 1
+ ELSIF x <= 0 AND y < 0 THEN 2 ELSE 3 ENDIF;
+
+phasediff(xold:REAL, yold:REAL, xnew:REAL, ynew:REAL): [# lb:REAL,ub:REAL #] =
+ LET phi1:REAL = phase(xold,yold) IN
+  LET phi2:REAL = phase(xnew,ynew) IN
+   (IF phi2 >= phi1 THEN (# lb:=1.57*(phi2-phi1-1), ub:=1.57*(phi2-phi1+1) #)
+    ELSE (# lb:=1.57*(phi2-phi1+4-1), ub:=1.57*(phi2-phi1+4+1) #) ENDIF);
+
+
+quadInvModTime(xold:REAL, yold:REAL, xnew:REAL, ynew:REAL, lamb:REAL, told: REAL, tnew: REAL): BOOLEAN =
+ (xold = 0 AND yold = 0 AND xnew = 0 AND ynew = 0) OR (
+   expTimeBnd1(modub(xnew,ynew), modlb(xold,yold), lamb*(tnew-told)) AND
+   expTimeBnd2(modlb(xnew,ynew), modub(xold,yold), lamb*(tnew-told)) );
+
+quadInvPhaseTime(xold:REAL, yold:REAL, xnew:REAL, ynew:REAL, omega:REAL, told: REAL, tnew: REAL): BOOLEAN =
+ ((xold = 0 AND yold = 0 AND xnew = 0 AND ynew = 0) OR
+  LET phi:[# lb:REAL,ub:REAL #] = phasediff(xold,yold,xnew,ynew) IN
+   (EXISTS(n:[0..1]):
+   (omega*(tnew-told) <= 2*3.14*n + phi.ub AND
+    omega*(tnew-told) >= 2*3.14*n + phi.lb)) OR
+   omega*(tnew-told) >= 2*3.14*(1+1) + phi.lb);
+
+quadInvTime(xold:REAL, yold:REAL, xnew:REAL, ynew:REAL, lamb:REAL, omega:REAL, told: REAL, tnew: REAL): BOOLEAN =
+ (tnew >= told) AND
+ quadInvModTime(xold, yold, xnew, ynew, lamb, told, tnew) AND
+ quadInvPhaseTime(xold, yold, xnew, ynew, omega, told, tnew);
+
+
+quadInv (xold:REAL,yold:REAL,xnew:REAL,ynew:REAL) : BOOLEAN  = 
+ abs(xnew) <= abs(xold) + abs(yold) AND abs(ynew) <= abs(xold) + abs(yold) AND (abs(xnew) <= abs(xold) OR abs(ynew) <= abs(yold)) AND (abs(xnew) <= abs(yold) OR abs(ynew) <= abs(xold)) ;
+
+gvNR  : REAL  = 
+ -(5000) ;
+
+gvR  : REAL  = 
+ 0 ;
+
+gxss  : REAL  = 
+ 25 ;
+
+gxsr1  : REAL  = 
+ 25 / 4 ;
+
+gxsr2  : REAL  = 
+ 25 / 8 ;
+
+gxsr3  : REAL  = 
+ 0 ;
+
+gxs  : REAL  = 
+ 0 ;
+
+gxr1  : REAL  = 
+ 30 ;
+
+gxr2  : REAL  = 
+ 1000 / 8 ;
+
+gxr3  : REAL  = 
+ 0 ;
+
+
+GainSchedule: TYPE = { smooth , rough , rougher , roughest } ;
+
+
+plant: MODULE =
+BEGIN
+LOCAL time:REAL
+INPUT mode:GainSchedule
+INPUT r:REAL
+OUTPUT xs:REAL,xu:REAL,vs:REAL,vu:REAL
+INITIALIZATION
+	xs IN { z : REAL | -(0.02) <= z AND z <= 0.02 } ;
+	xu IN { z : REAL | -(0.02) <= z AND z <= 0.02 } ;
+	vs = 0 ;
+	vu = 0 ;
+	time = 0 
+
+TRANSITION
+[
+mode = smooth AND -(0.05) <= xs - xu AND xs - xu <= 0.05 AND -(0.05) <= xs' - xu' AND xs' - xu' <= 0.05 AND time <= time' AND eigenInvTime(-0.044 * xs' + -0.035 * vs' + 1.00 * xu' + 0.026 * vu' + -0.88 * r,-0.044 * xs + -0.035 * vs + 1.00 * xu + 0.026 * vu + -0.88 * r,113.8,time,time') AND eigenInvTime(0.68 * xs' + 0.032 * vs' + -0.73 * xu' + 0.00038 * vu' + -1.1 * r,0.68 * xs + 0.032 * vs + -0.73 * xu + 0.00038 * vu + -1.1 * r,1.3,time,time') AND quadInvTime(0.028 * xs' + 0.023 * vs' + -1.00 * xu' + -0.0030 * vu' + 0.92 * r,0.031 * xs' + 0.023 * vs' + 0.0060 * vu' + -0.083 * r,0.028 * xs + 0.023 * vs + -1.00 * xu + -0.0030 * vu + 0.92 * r,0.031 * xs + 0.023 * vs + 0.0060 * vu + -0.083 * r,14.4,23.4,time,time')  --> 
+	vs' IN { aZtQ : REAL | TRUE } ;
+	vu' IN { aZtQ : REAL | TRUE } ;
+	time' IN { aZtQ : REAL | TRUE } ;
+	xs' IN { aZtQ : REAL | TRUE } ;
+	xu' IN { aZtQ : REAL | TRUE } 
+[]
+mode = rough AND (xu - xs >= 0.05 AND xu - xs <= 0.065 OR xs - xu >= 0.05 AND xs - xu <= 0.065) AND (xu' - xs' >= 0.05 AND xu' - xs' <= 0.065 OR xs' - xu' >= 0.05 AND xs' - xu' <= 0.065) AND time <= time' AND eigenInvTime(0.012 * xs' + 0.038 * vs' + -1.00 * xu' + -0.030 * vu' + 0.97 * r,0.012 * xs + 0.038 * vs + -1.00 * xu + -0.030 * vu + 0.97 * r,117.3,time,time') AND eigenInvTime(0.70 * xs' + 0.030 * vs' + -0.71 * xu' + -1.2 * r,0.70 * xs + 0.030 * vs + -0.71 * xu + -1.2 * r,0.32,time,time') AND quadInvTime(-0.0064 * xs' + -0.021 * vs' + 1.00 * xu' + 0.0033 * vu' + -0.98 * r,-0.0079 * xs' + -0.025 * vs' + -0.0064 * vu' + 0.021 * r,-0.0064 * xs + -0.021 * vs + 1.00 * xu + 0.0033 * vu + -0.98 * r,-0.0079 * xs + -0.025 * vs + -0.0064 * vu + 0.021 * r,13.2,24.4,time,time')  --> 
+	vs' IN { aZtQ : REAL | TRUE } ;
+	vu' IN { aZtQ : REAL | TRUE } ;
+	time' IN { aZtQ : REAL | TRUE } ;
+	xs' IN { aZtQ : REAL | TRUE } ;
+	xu' IN { aZtQ : REAL | TRUE } 
+[]
+mode = rougher AND (xu - xs >= 0.065 AND xu - xs <= 0.08 OR xs - xu >= 0.065 AND xs - xu <= 0.08) AND (xu' - xs' >= 0.065 AND xu' - xs' <= 0.08 OR xs' - xu' >= 0.065 AND xs' - xu' <= 0.08) AND time <= time' AND eigenInvTime(-0.37 * xs' + 0.053 * vs' + -0.93 * xu' + -0.043 * vu' + 1.3 * r,-0.37 * xs + 0.053 * vs + -0.93 * xu + -0.043 * vu + 1.3 * r,128.2,time,time') AND eigenInvTime(0.78 * xs + 0.025 * vs + -0.63 * xu + -0.00019 * vu + -0.12 * r,0.78 * xs' + 0.025 * vs' + -0.63 * xu' + -0.00019 * vu' + -0.12 * r,5.9,time,time') AND quadInvTime(0.12 * xs' + -0.012 * vs' + 0.98 * xu' + 0.0043 * vu' + -1.1 * r,0.17 * xs' + -0.029 * vs' + -0.0075 * vu' + -0.16 * r,0.12 * xs + -0.012 * vs + 0.98 * xu + 0.0043 * vu + -1.1 * r,0.17 * xs + -0.029 * vs + -0.0075 * vu + -0.16 * r,10.8,27.6,time,time')  --> 
+	vs' IN { aZtQ : REAL | TRUE } ;
+	vu' IN { aZtQ : REAL | TRUE } ;
+	time' IN { aZtQ : REAL | TRUE } ;
+	xs' IN { aZtQ : REAL | TRUE } ;
+	xu' IN { aZtQ : REAL | TRUE } 
+[]
+mode = roughest AND (xu - xs >= 0.08 OR xs - xu >= 0.08) AND (xu' - xs' >= 0.08 OR xs' - xu' >= 0.08) AND time <= time' AND quadInvTime(-0.91 * xs' + -0.025 * vs' + 0.063 * xu' + -0.0012 * vu' + 0.85 * r,0.10 * vs' + -0.40 * xu' + 0.0017 * vu' + 0.40 * r,-0.91 * xs + -0.025 * vs + 0.063 * xu + -0.0012 * vu + 0.85 * r,0.10 * vs + -0.40 * xu + 0.0017 * vu + 0.40 * r,1.7,8.4,time,time') AND quadInvTime(0.097 * xs' + 0.0047 * vs' + -1.00 * xu' + -0.0024 * vu' + 0.90 * r,0.0050 * xs' + -0.0013 * vs' + 0.015 * vu' + -0.0050 * r,0.097 * xs + 0.0047 * vs + -1.00 * xu + -0.0024 * vu + 0.90 * r,0.0050 * xs + -0.0013 * vs + 0.015 * vu + -0.0050 * r,10.3,63.5,time,time')  --> 
+	vs' IN { aZtQ : REAL | TRUE } ;
+	vu' IN { aZtQ : REAL | TRUE } ;
+	time' IN { aZtQ : REAL | TRUE } ;
+	xs' IN { aZtQ : REAL | TRUE } ;
+	xu' IN { aZtQ : REAL | TRUE } 
+]
+END ;
+
+
+controller: MODULE =
+BEGIN
+INPUT xs:REAL,xu:REAL,vs:REAL,vu:REAL
+OUTPUT mode:GainSchedule
+INITIALIZATION
+ mode = IF xs-xu<=0 AND xu-xs<0.05 OR xs-xu>=0 AND xs-xu < 0.05 THEN smooth
+        ELSIF xu-xs>0.08 OR xs-xu>0.08 THEN roughest
+        ELSIF xu-xs>=0.065 AND xu-xs<=0.08 OR xs-xu>=0.065 AND xs-xu<=0.08 THEN rougher
+        ELSE rough ENDIF
+ 
+TRANSITION
+[
+%NOT(mode = smooth) AND 
+xs' - xu' <= 0 AND xu' - xs' < 0.05 OR xs' - xu' >= 0 AND xs' - xu' < 0.05  --> 
+	mode' = smooth 
+[]
+xu' - xs' > 0.08 OR xs' - xu' > 0.08  --> 
+	mode' = roughest 
+[]
+%NOT(mode = rougher) AND 
+xu' - xs' >= 0.065 AND xu' - xs' <= 0.08 OR xs' - xu' >= 0.065 AND xs' - xu' <= 0.08  --> 
+	mode' = rougher 
+[]
+%NOT(mode = rough) AND 
+xu' - xs' >= 0.05 AND xu' - xs' <= 0.065 OR xs' - xu' >= 0.05 AND xs' - xu' <= 0.065  --> 
+	mode' = rough 
+]
+END ;
+
+
+contextModel: MODULE =
+BEGIN
+OUTPUT r:REAL
+INITIALIZATION
+	r IN { z : REAL | -(0.1) <= z AND z <= 0.1 } 
+
+TRANSITION
+[
+TRUE  --> 
+	r' IN { z : REAL | -(0.1) <= z AND z <= 0.1 } 
+]
+END ;
+
+
+system: MODULE =
+( plant || controller || contextModel ) ;
+
+correct : THEOREM
+system |- G(-(0.1) <= xs - xu AND xs - xu <= 0.1);
+
+% sal-inf-bmc -v 3 -d 0 activeSuspension3 reachable <--- No CE quickly
+% sal-inf-bmc -v 3 -d 1 activeSuspension3 reachable <--- CE found in 1 minute
+reachable : THEOREM system |- G(NOT(mode = rough));
+
+% sal-inf-bmc -v 3 -d 0 activeSuspension3 reachable1 <--- No CE quickly
+% sal-inf-bmc -v 3 -d 1 activeSuspension3 reachable1 <--- No CE quickly
+% sal-inf-bmc -v 3 -d 2 activeSuspension3 reachable1 <--- Expecting CE...
+reachable1 : THEOREM system |- G(NOT(mode = rougher));
+
+% sal-inf-bmc -v 3 -d 0 activeSuspension3 reachable2 <--- No CE quickly
+% sal-inf-bmc -v 3 -d 1 activeSuspension3 reachable2 <--- No CE quickly
+% sal-inf-bmc -v 3 -d 2 activeSuspension3 reachable2 <--- No CE quickly
+% sal-inf-bmc -v 3 -d 3 activeSuspension3 reachable2 <--- No CE quickly
+reachable2 : THEOREM system |- G(NOT(mode = roughest));
+
+END

@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /Users/e35480/projects/misc/sal/sal-3.3/bin/arm-apple-darwin24.6.0-release/salenv-exec-safe "$@"

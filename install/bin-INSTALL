@@ -1,0 +1,4 @@
+To install the binary distribution of SAL 3.3,
+you just need to execute the following command:
+         
+       % ./install.sh

@@ -1,0 +1,21 @@
+n-bit ADDER
+-----------
+
+Description: adder.sal is a parametric context. The parameter 'N' specifies
+the number of bits of the Nbitadder ADDER. The Nbitadder adder is build using 
+the onebitadder module.
+
+Commands:
+
+- Generate an execution trace up to depth 10, for a 5-bit adder
+
+  % sal-path-finder -v 3 --module='adder{5}!Nbitadder'
+
+- Generate an execution trace up to depth 20, for a 3-bit adder,
+  forcing sal-path-finder to print the value of modified 
+  variables.
+
+  % sal-path-finder -v 3 --depth=20 --delta-path --module='adder{3}!Nbitadder'
+
+
+  

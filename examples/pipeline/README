@@ -1,0 +1,16 @@
+Simple Pipeline Datapath
+------------------------
+
+This example was extracted from the UCLID manual. 
+UCLID is available online at: http://www-2.cs.cmu.edu/~uclid/
+
+Commands:
+
+- To prove that the pipeline circuit is "equivalent" to the
+  the nonpipelined version:
+
+  % sal-inf-bmc -v 10 --enable-ate -d 4 pipeline equivalent
+
+  Remark: we have to use the flag --enable-ate (array theory elimination),
+  because the array theory in ICS is incomplete.
+

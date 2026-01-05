@@ -1,0 +1,69 @@
+Synchronous bus arbiter
+-----------------------
+Source: Symbolic Model Checking (K. L. McMillan)
+        CMU-CS-92-131
+
+Description: The purpose of the arbiter is to grant
+access on each clock cycle to a single client among
+a number of clients contending for the use of a bus
+(or another resource). The inputs of the circuit
+are a set of request signals, and the output a
+set of acknowledge signals. Normally, the arbiter
+asserts the acknowledge signal to the client with
+lowest signal. However, as signal become more 
+frequent, the arbiter is designed to fall back
+on round robin scheme, so that every requester is
+eventually requested. This is done by circulating
+a token in a ring of arbiter cells, with one
+cell per client. The token moves once every
+clock cycle. If a given client's request persists
+for the time it takes for the token to make a
+complete circuit, that client is granted immediate
+access to the bus.
+
+Remark: arbiter.lsal is a parametric context.
+The parameter "n" is used to set the number of
+cells in the arbiter.
+
+Commands:
+
+- Prove the property at-most-one-ack for 10 cells
+
+  % sal-smc -v 3 --assertion="(@ at-most-one-ack (arbiter () (10)))"
+
+- Prove the property at-most-one-ack for 20 cells 
+
+  % sal-smc -v 3 --assertion="(@ at-most-one-ack (arbiter () (10)))"
+
+- Prove the property at-most-one-ack for 20 cells using backward search.
+
+  % sal-smc -v 3 --backward --assertion="(@ at-most-one-ack (arbiter () (20)))"
+
+- Prove the property no-ack-without-request for 20 cells
+
+  % sal-smc -v 3 --assertion="(@ no-ack-without-request (arbiter () (20)))"
+
+- Prove the property no-ack-without-request for 20 cells using backward search
+
+  % sal-smc -v 3 --backward --assertion="(@ no-ack-without-request (arbiter () (20)))"
+
+- Prove the property no-ack-without-request for 20 cells using k-induction (k = 10 default)
+
+  % sal-bmc -v 3 --induction --assertion="(@ no-ack-without-request (arbiter () (20)))"
+
+- Prove the property at-most-one-token for 20 cells using k-induction (k = 1)
+
+  % sal-bmc -v 3 -i -d 1 --assertion="(@ at-most-one-token (arbiter () (20)))"
+ 
+- Prove the property at-most-one-ack using at-most-one-token as a lemma 
+
+  % sal-bmc -v 3 -i -d 1 -l at-most-one-token --assertion="(@ at-most-one-ack (arbiter () (20)))"
+	
+- Prove the property every-request-is-eventually-acknowledged for 10 cells
+
+  % sal-smc -v 3 --assertion="(@ every-request-is-eventually-acknowledged (arbiter () (10)))"
+
+- Produce an execution path up to depth 10, for module arbiter with 20 cells
+
+  % sal-path-finder -v 3 --module="(@ arbiter (arbiter () (20)))"
+

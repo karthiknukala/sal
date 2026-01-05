@@ -1,0 +1,27 @@
+B.Subtilis Sporulation Initiation Network
+-----------------------------------------
+Author: Ashish Tiwari
+Email: tiwari@csl.sri.com
+
+BSubSpor78.sal --- HybridSAL specification of B.Subtilis Sporulation Initiation Network.
+BSubSpor78ABS.sal --- SAL specification of the abstraction of the above.
+	It is automatically generated from the BSubSpor78.sal HybridSal specification 
+	using the HybridAbstractor. Invariants AND properties were added by hand. 
+
+	The goal is to prove that the BSub Sporulation network stabilizes in a High Spo0AP and
+	low SinR4 state (when environmental conditions are not conducive to growth).
+	We prove that whenever the bacteria reaches the "HIGH Spo0AP AND LOW SinR4" state 
+	*after* certain other protein concentrations have stopped fluctuating, then it continues
+	to remain in this state.
+
+sporulate2 --- stability property, as described above. Of the form G(p => Gp).
+sporulate1 --- the stable state is reached (note this is weaker. It doesn't say it is
+*always eventually* reached.
+
+How to test?
+------------
+ % sal-smc -v 3 BSubSpor78ABS sporulate1
+	  Will produce a counter-example, which shows that the stable region is reachable.
+
+ % sal-smc -v 3 BSubSpor78ABS sporulate2
+  	Will prove the above stability property.
