@@ -23,7 +23,8 @@
                 sat-boolean-grasp-bmc-context sat-boolean-siege-bmc-context 
                 sat-boolean-berkmin-bmc-context sat-boolean-smt-bmc-context
 		sat-boolean-yices-bmc-context sat-boolean-lingeling-bmc-context
-		sat-boolean-minisat-bmc-context sat-boolean-yices2-bmc-context)
+		sat-boolean-minisat-bmc-context sat-boolean-yices2-bmc-context
+		sat-boolean-kissat-bmc-context)
         (export (sal-bmc/add-solver! solver-id make-bmc-context-proc)
                 (sal-bmc/create-assertion-lemmas lemma-str-list main-assertion-name bool-assertion)
                 (sal-bmc/find-trace module depth solver-id . acyclic?)
@@ -45,7 +46,8 @@
                     (berkmin . ,make-sat-boolean-berkmin-bmc-context)
                     (smt . ,make-sat-boolean-smt-bmc-context)
 		    (lingeling . ,make-sat-boolean-lingeling-bmc-context)
-		    (minisat . ,make-sat-boolean-minisat-bmc-context)))
+		    (minisat . ,make-sat-boolean-minisat-bmc-context)
+		    (kissat . ,make-sat-boolean-kissat-bmc-context)))
 
 (define-api (sal-bmc/add-solver! solver-id  make-bmc-context-proc)
   (push! (cons solver-id make-bmc-context-proc) *solvers*))

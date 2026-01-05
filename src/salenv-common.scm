@@ -31,7 +31,7 @@
                 sal-smc-api sal-pseudo-lets sal-nnf sal-ltl sal-bound graph sort sal-dependencies
                 finite-set-as-bdd sal-component-info sal-version tmp-files sal-flat-data-structures
                 zchaff-interface grasp-interface svc-interface uclid-interface 
-		cvcl-interface lingeling-interface minisat-interface
+		cvcl-interface lingeling-interface minisat-interface kissat-interface
                 simple-abstraction  verify-signature sal-derived-path sal-wmc-core ltl-ctl
                 sal-parser sal-global-context sal-smc-prioritized-traversal sal-bdd-fsm-max-min
                 sal-smc-context 
@@ -39,7 +39,8 @@
                 sat-boolean-ics-context sat-boolean-cnf-context sat-boolean-bmc-context
                 sat-boolean-ics-bmc-context sat-boolean-cnf-bmc-context 
                 sat-boolean-zchaff-bmc-context siege-interface sat-boolean-siege-bmc-context
-                sat-boolean-grasp-bmc-context sat-boolean-lingeling-bmc-context sat-boolean-minisat-bmc-context 
+                sat-boolean-grasp-bmc-context sat-boolean-lingeling-bmc-context sat-boolean-minisat-bmc-context
+                sat-boolean-kissat-bmc-context
 		sal-bmc berkmin-interface sat-boolean-berkmin-bmc-context
                 sal-guess-reader sat-generic-bmc-context sat-ics-context sat-ics-bmc-context
                 sal-inf-bmc sat-svc-context sat-svc-bmc-context sat-cvcl-context sat-cvcl-bmc-context

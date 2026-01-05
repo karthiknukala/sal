@@ -38,7 +38,7 @@ sal-bdd-fsm sal2bdd sal-bdd-cluster sal-smc-core sal-api
 sal-smc-api sal-pseudo-lets sal-nnf sal-ltl sal-bound graph sort
 sal-dependencies finite-set-as-bdd sal-component-info sal-version
 tmp-files sal-flat-data-structures zchaff-interface
-grasp-interface lingeling-interface minisat-interface
+grasp-interface lingeling-interface minisat-interface kissat-interface
 svc-interface uclid-interface cvcl-interface
 simple-abstraction sal-derived-path sal-wmc-core ltl-ctl
 sal-parser sal-global-context sal-smc-prioritized-traversal

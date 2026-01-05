@@ -206,6 +206,7 @@ sal-dependencies finite-set-as-bdd sal-component-info polarity          \
 dot-interface ics-interface tmp-files sal-flat-data-structures          \
 sal-flat-support zchaff-interface grasp-interface svc-interface         \
 uclid-interface cvcl-interface lingeling-interface minisat-interface    \
+kissat-interface                                                        \
 simple-abstraction sal-type-membership                                  \
 dp-translation-support sal-derived-path sal-wmc-core                    \
 ltl-ctl sal-global-context sal-smc-prioritized-traversal                \
@@ -217,7 +218,8 @@ sat-boolean-cnf-bmc-context sat-boolean-zchaff-bmc-context              \
 siege-interface sat-boolean-siege-bmc-context                           \
 sat-boolean-grasp-bmc-context sal-bmc berkmin-interface                 \
 sat-boolean-berkmin-bmc-context sat-boolean-lingeling-bmc-context       \
-sat-boolean-minisat-bmc-context sal-expand-for-all-definitions          \
+sat-boolean-minisat-bmc-context sat-boolean-kissat-bmc-context          \
+sal-expand-for-all-definitions                                          \
 sal-guess-reader sat-generic-bmc-context sat-ics-context                \
 sat-ics-bmc-context sat-generic-context-result sal-inf-bmc              \
 sat-svc-context sat-svc-bmc-context sat-cvcl-context                    \
