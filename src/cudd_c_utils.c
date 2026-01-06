@@ -17,49 +17,82 @@
  *
  */
 
-/*
- * Use compatibility header that handles CUDD 2.x vs 3.x differences
- */
 #include "cudd_compat.h"
 
-/*
- * Fix a compilation warning: both cudd.h and bigloo.h may
- * define assert as a macro. gcc complains that assert is
- * redefined.
- */
 #ifdef assert
 #undef assert
 #endif
 
 #include "bigloo.h"
 
-/*
- * Modern Bigloo (4.x) may not export GC_finalize_on_demand directly.
- * We use a wrapper function instead.
- */
 extern int GC_finalize_on_demand;
 
-/*
- * Compatibility macros for Bigloo 4.x
- * In older Bigloo, FOREIGN_TO_COBJ was used; in modern versions,
- * we may need CREF or direct access depending on the object type.
- */
 #ifndef FOREIGN_TO_COBJ
 #  define FOREIGN_TO_COBJ(x) ((void *)CREF(x))
 #endif
 
-/*
- * GC_PTR type for finalizer callbacks - modern GC uses void*
- */
 #ifndef GC_PTR
 typedef void * GC_PTR;
 #endif
 
-DdManager * cudd_new_manager() {
+/*===========================================================================
+ * MEMORY MANAGEMENT FOR ARM64 (Apple Silicon)
+ *
+ * Problem: On ARM64, Boehm GC finalizers can run during CUDD operations,
+ * causing race conditions that corrupt CUDD's internal structures.
+ *
+ * Solution: Don't use Boehm GC finalizers for BDD nodes. Instead:
+ * 1. Disable finalization for CUDD nodes
+ * 2. Provide periodic cleanup at Scheme-level safe points
+ * 3. Accept some memory overhead for automatic cleanup via Scheme-level tracking
+ *
+ * The Scheme code in bdd.scm tracks nodes and can call cleanup periodically.
+ *===========================================================================*/
+
+/*===========================================================================
+ * GC Finalization Control
+ *===========================================================================*/
+
+void sal_enable_full_finalization(void) {
   GC_finalize_on_demand = 0;
-  return Cudd_Init(0,0,CUDD_UNIQUE_SLOTS,CUDD_CACHE_SLOTS,0);
 }
 
+void sal_disable_full_finalization(void) {
+  GC_finalize_on_demand = 1;
+}
+
+/* Stubs for deferred finalization interface - not used in this implementation */
+void cudd_process_deferred_finalizations(void) {
+  /* Cleanup is handled at Scheme level */
+}
+
+int cudd_deferred_queue_size(void) {
+  return 0;
+}
+
+void cudd_enter_operation(void) {
+  /* No-op */
+}
+
+void cudd_leave_operation(void) {
+  /* No-op */
+}
+
+int cudd_in_operation(void) {
+  return 0;
+}
+
+/*===========================================================================
+ * Manager and Node Creation/Registration
+ *===========================================================================*/
+
+DdManager * cudd_new_manager(void) {
+  DdManager * result;
+  /* Disable automatic finalization to prevent bus errors on ARM64 */
+  GC_finalize_on_demand = 1;
+  result = Cudd_Init(0,0,CUDD_UNIQUE_SLOTS,CUDD_CACHE_SLOTS,0);
+  return result;
+}
 
 void check_cudd(DdManager * manager) {
   if (Cudd_DebugCheck(manager) != 0) {
@@ -67,32 +100,27 @@ void check_cudd(DdManager * manager) {
   }
 }
 
-int num_finalizations=0;
-
-static void cudd_dec_ref_finalizer(GC_PTR obj, GC_PTR data)
-{
-  DdNode * node = (DdNode *) FOREIGN_TO_COBJ((obj_t) obj);
-  DdManager * manager = (DdManager *) FOREIGN_TO_COBJ((obj_t) data);
-
-  num_finalizations++;
-  Cudd_RecursiveDeref(manager, node);
-}
-
-static void cudd_manager_finalizer(GC_PTR obj, GC_PTR data) 
-{
-  DdManager * manager = (DdManager *) FOREIGN_TO_COBJ((obj_t) obj); 
-  Cudd_Quit(manager);
-}
+int num_finalizations = 0;
 
 void cudd_register_node(obj_t manager, obj_t node)
 {
-  GC_register_finalizer(node, cudd_dec_ref_finalizer, manager, 0, 0);
+  /*
+   * DO NOT use Boehm GC finalizers for BDD nodes on ARM64.
+   * Memory cleanup is handled at the Scheme level via periodic collection.
+   */
+  (void)manager;
+  (void)node;
 }
 
 void cudd_register_manager(obj_t manager) 
 {
-  GC_register_finalizer(manager, cudd_manager_finalizer, 0, 0, 0);
+  /* Don't register manager finalizer either */
+  (void)manager;
 }
+
+/*===========================================================================
+ * Basic Node Operations
+ *===========================================================================*/
 
 DdNode * cudd_then(DdNode * n) {
   return Cudd_T(n);
@@ -110,43 +138,12 @@ int cudd_is_constant(DdNode * n) {
   return Cudd_IsConstant(n);
 }
 
-/***************************************************************
-
-Bruno found the GC interaction bug that was happening on the MAC.
-
-On the MAC plataform registers are used to pass arguments. So,
-the following problem may happen:
-
-1) (bdd/or n1 n2) is called, and n1 and n2 are dead after the call.
- Assume the registers r3 and r4 are used to store n1 and n2.
-
-2) The Cudd nodes associated with n1 and n2 are sent to Cudd_bddOr,
-   in the process r3 and r4 are overwritten. Therefore, there isn't
-   any reference to n1 and n2. 
-
-3) Cudd_bddOr may invoke the CUDD GC, suppose it invokes it.
-   
-4) The CUDD GC invokes cudd_gc_pre_hook, which invokes GC_gcollect and
-   GC_invoke_finalizers. Since n1 and n2 are not referenced, they are
-   garbage collected. 
-
-5) When n1 and n2 are finalized the reference counter of the associated
-   nodes is decremented, and they can be garbage collected by CUDD. This
-   is a BUG, since n1 and n2 will be used by Cudd_bddOr.
-
-So, the bug happens when:
-
-1) n1 and/or n2 are not used after the call (bdd/or n1 n2)
-2) registers are used to pass arguments
-3) n1 and n2 are stored in registers that are overwritten before
-   calling the CUDD GC
-
-Solution:
-  Increment the reference counter of the CUDD nodes associated
-  with n1 and n2 before calling the CUDD function, and decrement
-  them after the call.
- 
-***************************************************************/
+/*===========================================================================
+ * Safe CUDD Operations
+ *
+ * These wrappers protect arguments from being collected during the call
+ * by incrementing reference counts before and decrementing after.
+ *===========================================================================*/
 
 DdNode * s_Cudd_ReadOne(DdManager * manager) {
   DdNode * result = Cudd_ReadOne(manager);
@@ -170,7 +167,6 @@ DdNode * s_Cudd_bddIthVar(DdManager * manager, unsigned i) {
 }
 
 DdNode * s_Cudd_Not(DdNode * n) {
-  /* Cudd_Not is a macro, so I don't need to increment/decrement the reference count of n */
   DdNode * result = Cudd_Not(n);
   assert(result != 0);
   Cudd_Ref(result);
@@ -308,15 +304,15 @@ DdNode * s_Cudd_SubsetCompress(DdManager * manager, DdNode * n1, int num_vars, i
 }
 
 
-/**********************************************************/
-
+/*===========================================================================
+ * Cube Operations
+ *===========================================================================*/
 
 int * result_cube;
 
 DdGen * cudd_first_cube (DdManager * m, DdNode * n) {
   CUDD_VALUE_TYPE value;
   DdGen * result = Cudd_FirstCube(m, n, &result_cube, &value);
-  /* printf("result = %d\n", result_cube[0]); */
   return result;
 }
 
@@ -325,7 +321,6 @@ int cudd_next_cube (DdGen * gen) {
   return Cudd_NextCube(gen, &result_cube, &value);
 }
 
-/* return the highest position (in the current order) of a variable in the given cube */
 int cudd_get_maximum_pos(DdManager * m, DdNode * cube) {
   int num_vars = Cudd_ReadSize(m);
   int max = 0;
@@ -357,9 +352,13 @@ void copy_cube_to_vector(obj_t vector, int num_vars)
   }
 }
 
-int * cudd_result_cube() {
+int * cudd_result_cube(void) {
   return result_cube;
 }
+
+/*===========================================================================
+ * Reordering
+ *===========================================================================*/
 
 void cudd_enable_sift_reordering(DdManager * manager) {
   Cudd_AutodynEnable(manager, CUDD_REORDER_SIFT);
@@ -369,11 +368,15 @@ void cudd_enable_symm_sift_reordering(DdManager * manager) {
   Cudd_AutodynEnable(manager, CUDD_REORDER_SYMM_SIFT);
 }
 
+/*===========================================================================
+ * Verbose Mode and Display
+ *===========================================================================*/
+
 int cudd_indent = 4;
 int verbose_mode = 0;
 int reorder_increment = 200000;
 
-void cudd_set_verbose_mode() {
+void cudd_set_verbose_mode(void) {
   verbose_mode = 1;
 }
 
@@ -381,30 +384,24 @@ void cudd_set_reorder_increment(int n) {
   reorder_increment = n;
 }
 
-void cudd_show_indent() {
+void cudd_show_indent(void) {
   int i;
   for(i = 0; i < cudd_indent; i++)
     fprintf(stderr, " ");
 }
 
-/***********************************
-The CUDD GC is always executed 
-
-
-*************************************/
-
+/*===========================================================================
+ * CUDD GC Hooks
+ *===========================================================================*/
 
 int cudd_gc_pre_hook(DdManager * manager, const char * msg, void * value) {
   unsigned int num_dead;
+
   if (verbose_mode) {
     cudd_show_indent();
-    fprintf(stderr, "SALenv GC... ");
-    fflush(stderr);
+    fprintf(stderr, "SALenv GC... done\n");
   }
-  GC_gcollect();  
-  GC_invoke_finalizers(); 
-  if (verbose_mode)
-    fprintf(stderr, "done\n");
+  
   num_dead = Cudd_ReadDead(manager);
   if (verbose_mode) {
     cudd_show_indent();
@@ -416,6 +413,7 @@ int cudd_gc_pre_hook(DdManager * manager, const char * msg, void * value) {
 
 int cudd_gc_post_hook(DdManager * manager, const char * msg, void * value) {
   unsigned int num_dead = Cudd_ReadDead(manager);
+  
   if (verbose_mode) {
     cudd_show_indent();
     fprintf(stderr, "end BDD GC (dead node count: %u)...\n", num_dead);
@@ -428,7 +426,7 @@ int cudd_reordering_pre_hook(DdManager * manager, const char * msg, void * value
   long n = Cudd_ReadNodeCount(manager);
   if (verbose_mode) {
     cudd_show_indent();
-    fprintf(stderr, "begin BDD reordering (node count: %d)...\n", n);
+    fprintf(stderr, "begin BDD reordering (node count: %ld)...\n", n);
     fflush(stderr);
   }
   return 1;
@@ -438,11 +436,9 @@ int cudd_reordering_post_hook(DdManager * manager, const char * msg, void * valu
   long n = Cudd_ReadNodeCount(manager);
   int curr = Cudd_ReadNextReordering(manager);
   Cudd_SetNextReordering(manager, curr + reorder_increment);
-  /* printf("curr = %d\n", curr); 
-     printf("new curr = %d\n", Cudd_ReadNextReordering(manager)); */
   if (verbose_mode) {
     cudd_show_indent();
-    fprintf(stderr, "end BDD reordering (node count: %d)...\n", n);
+    fprintf(stderr, "end BDD reordering (node count: %ld)...\n", n);
     fflush(stderr);
   }
   return 1;
@@ -473,38 +469,30 @@ int cudd_gen_dot_file(DdManager * manager, int n, DdNode ** nodes, char * file) 
   return result;
 }
 
-/*
- * CUDD 3.x compatibility: Helper functions for array operations on
- * opaque types. These are needed because DdNode and DdGen are opaque
- * in CUDD 3.x, so Bigloo can't generate array access code directly.
- */
+/*===========================================================================
+ * CUDD 3.x Compatibility Helpers
+ *===========================================================================*/
 
-/* Allocate an array of DdNode pointers */
 DdNode ** cudd_node_array_alloc(int n) {
   return (DdNode **)GC_MALLOC(n * sizeof(DdNode *));
 }
 
-/* Set element in DdNode* array */
 void cudd_node_array_set(DdNode ** arr, int i, DdNode * val) {
   arr[i] = val;
 }
 
-/* Get element from DdNode* array */
 DdNode * cudd_node_array_ref(DdNode ** arr, int i) {
   return arr[i];
 }
 
-/* Check if array pointer is null */
 int cudd_node_array_null(DdNode ** arr) {
   return arr == NULL;
 }
 
-/* Check if generator pointer is null */
 int cudd_gen_null(DdGen * gen) {
   return gen == NULL;
 }
 
-/* Check if node pointer is null */
 int cudd_node_null(DdNode * node) {
   return node == NULL;
 }

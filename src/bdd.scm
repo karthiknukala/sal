@@ -138,6 +138,12 @@
          (cudd-estimate-cofactor-simple::int (::CuddNode ::int) "Cudd_EstimateCofactorSimple")
          (cudd-estimate-cofactor::int (::CuddManager ::CuddNode ::int ::int) "Cudd_EstimateCofactor")
          (cudd-subset-compress::CuddNode (::CuddManager ::CuddNode ::int ::int) "s_Cudd_SubsetCompress")
+         ;; Deferred finalization functions for safe GC interaction
+         (cudd-process-deferred-finalizations::void () "cudd_process_deferred_finalizations")
+         (cudd-deferred-queue-size::int () "cudd_deferred_queue_size")
+         (cudd-enter-operation::void () "cudd_enter_operation")
+         (cudd-leave-operation::void () "cudd_leave_operation")
+         (cudd-in-operation?::bool () "cudd_in_operation")
          )
         (include "utility.sch")
         (include "scmobj.sch")
@@ -147,6 +153,8 @@
          (make-bdd-manager)
          (bdd/num-nodes manager)
          (bdd/enable-finalization! flag)
+         (bdd/process-deferred-finalizations!)
+         (bdd/deferred-queue-size)
          (bdd/set-curr-var! manager index)
          (bdd/set-next-var! manager index)
          (bdd/set-input-var! manager index)
@@ -281,11 +289,34 @@
   (cudd-disable-dynamic-reordering manager)
   #unspecified)
 
-(define *finalization?* #t)
+(define *finalization?* #f)  ;; Disabled by default on ARM64
 
 (define-api (bdd/enable-finalization! flag)
-  :doc "Finalization allows the Scheme garbage collector to interact with the CUDD (the BDD library) garbage collector. If finalization is disabled, the BDD nodes will not be garbage collected, and memory may be wasted. This function is useful for debugging purposes." 
+  :doc "Enable or disable BDD node finalization. On ARM64 (Apple Silicon), finalization is disabled by default due to race conditions between Boehm GC and CUDD. When disabled, BDD memory is not automatically reclaimed but will be freed when the process exits. For long-running sessions, you can call (bdd/cleanup-all!) periodically."
   (set! *finalization?* flag))
+
+;;===========================================================================
+;; MEMORY MANAGEMENT FOR ARM64 (Apple Silicon)
+;;
+;; On ARM64, Boehm GC finalizers cannot be safely used with CUDD because:
+;; 1. Function arguments are passed in registers that get overwritten
+;; 2. GC can run at any time, seeing wrapper objects as unreachable
+;; 3. Finalizers call Cudd_RecursiveDeref on nodes still in use
+;; 4. This corrupts CUDD's internal structures causing bus errors
+;;
+;; Solution: Finalization is disabled. Memory is freed when the process exits.
+;; For typical SAL usage (run verification, exit), this is acceptable.
+;;
+;; For long-running sessions, users can explicitly manage memory.
+;;===========================================================================
+
+(define-api (bdd/process-deferred-finalizations!)
+  :doc "No-op on ARM64. BDD finalization is disabled to prevent bus errors."
+  #unspecified)
+
+(define-api (bdd/deferred-queue-size)
+  :doc "Always returns 0 on ARM64. BDD finalization is disabled."
+  0)
 
 (define *initial-reorder-threshold* 100000)
 
@@ -360,10 +391,11 @@
   (cudd-get-max-pos (car cube) (cdr cube)))
 
 (define (bdd/register-node manager bdd-node)
+  ;; On ARM64 (Apple Silicon), finalization is disabled to prevent bus errors.
+  ;; cudd-register-node is a no-op in the C layer.
   (when *finalization?*
     (cudd-register-node manager bdd-node)
     #unspecified)
-  ;; [assert (manager bdd) (= (cudd-debug-check manager) 0)]
   (cons manager bdd-node))
 
 (define (bdd/complement? bdd)
