@@ -19,9 +19,10 @@
 (module utility
         (include "utility.macros")
         (extern 
+         ;; Modern Bigloo (4.x) GC interface
+         ;; These functions are part of the Boehm GC used by Bigloo
          (GC_gcollect::void () "GC_gcollect")
-         (GC_invoke_finalizers::int () "GC_invoke_finalizers")
-         (GC_finalize_on_demand::int "GC_finalize_on_demand"))
+         (GC_invoke_finalizers::int () "GC_invoke_finalizers"))
         (import xformat gmp-scheme)
         (export (force-gc!)
                 (natural? obj)
@@ -142,8 +143,8 @@
   (GC_invoke_finalizers)
   #unspecified)
 
-;; enable full finalization
-(set! GC_finalize_on_demand 0)
+;; NOTE: On ARM64 (Apple Silicon), finalization is disabled in cudd_c_utils.c
+;; to prevent bus errors. See cudd_new_manager() for details.
 
 (define (natural? obj)
   (and (integer? obj) (>= obj 0)))
@@ -864,9 +865,9 @@
 (define (verbose-message-core msg . args)
   (with-output-to-port (current-error-port)
     (lambda ()
-      (print (apply xformat (cons* #f msg args)))))
-  ;; the following line was included to solve a problem when compiling SAL with mingw
-  (pragma "fflush(stderr);")
+      (display (apply xformat (cons* #f msg args)))
+      (newline)
+      (flush-output-port (current-error-port))))
   #unspecified)
 
 ;;
