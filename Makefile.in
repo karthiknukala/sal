@@ -42,19 +42,18 @@ RANLIB = @RANLIB@
 BIGLOO = @BIGLOO@
 BDEPEND = @BDEPEND@
 
-# ---- IMPORTANT: allow user/CI to override/extend flags via environment ----
-# Keep Autoconf-provided values, but also allow additional include/lib paths
-# (e.g. CI building CUDD into a local prefix and exporting CPPFLAGS/LDFLAGS).
-# Using "+=" ensures exported env vars are not discarded.
-CPPFLAGS=@CPPFLAGS@
-LDFLAGS=@LDFLAGS@
-LIBS=@LIBS@
+# ----------------------------------------------------------------------
+# Flags: keep autoconf defaults, but DO NOT overwrite environment/CI.
+# This fixes CI builds that export CPPFLAGS/LDFLAGS to point at a local prefix.
+# ----------------------------------------------------------------------
+CPPFLAGS ?= @CPPFLAGS@
+LDFLAGS  ?= @LDFLAGS@
+LIBS     ?= @LIBS@
 
-# Project defaults appended after configure/env-provided values
+# SAL defaults appended
 CPPFLAGS += -I$(BIGLOOLIBDIR) -DOS_$(posixos)
 
-# If configure didn't provide libs, default to common names (works with -L...)
-# (CI can still pass explicit paths/libraries via LIBS=...).
+# If configure didn't provide libs, use common names (works with -L... in LDFLAGS)
 ifeq ($(strip $(LIBS)),)
 LIBS = -lcudd -lgmp -lgc -lm
 endif
@@ -84,8 +83,6 @@ BIGLOO_LFLAGS_DEFAULT= $(BIGLOOLFLAGS) -ld-relative
 # Updated for modern compilers and ARM64 Macs (M1/M2/M3)
 
 ifeq ($(posixos),linux)
-  # -O3 is the maximum standard optimization level (gcc/clang)
-  # -O6 was a gcc-ism that may not work on all compilers
   OPT=-O3
   SAFEOPT=-O2
   COPT=-O2
@@ -99,32 +96,27 @@ ifeq ($(posixos),cygwin)
   OPT=-O3
   SAFEOPT=-O2
   COPT=-O2
-  # increase stack space in Windows
   EXTRA_BIGLOO_LFLAGS= -ldopt "$(LDFLAGS) -Wl,--stack,16777216 $(LIBS)" -static-bigloo
 else
 ifeq ($(posixos),sunos)
   OPT=-O3
   SAFEOPT=-O2
   COPT=-O2
-  # flag -static didn't work in the Solaris machine
   EXTRA_BIGLOO_LFLAGS= -ldopt "$(LDFLAGS) $(LIBS) --export-dynamic" -static-bigloo
 else
   ifeq ($(posixos),darwin)
-  # macOS (Darwin) - supports both Intel and ARM64 (M1/M2/M3) Macs
   OPT=-O2
   SAFEOPT=-O2
   COPT=-O2
   # Darwin produces the error message crt0.o not found when the flag -static is used
-  # The following website provides an explanation: http://developer.apple.com/qa/qa2001/qa1118.html
+  # http://developer.apple.com/qa/qa2001/qa1118.html
   #
-  # On macOS, prefer Homebrew paths if brew is available. This helps both Intel (/usr/local)
-  # and Apple Silicon (/opt/homebrew), and does NOT prevent CI from injecting its own prefix.
+  # Add Homebrew include/lib if brew exists (works for /opt/homebrew and /usr/local).
   HOMEBREW_PREFIX := $(shell brew --prefix 2>/dev/null || echo "")
   ifneq ($(strip $(HOMEBREW_PREFIX)),)
     CPPFLAGS += -I$(HOMEBREW_PREFIX)/include
     LDFLAGS  += -L$(HOMEBREW_PREFIX)/lib
   endif
-
   EXTRA_BIGLOO_LFLAGS= -ldopt "$(LDFLAGS) $(LIBS)" -static-bigloo
 else
   OPT=-O2
@@ -311,9 +303,9 @@ SAL_PARSER_OBJ=$(SAL_PARSER_SCM_OBJ) $(SAL_PARSER_C_OBJ)
 .PHONY: all install-local
 
 ifeq ($(SALENV_BUILD_MODE),release)
-TARGETS = $(SALENV_SAFE) $(SALENV) $(SALHEAP) $(SAL_PARSER) $(SALRUNTIME_SAFE) $(SALRUNTIME)
+TARGETS = $(SALENV)-safe $(SALENV) sal.heap sal-parser libsal_s libsal_u
 else
-TARGETS = $(SALENV) $(SALENV_SAFE) $(SALHEAP) $(SAL_PARSER) $(SALRUNTIME)
+TARGETS = $(SALENV) $(SALENV)-safe sal.heap sal-parser libsal_u
 endif
 
 all: $(TARGETS) local-install
@@ -350,36 +342,35 @@ endif
 # SALENV SAFE
 #
 ifeq ($(MAKELEVEL),1)
-$(SALENV_SAFE) : $(SALENV_SAFE_BIN)
+$(SALENV)-safe : $(SALENV_SAFE_BIN)
 
 ifeq ($(SALENV_BUILD_MODE),release)
 $(SALENV_SAFE_BIN) : $(SALENV_SAFE_OBJ)
 	@mkdir -p $(BIN_DIR)
 	$(BIGLOO) $(BIGLOO_SAFE_LFLAGS) $(SALENV_SAFE_OBJ) -o $(SALENV_SAFE_BIN) 
 else
-# Only in release mode I create a safe executable
 $(SALENV_SAFE_BIN) : $(SALENV_BIN)
 		@mkdir -p $(BIN_DIR)
 		rm -f $(SALENV_SAFE_BIN)
 		cp $(SALENV_BIN)$(EXEEXT) $(SALENV_SAFE_BIN)$(EXEEXT)
 endif
 else
-$(SALENV_SAFE) :
-	make -C src -f ../Makefile $(SALENV_SAFE) MAKELEVEL=1
+$(SALENV)-safe :
+	make -C src -f ../Makefile $(SALENV)-safe MAKELEVEL=1
 endif
 
 #
 # SALHEAP
 #
 ifeq ($(MAKELEVEL),1)
-$(SALHEAP) : $(SALHEAP_DEST)
+sal.heap : $(SALHEAP_DEST)
 
 $(SALHEAP_DEST) : $(SALENV_OBJ) make-lib.scm
 	@mkdir -p $(LIB_DIR)
 	$(BIGLOO) -unsafe -q -mkaddheap -mkaddlib make-lib.scm -addheap $(SALHEAP_DEST) -heap-library sal
 else
-$(SALHEAP) : 
-	make -C src -f ../Makefile $(SALHEAP) MAKELEVEL=1
+sal.heap : 
+	make -C src -f ../Makefile sal.heap MAKELEVEL=1
 endif
 
 #
@@ -387,7 +378,7 @@ endif
 #
 ifeq ($(MAKELEVEL),1)
 
-$(SALRUNTIME) : $(SALRUNTIME_LIB)
+libsal_u : $(SALRUNTIME_LIB)
 
 $(SALRUNTIME_LIB) : $(SALRUNTIME_OBJ)
 	rm -f $(SALRUNTIME_LIB)
@@ -396,8 +387,8 @@ $(SALRUNTIME_LIB) : $(SALRUNTIME_OBJ)
 
 else
 
-$(SALRUNTIME) :
-	make -C src -f ../Makefile $(SALRUNTIME) MAKELEVEL=1
+libsal_u :
+	make -C src -f ../Makefile libsal_u MAKELEVEL=1
 
 endif
 
@@ -406,7 +397,7 @@ endif
 #
 ifeq ($(MAKELEVEL),1)
 
-$(SALRUNTIME_SAFE) : $(SALRUNTIME_SAFE_LIB)
+libsal_s : $(SALRUNTIME_SAFE_LIB)
 
 $(SALRUNTIME_SAFE_LIB) : $(SALRUNTIME_SAFE_OBJ)
 	rm -f $(SALRUNTIME_SAFE_LIB)
@@ -415,8 +406,8 @@ $(SALRUNTIME_SAFE_LIB) : $(SALRUNTIME_SAFE_OBJ)
 
 else
 
-$(SALRUNTIME_SAFE) :
-	make -C src -f ../Makefile $(SALRUNTIME_SAFE) MAKELEVEL=1
+libsal_s :
+	make -C src -f ../Makefile libsal_s MAKELEVEL=1
 
 endif
 
@@ -424,14 +415,14 @@ endif
 # SAL-PARSER
 #
 ifeq ($(MAKELEVEL),1)
-$(SAL_PARSER) : $(SAL_PARSER_BIN)
+sal-parser : $(SAL_PARSER_BIN)
 
 $(SAL_PARSER_BIN) : $(SAL_PARSER_OBJ)
 	@mkdir -p $(BIN_DIR)
 	$(BIGLOO) $(BIGLOO_UNSAFE_LFLAGS) $(SAL_PARSER_OBJ) -o $(SAL_PARSER_BIN)
 else
-$(SAL_PARSER) : 
-	make -C src -f ../Makefile $(SAL_PARSER) MAKELEVEL=1
+sal-parser : 
+	make -C src -f ../Makefile sal-parser MAKELEVEL=1
 endif
 
 #*---------------------------------------------------------------------*/
@@ -454,8 +445,6 @@ endif
 #*---------------------------------------------------------------------*/
 #*    Auxiliary                                                        */
 #*---------------------------------------------------------------------*/
-# I'm using the following ifeq statements to avoid a problem in the solaris
-# (remote) compilation...
 ifeq ($(posixos),linux)
 Makefile: Makefile.in config.status
 	./config.status
@@ -465,6 +454,7 @@ ifeq ($(posixos),linux)
 config.status: configure
 	./config.status --recheck
 endif
+
 #*---------------------------------------------------------------------*/
 #*    .scm.o                                                           */
 #*---------------------------------------------------------------------*/
@@ -491,7 +481,6 @@ $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
 	@mkdir -p $(OBJ_DIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(SRC_DIR)/$*.c -o $(OBJ_DIR)/$*.o -c
 
-
 #*---------------------------------------------------------------------*/
 #* Dependencies                                                        */
 #*---------------------------------------------------------------------*/
@@ -516,7 +505,7 @@ include $(OBJ_SAFE_DIR)/Makefile.dependencies
 endif
 
 #*---------------------------------------------------------------------*/
-#*    .c ==> .d                                                      */
+#*    .c ==> .d                                                        */
 #*---------------------------------------------------------------------*/
 
 $(OBJ_DIR)/%.d: $(SRC_DIR)/%.c
@@ -554,7 +543,6 @@ binary-distribution:
 source-distribution:
 	@ chmod +x distribution/build-source-distribution.sh
 	distribution/build-source-distribution.sh
-
 
 #*---------------------------------------------------------------------*/
 #*    clean                                                            */
