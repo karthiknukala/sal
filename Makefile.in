@@ -41,9 +41,23 @@ AR = @AR@
 RANLIB = @RANLIB@
 BIGLOO = @BIGLOO@
 BDEPEND = @BDEPEND@
-CPPFLAGS=@CPPFLAGS@ -I$(BIGLOOLIBDIR) -DOS_$(posixos)
-LIBS=@LIBS@ 
+
+# ---- IMPORTANT: allow user/CI to override/extend flags via environment ----
+# Keep Autoconf-provided values, but also allow additional include/lib paths
+# (e.g. CI building CUDD into a local prefix and exporting CPPFLAGS/LDFLAGS).
+# Using "+=" ensures exported env vars are not discarded.
+CPPFLAGS=@CPPFLAGS@
 LDFLAGS=@LDFLAGS@
+LIBS=@LIBS@
+
+# Project defaults appended after configure/env-provided values
+CPPFLAGS += -I$(BIGLOOLIBDIR) -DOS_$(posixos)
+
+# If configure didn't provide libs, default to common names (works with -L...)
+# (CI can still pass explicit paths/libraries via LIBS=...).
+ifeq ($(strip $(LIBS)),)
+LIBS = -lcudd -lgmp -lgc -lm
+endif
 ###
 
 .PHONY: documentation
@@ -102,13 +116,16 @@ else
   COPT=-O2
   # Darwin produces the error message crt0.o not found when the flag -static is used
   # The following website provides an explanation: http://developer.apple.com/qa/qa2001/qa1118.html
-  # On ARM64 Macs, we may need to add Homebrew library paths
-  HOMEBREW_PREFIX := $(shell brew --prefix 2>/dev/null || echo "/usr/local")
-  ifeq ($(SALENV_ENABLE_DYNAMIC),yes)
-    EXTRA_BIGLOO_LFLAGS= -ldopt "$(LDFLAGS) -L$(HOMEBREW_PREFIX)/lib $(LIBS)" -static-bigloo
-  else
-    EXTRA_BIGLOO_LFLAGS= -ldopt "$(LDFLAGS) -L$(HOMEBREW_PREFIX)/lib $(LIBS)" -static-bigloo
+  #
+  # On macOS, prefer Homebrew paths if brew is available. This helps both Intel (/usr/local)
+  # and Apple Silicon (/opt/homebrew), and does NOT prevent CI from injecting its own prefix.
+  HOMEBREW_PREFIX := $(shell brew --prefix 2>/dev/null || echo "")
+  ifneq ($(strip $(HOMEBREW_PREFIX)),)
+    CPPFLAGS += -I$(HOMEBREW_PREFIX)/include
+    LDFLAGS  += -L$(HOMEBREW_PREFIX)/lib
   endif
+
+  EXTRA_BIGLOO_LFLAGS= -ldopt "$(LDFLAGS) $(LIBS)" -static-bigloo
 else
   OPT=-O2
   SAFEOPT=-O2
