@@ -1,0 +1,121 @@
+name: build-sal-macos
+
+on:
+  pull_request:
+  workflow_dispatch:
+  # push:
+  #   branches: [ci/macos-build]
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runs_on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macos-arm64
+            runs_on: macos-14
+          - name: macos-intel
+            runs_on: macos-15-intel
+
+    env:
+      DEPS_PREFIX: ${{ github.workspace }}/.deps
+
+      # Pin CUDD
+      CUDD_REPO: https://github.com/cuddorg/cudd.git
+      CUDD_REF: "3.0.0"
+      CUDD_SHA: "f54f533303640afd5dbe47a05ebeabb3066f2a25"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache deps
+        uses: actions/cache@v4
+        with:
+          path: .deps
+          key: deps-${{ matrix.name }}-${{ env.CUDD_REF }}
+
+      - name: Install deps (Homebrew)
+        shell: bash
+        run: |
+          set -euxo pipefail
+          brew update
+          brew install pkg-config gmp bdw-gc bigloo yices2
+
+      - name: Build CUDD (pinned)
+        shell: bash
+        run: |
+          set -euxo pipefail
+          chmod +x ci/build_cudd_from_git.sh
+          ci/build_cudd_from_git.sh "$DEPS_PREFIX"
+
+      - name: Configure + build SAL
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          HOMEBREW_PREFIX="$(brew --prefix)"
+
+          # Feed non-system deps to configure (CUDD in .deps, others via brew)
+          export CPPFLAGS="-I$DEPS_PREFIX/include -I$HOMEBREW_PREFIX/include"
+          export LDFLAGS="-L$DEPS_PREFIX/lib -L$HOMEBREW_PREFIX/lib"
+          export LIBS="-lcudd -lgmp -lgc -lm"
+
+          ./configure
+          make clean || true
+          make
+
+      - name: Package artifacts (bundle yices2)
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          rm -rf bundle dist
+          mkdir -p bundle dist
+          mkdir -p bundle/third_party/yices2 bundle/LICENSES bundle/SOURCES
+
+          # SAL outputs
+          cp -a bin lib bundle/
+
+          # Bundle yices2
+          YICES_PREFIX="$(brew --prefix yices2)"
+          cp -a "$YICES_PREFIX/bin" bundle/third_party/yices2/
+          if [ -d "$YICES_PREFIX/lib" ]; then
+            cp -a "$YICES_PREFIX/lib" bundle/third_party/yices2/
+          fi
+
+          # Best-effort: include license files from the keg
+          find "$YICES_PREFIX" -maxdepth 4 -type f \( -iname 'LICENSE*' -o -iname 'COPYING*' \) \
+            -exec cp -f {} bundle/LICENSES/ \; || true
+
+          # Best-effort: include the exact Homebrew source tarball (helps redistribution compliance)
+          brew fetch --force --build-from-source yices2
+          YICES_SRC_TARBALL="$(brew --cache yices2)"
+          if [ -f "$YICES_SRC_TARBALL" ]; then
+            cp -f "$YICES_SRC_TARBALL" bundle/SOURCES/
+          fi
+
+          # Optional: wrapper to prefer bundled yices at runtime
+          cat > bundle/run-salenv.sh <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+          export PATH="$ROOT/third_party/yices2/bin:$PATH"
+          export DYLD_LIBRARY_PATH="$ROOT/third_party/yices2/lib:${DYLD_LIBRARY_PATH:-}"
+          SALENV="$(ls "$ROOT"/bin/*/salenv-exec 2>/dev/null | head -n 1 || true)"
+          if [ -z "$SALENV" ]; then
+            echo "Could not find salenv-exec under $ROOT/bin/*" >&2
+            exit 1
+          fi
+          exec "$SALENV" "$@"
+          EOF
+          chmod +x bundle/run-salenv.sh
+
+          tar -czf "dist/sal-${{ matrix.name }}.tar.gz" -C bundle .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sal-${{ matrix.name }}
+          path: dist/sal-${{ matrix.name }}.tar.gz
+          if-no-files-found: error
