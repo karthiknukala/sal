@@ -49,6 +49,9 @@ fi
 make -j"$JOBS"
 make install
 
+mkdir -p "$PREFIX/include"
+cp -f cudd/*.h util/*.h st/*.h mtr/*.h epd/*.h dddmp/*.h "$PREFIX/include/" 2>/dev/null || true
+
 # --- IMPORTANT ---
 # CUDD's install often only installs cudd/cudd.h.
 # SAL may include headers from util/, st/, mtr/, epd/, dddmp/, etc.
