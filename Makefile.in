@@ -42,18 +42,13 @@ RANLIB = @RANLIB@
 BIGLOO = @BIGLOO@
 BDEPEND = @BDEPEND@
 
-# ----------------------------------------------------------------------
-# Flags: keep autoconf defaults, but DO NOT overwrite environment/CI.
-# This fixes CI builds that export CPPFLAGS/LDFLAGS to point at a local prefix.
-# ----------------------------------------------------------------------
-CPPFLAGS ?= @CPPFLAGS@
-LDFLAGS  ?= @LDFLAGS@
-LIBS     ?= @LIBS@
+# Best-practice: allow users (and CI) to prepend/override via environment,
+# while still keeping configure-provided defaults.
+CPPFLAGS += @CPPFLAGS@ -I$(BIGLOOLIBDIR) -DOS_$(posixos)
+LDFLAGS  += @LDFLAGS@
+LIBS     += @LIBS@
 
-# SAL defaults appended
-CPPFLAGS += -I$(BIGLOOLIBDIR) -DOS_$(posixos)
-
-# If configure didn't provide libs, use common names (works with -L... in LDFLAGS)
+# If configure didn't provide LIBS at all, provide a sensible baseline.
 ifeq ($(strip $(LIBS)),)
 LIBS = -lcudd -lgmp -lgc -lm
 endif
@@ -96,27 +91,31 @@ ifeq ($(posixos),cygwin)
   OPT=-O3
   SAFEOPT=-O2
   COPT=-O2
+  # increase stack space in Windows
   EXTRA_BIGLOO_LFLAGS= -ldopt "$(LDFLAGS) -Wl,--stack,16777216 $(LIBS)" -static-bigloo
 else
 ifeq ($(posixos),sunos)
   OPT=-O3
   SAFEOPT=-O2
   COPT=-O2
+  # flag -static didn't work in the Solaris machine
   EXTRA_BIGLOO_LFLAGS= -ldopt "$(LDFLAGS) $(LIBS) --export-dynamic" -static-bigloo
 else
   ifeq ($(posixos),darwin)
+  # macOS (Darwin) - supports both Intel and ARM64 (M1/M2/M3) Macs
   OPT=-O2
   SAFEOPT=-O2
   COPT=-O2
   # Darwin produces the error message crt0.o not found when the flag -static is used
-  # http://developer.apple.com/qa/qa2001/qa1118.html
+  # The following website provides an explanation: http://developer.apple.com/qa/qa2001/qa1118.html
   #
-  # Add Homebrew include/lib if brew exists (works for /opt/homebrew and /usr/local).
+  # If Homebrew is present, add its include/lib dirs (safe for both /opt/homebrew and /usr/local).
   HOMEBREW_PREFIX := $(shell brew --prefix 2>/dev/null || echo "")
   ifneq ($(strip $(HOMEBREW_PREFIX)),)
     CPPFLAGS += -I$(HOMEBREW_PREFIX)/include
     LDFLAGS  += -L$(HOMEBREW_PREFIX)/lib
   endif
+
   EXTRA_BIGLOO_LFLAGS= -ldopt "$(LDFLAGS) $(LIBS)" -static-bigloo
 else
   OPT=-O2
@@ -303,9 +302,9 @@ SAL_PARSER_OBJ=$(SAL_PARSER_SCM_OBJ) $(SAL_PARSER_C_OBJ)
 .PHONY: all install-local
 
 ifeq ($(SALENV_BUILD_MODE),release)
-TARGETS = $(SALENV)-safe $(SALENV) sal.heap sal-parser libsal_s libsal_u
+TARGETS = $(SALENV_SAFE) $(SALENV) $(SALHEAP) $(SAL_PARSER) $(SALRUNTIME_SAFE) $(SALRUNTIME)
 else
-TARGETS = $(SALENV) $(SALENV)-safe sal.heap sal-parser libsal_u
+TARGETS = $(SALENV) $(SALENV_SAFE) $(SALHEAP) $(SAL_PARSER) $(SALRUNTIME)
 endif
 
 all: $(TARGETS) local-install
@@ -342,35 +341,36 @@ endif
 # SALENV SAFE
 #
 ifeq ($(MAKELEVEL),1)
-$(SALENV)-safe : $(SALENV_SAFE_BIN)
+$(SALENV_SAFE) : $(SALENV_SAFE_BIN)
 
 ifeq ($(SALENV_BUILD_MODE),release)
 $(SALENV_SAFE_BIN) : $(SALENV_SAFE_OBJ)
 	@mkdir -p $(BIN_DIR)
 	$(BIGLOO) $(BIGLOO_SAFE_LFLAGS) $(SALENV_SAFE_OBJ) -o $(SALENV_SAFE_BIN) 
 else
+# Only in release mode I create a safe executable
 $(SALENV_SAFE_BIN) : $(SALENV_BIN)
 		@mkdir -p $(BIN_DIR)
 		rm -f $(SALENV_SAFE_BIN)
 		cp $(SALENV_BIN)$(EXEEXT) $(SALENV_SAFE_BIN)$(EXEEXT)
 endif
 else
-$(SALENV)-safe :
-	make -C src -f ../Makefile $(SALENV)-safe MAKELEVEL=1
+$(SALENV_SAFE) :
+	make -C src -f ../Makefile $(SALENV_SAFE) MAKELEVEL=1
 endif
 
 #
 # SALHEAP
 #
 ifeq ($(MAKELEVEL),1)
-sal.heap : $(SALHEAP_DEST)
+$(SALHEAP) : $(SALHEAP_DEST)
 
 $(SALHEAP_DEST) : $(SALENV_OBJ) make-lib.scm
 	@mkdir -p $(LIB_DIR)
 	$(BIGLOO) -unsafe -q -mkaddheap -mkaddlib make-lib.scm -addheap $(SALHEAP_DEST) -heap-library sal
 else
-sal.heap : 
-	make -C src -f ../Makefile sal.heap MAKELEVEL=1
+$(SALHEAP) : 
+	make -C src -f ../Makefile $(SALHEAP) MAKELEVEL=1
 endif
 
 #
@@ -378,7 +378,7 @@ endif
 #
 ifeq ($(MAKELEVEL),1)
 
-libsal_u : $(SALRUNTIME_LIB)
+$(SALRUNTIME) : $(SALRUNTIME_LIB)
 
 $(SALRUNTIME_LIB) : $(SALRUNTIME_OBJ)
 	rm -f $(SALRUNTIME_LIB)
@@ -387,8 +387,8 @@ $(SALRUNTIME_LIB) : $(SALRUNTIME_OBJ)
 
 else
 
-libsal_u :
-	make -C src -f ../Makefile libsal_u MAKELEVEL=1
+$(SALRUNTIME) :
+	make -C src -f ../Makefile $(SALRUNTIME) MAKELEVEL=1
 
 endif
 
@@ -397,7 +397,7 @@ endif
 #
 ifeq ($(MAKELEVEL),1)
 
-libsal_s : $(SALRUNTIME_SAFE_LIB)
+$(SALRUNTIME_SAFE) : $(SALRUNTIME_SAFE_LIB)
 
 $(SALRUNTIME_SAFE_LIB) : $(SALRUNTIME_SAFE_OBJ)
 	rm -f $(SALRUNTIME_SAFE_LIB)
@@ -406,8 +406,8 @@ $(SALRUNTIME_SAFE_LIB) : $(SALRUNTIME_SAFE_OBJ)
 
 else
 
-libsal_s :
-	make -C src -f ../Makefile libsal_s MAKELEVEL=1
+$(SALRUNTIME_SAFE) :
+	make -C src -f ../Makefile $(SALRUNTIME_SAFE) MAKELEVEL=1
 
 endif
 
@@ -415,14 +415,14 @@ endif
 # SAL-PARSER
 #
 ifeq ($(MAKELEVEL),1)
-sal-parser : $(SAL_PARSER_BIN)
+$(SAL_PARSER) : $(SAL_PARSER_BIN)
 
 $(SAL_PARSER_BIN) : $(SAL_PARSER_OBJ)
 	@mkdir -p $(BIN_DIR)
 	$(BIGLOO) $(BIGLOO_UNSAFE_LFLAGS) $(SAL_PARSER_OBJ) -o $(SAL_PARSER_BIN)
 else
-sal-parser : 
-	make -C src -f ../Makefile sal-parser MAKELEVEL=1
+$(SAL_PARSER) : 
+	make -C src -f ../Makefile $(SAL_PARSER) MAKELEVEL=1
 endif
 
 #*---------------------------------------------------------------------*/
@@ -480,6 +480,7 @@ $(OBJ_SAFE_DIR)/%.mco:
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
 	@mkdir -p $(OBJ_DIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(SRC_DIR)/$*.c -o $(OBJ_DIR)/$*.o -c
+
 
 #*---------------------------------------------------------------------*/
 #* Dependencies                                                        */
@@ -543,6 +544,7 @@ binary-distribution:
 source-distribution:
 	@ chmod +x distribution/build-source-distribution.sh
 	distribution/build-source-distribution.sh
+
 
 #*---------------------------------------------------------------------*/
 #*    clean                                                            */

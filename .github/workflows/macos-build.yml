@@ -1,10 +1,11 @@
 name: build-sal-macos
 
 on:
-  push:
-    branches: [ci/macos-build]   # branch-only while iterating
   pull_request:
   workflow_dispatch:
+  # while iterating you can limit pushes to a branch like:
+  # push:
+  #   branches: [ci/macos-build]
 
 jobs:
   build:
@@ -20,26 +21,21 @@ jobs:
             runs_on: macos-15-intel
 
     env:
-      SALENV_BUILD_MODE: release
-      POSIXOS: darwin
       DEPS_PREFIX: ${{ github.workspace }}/.deps
 
-      # Pinned CUDD
+      # Pin CUDD
       CUDD_REPO: https://github.com/cuddorg/cudd.git
       CUDD_REF: "3.0.0"
-      # Optional safety check (tag points to this commit today)
       CUDD_SHA: "f54f533303640afd5dbe47a05ebeabb3066f2a25"
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache deps prefix
+      - name: Cache deps
         uses: actions/cache@v4
         with:
           path: .deps
-          key: deps-${{ matrix.name }}-${{ env.CUDD_REF }}-${{ hashFiles('ci/**', 'Makefile', '**/*.scm', '**/*.c') }}
-          restore-keys: |
-            deps-${{ matrix.name }}-${{ env.CUDD_REF }}-
+          key: deps-${{ matrix.name }}-${{ env.CUDD_REF }}
 
       - name: Install deps (Homebrew)
         shell: bash
@@ -48,26 +44,30 @@ jobs:
           brew update
           brew install pkg-config gmp bdw-gc bigloo
 
-      - name: Build pinned CUDD (from git)
+      - name: Build CUDD (pinned)
         shell: bash
         run: |
           set -euxo pipefail
           chmod +x ci/build_cudd_from_git.sh
           ci/build_cudd_from_git.sh "$DEPS_PREFIX"
 
-      - name: Build SAL
+      - name: Configure + build SAL
         shell: bash
         run: |
           set -euxo pipefail
 
-          # Prefer our pinned deps
-          export PATH="$DEPS_PREFIX/bin:$PATH"
-          export PKG_CONFIG_PATH="$DEPS_PREFIX/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
-          export CPPFLAGS="-I$DEPS_PREFIX/include ${CPPFLAGS:-}"
-          export LDFLAGS="-L$DEPS_PREFIX/lib ${LDFLAGS:-}"
+          HOMEBREW_PREFIX="$(brew --prefix)"
+
+          # Best-practice: feed non-system deps to configure
+          export CPPFLAGS="-I$DEPS_PREFIX/include -I$HOMEBREW_PREFIX/include"
+          export LDFLAGS="-L$DEPS_PREFIX/lib -L$HOMEBREW_PREFIX/lib"
+          export LIBS="-lcudd -lgmp -lgc -lm"
+
+          # Configure SAL (this is what you were missing before)
+          ./configure
 
           make clean || true
-          make posixos="$POSIXOS" SALENV_BUILD_MODE="$SALENV_BUILD_MODE"
+          make
 
       - name: Package artifacts
         shell: bash
