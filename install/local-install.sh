@@ -21,26 +21,33 @@
 
 # This script is used to allow the user to execute SAL after executing make.
 # In other words, even if the user does not install SAL, he can execute it locally.
-DOT_A_LIBS=" /usr/local/lib/libcudd.a /opt/homebrew/lib/libgmp.a "
+DOT_A_LIBS=" /usr/local/lib/libcudd.a /usr/local/lib/libgmp.a "
 BIGLOOLIBDIR="/opt/homebrew/Cellar/bigloo/4.6a/lib/bigloo/4.6a"
 ARCH="arm-apple-darwin24.6.0"
 SALENV_BUILD_MODE="release"
 
-curr_dir=`pwd`
+runtime_salenv_dir='$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)'
+runtime_bigloolib="$runtime_salenv_dir/lib/$ARCH-$SALENV_BUILD_MODE:$BIGLOOLIBDIR"
+runtime_salenv_dir_escaped=`printf "%s" "$runtime_salenv_dir" | sed 's/&/\\\&/g'`
+runtime_bigloolib_escaped=`printf "%s" "$runtime_bigloolib" | sed 's/&/\\\&/g'`
 
-BIGLOOLIB=$curr_dir/lib/$ARCH-$SALENV_BUILD_MODE:$BIGLOOLIBDIR
-
-echo "#!/bin/sh" > bin/salenv-exec
-echo "exec $curr_dir/bin/arm-apple-darwin24.6.0-release/salenv-exec \"\$@\"" >> bin/salenv-exec
+cat > bin/salenv-exec <<EOF
+#!/bin/sh
+SAL_BIN_DIR=\$(CDPATH= cd -- "\$(dirname "\$0")" && pwd)
+exec "\$SAL_BIN_DIR/$ARCH-$SALENV_BUILD_MODE/salenv-exec" "\$@"
+EOF
 chmod +x bin/salenv-exec
 
-echo "#!/bin/sh" > bin/salenv-exec-safe
-echo "exec $curr_dir/bin/arm-apple-darwin24.6.0-release/salenv-exec-safe \"\$@\"" >> bin/salenv-exec-safe
+cat > bin/salenv-exec-safe <<EOF
+#!/bin/sh
+SAL_BIN_DIR=\$(CDPATH= cd -- "\$(dirname "\$0")" && pwd)
+exec "\$SAL_BIN_DIR/$ARCH-$SALENV_BUILD_MODE/salenv-exec-safe" "\$@"
+EOF
 chmod +x bin/salenv-exec-safe
 
 for name in salenv salenv-safe sal-wfc lsal2xml sal2bool sal-smc sal-bmc sal-inf-bmc sal-path-finder sal-deadlock-checker sal-sim sal-wmc ltl2buchi sal-emc sal-path-explorer sal-atg sal-atg2 sal-sld sal-sc
 do 
-	if sed -e "s|__SALENV_DIR__|`pwd`|g;s|__BIGLOO_LIB_DIR__|$BIGLOOLIB|g;s|__DOT_A_LIBS__|$DOT_A_LIBS|g" src/$name.template > bin/$name
+	if sed -e "s|__SALENV_DIR__|$runtime_salenv_dir_escaped|g;s|__BIGLOO_LIB_DIR__|$runtime_bigloolib_escaped|g;s|__DOT_A_LIBS__|$DOT_A_LIBS|g" src/$name.template > bin/$name
 	then
 			echo "Script $name was copied..."
 	else
@@ -51,4 +58,3 @@ do
 done
 
 echo "You can start SAL typing: `pwd`/bin/salenv"
-

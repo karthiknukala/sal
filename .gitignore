@@ -46,3 +46,6 @@
 *.swp
 *.swo
 
+doc/version.texi
+gui/version.py
+

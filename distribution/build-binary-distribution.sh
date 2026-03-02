@@ -29,7 +29,7 @@ BIGLOOLIBDIR="/opt/homebrew/Cellar/bigloo/4.6a/lib/bigloo/4.6a"
 SALENV_STATIC="no"
 ARCH="arm-apple-darwin24.6.0"
 SALENV_BUILD_MODE="release"
-DOT_A_LIBS=" /usr/local/lib/libcudd.a /opt/homebrew/lib/libgmp.a "
+DOT_A_LIBS=" /usr/local/lib/libcudd.a /usr/local/lib/libgmp.a "
 EXEEXT=
 ICS_BIN_DIR=
 YICES_BIN_DIR=/opt/homebrew/bin
@@ -39,7 +39,6 @@ curr_dir=`pwd`
 LIB_DIR=$curr_dir/lib/$BUILD_SUBDIR
 SAL_BIN_DISTRIB_FILE="sal-"$salenv_version"-bin-"$ARCH".tar.gz"
 USE_YICES=yes
-USE_ICS=no
 
 rm -r -f $SALENVDIR
 rm -f $SAL_BIN_DISTRIB_FILE
@@ -77,6 +76,15 @@ safe_cp ()
    fi
 }
 
+safe_cp_optional ()
+{
+   if test -f "$1"; then
+      safe_cp "$1" "$2"
+   else
+      echo "Skipping optional file $1"
+   fi
+}
+
 if [ $SALENV_STATIC = "no" ]; then
    bigloo_exe=`which bigloo`$EXEEXT
    safe_cp $bigloo_exe $SALENVDIR/bin
@@ -94,18 +102,15 @@ if [ $SALENV_STATIC = "no" ]; then
       echo "Failed to copy libraries: $LIBS" 
       exit -1
    fi
-   ranlib $SALENVDIR/lib/*.a
+   chmod u+w $SALENVDIR/lib/*.a 2> /dev/null
+   if ! ranlib $SALENVDIR/lib/*.a; then
+      echo "Warning: ranlib failed for one or more libraries"
+   fi
 fi
 
-
-if test $USE_ICS = yes; then
-    safe_cp $ICS_BIN_DIR/ics$EXEEXT $SALENVDIR/bin/ics$EXEEXT
-    safe_cp empty-certificate $SALENVDIR/certificate
-fi
 
 if test $USE_YICES = yes; then
     safe_cp $YICES_BIN_DIR/yices$EXEEXT $SALENVDIR/bin
-    safe_cp YICES-LICENSE $SALENVDIR
 fi
 
 safe_cp README $SALENVDIR/
@@ -122,7 +127,7 @@ cp doc/README* $SALENVDIR/doc
 safe_cp doc/Limitations.txt $SALENVDIR/doc
 safe_cp doc/sal_tutorial.ps $SALENVDIR/doc
 safe_cp doc/sal_tutorial.pdf $SALENVDIR/doc
-safe_cp doc/salatg.pdf $SALENVDIR/doc
+safe_cp_optional doc/salatg.pdf $SALENVDIR/doc
 
 echo "Copying examples..."
 cp -R examples/* $SALENVDIR/examples
@@ -130,7 +135,11 @@ cp -R examples/* $SALENVDIR/examples
 (cd $SALENVDIR/examples; find . -name '.svn' -exec rm -r -f '{}' ';')
 
 echo "Copying contributions..."
-cp contrib/* $SALENVDIR/contrib
+if ls contrib/* > /dev/null 2> /dev/null; then
+   cp contrib/* $SALENVDIR/contrib
+else
+   echo "No contributions found"
+fi
 
 echo "Copying etc..."
 cp etc/* $SALENVDIR/etc

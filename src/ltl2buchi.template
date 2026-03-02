@@ -19,5 +19,4 @@
 #
 #
 
-exec __SALENV_DIR__/bin/salenv "$@" __SALENV_DIR__/src/ltl2buchi-front-end.scm
-
+exec "__SALENV_DIR__/bin/salenv" "$@" "__SALENV_DIR__/src/ltl2buchi-front-end.scm"

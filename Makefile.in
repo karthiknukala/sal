@@ -41,9 +41,17 @@ AR = @AR@
 RANLIB = @RANLIB@
 BIGLOO = @BIGLOO@
 BDEPEND = @BDEPEND@
-CPPFLAGS=@CPPFLAGS@ -I$(BIGLOOLIBDIR) -DOS_$(posixos)
-LIBS=@LIBS@ 
-LDFLAGS=@LDFLAGS@
+
+# Best-practice: allow users (and CI) to prepend/override via environment,
+# while still keeping configure-provided defaults.
+CPPFLAGS += @CPPFLAGS@ -I$(BIGLOOLIBDIR) -DOS_$(posixos)
+LDFLAGS  += @LDFLAGS@
+LIBS     += @LIBS@
+
+# If configure didn't provide LIBS at all, provide a sensible baseline.
+ifeq ($(strip $(LIBS)),)
+LIBS = -lcudd -lgmp -lgc -lm
+endif
 ###
 
 .PHONY: documentation
@@ -70,8 +78,6 @@ BIGLOO_LFLAGS_DEFAULT= $(BIGLOOLFLAGS) -ld-relative
 # Updated for modern compilers and ARM64 Macs (M1/M2/M3)
 
 ifeq ($(posixos),linux)
-  # -O3 is the maximum standard optimization level (gcc/clang)
-  # -O6 was a gcc-ism that may not work on all compilers
   OPT=-O3
   SAFEOPT=-O2
   COPT=-O2
@@ -102,13 +108,15 @@ else
   COPT=-O2
   # Darwin produces the error message crt0.o not found when the flag -static is used
   # The following website provides an explanation: http://developer.apple.com/qa/qa2001/qa1118.html
-  # On ARM64 Macs, we may need to add Homebrew library paths
-  HOMEBREW_PREFIX := $(shell brew --prefix 2>/dev/null || echo "/usr/local")
-  ifeq ($(SALENV_ENABLE_DYNAMIC),yes)
-    EXTRA_BIGLOO_LFLAGS= -ldopt "$(LDFLAGS) -L$(HOMEBREW_PREFIX)/lib $(LIBS)" -static-bigloo
-  else
-    EXTRA_BIGLOO_LFLAGS= -ldopt "$(LDFLAGS) -L$(HOMEBREW_PREFIX)/lib $(LIBS)" -static-bigloo
+  #
+  # If Homebrew is present, add its include/lib dirs (safe for both /opt/homebrew and /usr/local).
+  HOMEBREW_PREFIX := $(shell brew --prefix 2>/dev/null || echo "")
+  ifneq ($(strip $(HOMEBREW_PREFIX)),)
+    CPPFLAGS += -I$(HOMEBREW_PREFIX)/include
+    LDFLAGS  += -L$(HOMEBREW_PREFIX)/lib
   endif
+
+  EXTRA_BIGLOO_LFLAGS= -ldopt "$(LDFLAGS) $(LIBS)" -static-bigloo
 else
   OPT=-O2
   SAFEOPT=-O2
@@ -437,8 +445,6 @@ endif
 #*---------------------------------------------------------------------*/
 #*    Auxiliary                                                        */
 #*---------------------------------------------------------------------*/
-# I'm using the following ifeq statements to avoid a problem in the solaris
-# (remote) compilation...
 ifeq ($(posixos),linux)
 Makefile: Makefile.in config.status
 	./config.status
@@ -448,6 +454,7 @@ ifeq ($(posixos),linux)
 config.status: configure
 	./config.status --recheck
 endif
+
 #*---------------------------------------------------------------------*/
 #*    .scm.o                                                           */
 #*---------------------------------------------------------------------*/
@@ -499,7 +506,7 @@ include $(OBJ_SAFE_DIR)/Makefile.dependencies
 endif
 
 #*---------------------------------------------------------------------*/
-#*    .c ==> .d                                                      */
+#*    .c ==> .d                                                        */
 #*---------------------------------------------------------------------*/
 
 $(OBJ_DIR)/%.d: $(SRC_DIR)/%.c

@@ -1,0 +1,179 @@
+name: build-sal-macos
+
+on:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Nightly build (UTC)
+    - cron: '0 3 * * *'
+  # push:
+  #   branches: [ci/macos-build]
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runs_on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macos-arm64
+            runs_on: macos-14
+          - name: macos-intel
+            runs_on: macos-15-intel
+
+    env:
+      DEPS_PREFIX: ${{ github.workspace }}/.deps
+
+      # Pin CUDD
+      CUDD_REPO: https://github.com/cuddorg/cudd.git
+      CUDD_REF: "3.0.0"
+      CUDD_SHA: "f54f533303640afd5dbe47a05ebeabb3066f2a25"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache deps
+        uses: actions/cache@v4
+        with:
+          path: .deps
+          key: deps-${{ matrix.name }}-${{ env.CUDD_REF }}
+
+      - name: Install deps (Homebrew)
+        shell: bash
+        run: |
+          set -euxo pipefail
+          brew update
+          brew install pkg-config gmp bdw-gc bigloo yices2 help2man
+
+      - name: Build CUDD (pinned)
+        shell: bash
+        run: |
+          set -euxo pipefail
+          chmod +x ci/build_cudd_from_git.sh
+          ci/build_cudd_from_git.sh "$DEPS_PREFIX"
+
+      - name: Configure + build SAL
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          HOMEBREW_PREFIX="$(brew --prefix)"
+
+          # Feed non-system deps to configure (CUDD in .deps, others via brew)
+          export CPPFLAGS="-I$DEPS_PREFIX/include -I$HOMEBREW_PREFIX/include"
+          export LDFLAGS="-L$DEPS_PREFIX/lib -L$HOMEBREW_PREFIX/lib"
+          export LIBS="-lcudd -lgmp -lgc -lm"
+
+          ./configure
+          make clean || true
+          make
+
+      - name: Package binary distribution
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          chmod +x distribution/build-binary-distribution.sh
+          distribution/build-binary-distribution.sh
+
+          shopt -s nullglob
+          tarballs=(sal-*-bin-*.tar.gz)
+          if [ "${#tarballs[@]}" -ne 1 ]; then
+            echo "Expected one distribution tarball, found ${#tarballs[@]}" >&2
+            ls -la sal-*-bin-*.tar.gz || true
+            exit 1
+          fi
+          PKG_TARBALL="${tarballs[0]}"
+
+          # Validate installer output is relocatable and does not bake CI paths into wrappers.
+          VERIFY_ROOT="$(mktemp -d)"
+          tar -xzf "$PKG_TARBALL" -C "$VERIFY_ROOT"
+          PKG_DIR="$(find "$VERIFY_ROOT" -maxdepth 1 -type d -name 'sal-*' | head -n 1)"
+          if [ -z "$PKG_DIR" ]; then
+            echo "Could not find extracted package directory under $VERIFY_ROOT" >&2
+            exit 1
+          fi
+
+          (cd "$PKG_DIR" && chmod +x install.sh && ./install.sh)
+
+          # Ensure all expected SAL command binaries/wrappers were produced.
+          expected_bins=(
+            salenv salenv-safe salenv-exec salenv-exec-safe
+            sal-wfc lsal2xml sal2bool sal-smc sal-bmc sal-inf-bmc
+            sal-path-finder sal-deadlock-checker sal-sim sal-wmc
+            ltl2buchi sal-emc sal-path-explorer sal-atg sal-atg2
+            sal-sld sal-sc
+          )
+          for name in "${expected_bins[@]}"; do
+            if [ ! -x "$PKG_DIR/bin/$name" ]; then
+              echo "Missing expected binary artifact: $name" >&2
+              ls -la "$PKG_DIR/bin" >&2 || true
+              exit 1
+            fi
+          done
+
+          if grep -R -n -I -F "$GITHUB_WORKSPACE" "$PKG_DIR/bin"; then
+            echo "Build path leaked into installed wrapper scripts: $GITHUB_WORKSPACE" >&2
+            exit 1
+          fi
+
+          RELOCATE_ROOT="$(mktemp -d)"
+          mv "$PKG_DIR" "$RELOCATE_ROOT/sal"
+          "$RELOCATE_ROOT/sal/bin/salenv-safe" --version
+          "$RELOCATE_ROOT/sal/bin/sal-smc" --version
+          SPACE_BASE="$(mktemp -d)"
+          cp -a "$RELOCATE_ROOT/sal" "$SPACE_BASE/sal artifact"
+          "$SPACE_BASE/sal artifact/bin/sal-bmc" --version
+
+          # Publish only runtime artifacts (no docs/examples/source tree).
+          ARTIFACT_ROOT="$(mktemp -d)"
+          mkdir -p "$ARTIFACT_ROOT/sal"
+          cp -a "$RELOCATE_ROOT/sal/bin" "$ARTIFACT_ROOT/sal/"
+          cp -a "$RELOCATE_ROOT/sal/lib" "$ARTIFACT_ROOT/sal/"
+          cp -a "$RELOCATE_ROOT/sal/src" "$ARTIFACT_ROOT/sal/"
+          find "$ARTIFACT_ROOT/sal/src" -type f -name '*.template' -delete
+
+          mkdir -p dist
+          tar -czf "dist/sal-${{ matrix.name }}.tar.gz" -C "$ARTIFACT_ROOT/sal" .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sal-${{ matrix.name }}
+          path: dist/sal-${{ matrix.name }}.tar.gz
+          if-no-files-found: error
+
+  release-nightly:
+    name: publish-nightly-release
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.ref_name == github.event.repository.default_branch)
+    permissions:
+      contents: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          pattern: sal-macos-*
+          merge-multiple: true
+
+      - name: Show release assets
+        shell: bash
+        run: |
+          set -euxo pipefail
+          ls -la release-assets
+
+      - name: Publish rolling nightly prerelease
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly
+          name: Nightly
+          prerelease: true
+          make_latest: false
+          generate_release_notes: false
+          files: release-assets/*.tar.gz
+          body: |
+            Automated nightly build artifacts for SAL macOS.
+            Commit: ${{ github.sha }}
+            Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
