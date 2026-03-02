@@ -3,6 +3,9 @@ name: build-sal-macos
 on:
   pull_request:
   workflow_dispatch:
+  schedule:
+    # Nightly build (UTC)
+    - cron: '0 3 * * *'
   # push:
   #   branches: [ci/macos-build]
 
@@ -139,3 +142,38 @@ jobs:
           name: sal-${{ matrix.name }}
           path: dist/sal-${{ matrix.name }}.tar.gz
           if-no-files-found: error
+
+  release-nightly:
+    name: publish-nightly-release
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.ref_name == github.event.repository.default_branch)
+    permissions:
+      contents: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          pattern: sal-macos-*
+          merge-multiple: true
+
+      - name: Show release assets
+        shell: bash
+        run: |
+          set -euxo pipefail
+          ls -la release-assets
+
+      - name: Publish rolling nightly prerelease
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly
+          name: Nightly
+          prerelease: true
+          make_latest: false
+          generate_release_notes: false
+          files: release-assets/*.tar.gz
+          body: |
+            Automated nightly build artifacts for SAL macOS.
+            Commit: ${{ github.sha }}
+            Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
