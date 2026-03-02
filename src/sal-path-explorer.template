@@ -19,5 +19,4 @@
 #
 #
 
-exec __SALENV_DIR__/bin/salenv "$@" __SALENV_DIR__/src/sal-path-explorer-front-end.scm
-
+exec "__SALENV_DIR__/bin/salenv" "$@" "__SALENV_DIR__/src/sal-path-explorer-front-end.scm"

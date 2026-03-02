@@ -19,4 +19,4 @@
 #
 #
 
-exec __SALENV_DIR__/bin/salenv "$@" __SALENV_DIR__/src/sal-inf-bmc-front-end.scm
+exec "__SALENV_DIR__/bin/salenv" "$@" "__SALENV_DIR__/src/sal-inf-bmc-front-end.scm"

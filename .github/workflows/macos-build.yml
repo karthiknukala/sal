@@ -119,6 +119,9 @@ jobs:
           mv "$PKG_DIR" "$RELOCATE_ROOT/sal"
           "$RELOCATE_ROOT/sal/bin/salenv-safe" --version
           "$RELOCATE_ROOT/sal/bin/sal-smc" --version
+          SPACE_BASE="$(mktemp -d)"
+          cp -a "$RELOCATE_ROOT/sal" "$SPACE_BASE/sal artifact"
+          "$SPACE_BASE/sal artifact/bin/sal-bmc" --version
 
           # Publish only runtime artifacts (no docs/examples/source tree).
           ARTIFACT_ROOT="$(mktemp -d)"

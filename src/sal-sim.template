@@ -19,4 +19,4 @@
 #
 #
 
-exec __SALENV_DIR__/bin/salenv-safe "$@" __SALENV_DIR__/src/sal-simulator-front-end.scm
+exec "__SALENV_DIR__/bin/salenv-safe" "$@" "__SALENV_DIR__/src/sal-simulator-front-end.scm"
