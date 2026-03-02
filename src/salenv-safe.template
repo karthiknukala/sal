@@ -31,7 +31,4 @@ PATH=$PATH:$SALENV_DIR/bin;
 export PATH;
 BIGLOOLIB=__BIGLOO_LIB_DIR__
 export BIGLOOLIB;
-if test -z "$ICS_LICENSE_CERTIFICATE"; then ICS_LICENSE_CERTIFICATE=$SALENV_DIR/certificate; export ICS_LICENSE_CERTIFICATE; fi;
-cmd="exec __SALENV_DIR__/bin/salenv-exec-safe $*"; 
-eval $cmd
-
+exec __SALENV_DIR__/bin/salenv-exec-safe "$@"

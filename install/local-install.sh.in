@@ -26,21 +26,28 @@ BIGLOOLIBDIR="@BIGLOOLIBDIR@"
 ARCH="@ARCH@"
 SALENV_BUILD_MODE="@SALENV_BUILD_MODE@"
 
-curr_dir=`pwd`
+runtime_salenv_dir='$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)'
+runtime_bigloolib="$runtime_salenv_dir/lib/$ARCH-$SALENV_BUILD_MODE:$BIGLOOLIBDIR"
+runtime_salenv_dir_escaped=`printf "%s" "$runtime_salenv_dir" | sed 's/&/\\\&/g'`
+runtime_bigloolib_escaped=`printf "%s" "$runtime_bigloolib" | sed 's/&/\\\&/g'`
 
-BIGLOOLIB=$curr_dir/lib/$ARCH-$SALENV_BUILD_MODE:$BIGLOOLIBDIR
-
-echo "#!/bin/sh" > bin/salenv-exec
-echo "exec $curr_dir/bin/@ARCH@-@SALENV_BUILD_MODE@/salenv-exec \"\$@\"" >> bin/salenv-exec
+cat > bin/salenv-exec <<EOF
+#!/bin/sh
+SAL_BIN_DIR=\$(CDPATH= cd -- "\$(dirname "\$0")" && pwd)
+exec "\$SAL_BIN_DIR/$ARCH-$SALENV_BUILD_MODE/salenv-exec" "\$@"
+EOF
 chmod +x bin/salenv-exec
 
-echo "#!/bin/sh" > bin/salenv-exec-safe
-echo "exec $curr_dir/bin/@ARCH@-@SALENV_BUILD_MODE@/salenv-exec-safe \"\$@\"" >> bin/salenv-exec-safe
+cat > bin/salenv-exec-safe <<EOF
+#!/bin/sh
+SAL_BIN_DIR=\$(CDPATH= cd -- "\$(dirname "\$0")" && pwd)
+exec "\$SAL_BIN_DIR/$ARCH-$SALENV_BUILD_MODE/salenv-exec-safe" "\$@"
+EOF
 chmod +x bin/salenv-exec-safe
 
 for name in @sal_scripts@
 do 
-	if sed -e "s|__SALENV_DIR__|`pwd`|g;s|__BIGLOO_LIB_DIR__|$BIGLOOLIB|g;s|__DOT_A_LIBS__|$DOT_A_LIBS|g" src/$name.template > bin/$name
+	if sed -e "s|__SALENV_DIR__|$runtime_salenv_dir_escaped|g;s|__BIGLOO_LIB_DIR__|$runtime_bigloolib_escaped|g;s|__DOT_A_LIBS__|$DOT_A_LIBS|g" src/$name.template > bin/$name
 	then
 			echo "Script $name was copied..."
 	else
@@ -51,4 +58,3 @@ do
 done
 
 echo "You can start SAL typing: `pwd`/bin/salenv"
-

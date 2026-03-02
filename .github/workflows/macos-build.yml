@@ -41,7 +41,7 @@ jobs:
         run: |
           set -euxo pipefail
           brew update
-          brew install pkg-config gmp bdw-gc bigloo yices2
+          brew install pkg-config gmp bdw-gc bigloo yices2 help2man
 
       - name: Build CUDD (pinned)
         shell: bash
@@ -66,53 +66,45 @@ jobs:
           make clean || true
           make
 
-      - name: Package artifacts (bundle yices2)
+      - name: Package binary distribution
         shell: bash
         run: |
           set -euxo pipefail
 
-          rm -rf bundle dist
-          mkdir -p bundle dist
-          mkdir -p bundle/third_party/yices2 bundle/LICENSES bundle/SOURCES
+          chmod +x distribution/build-binary-distribution.sh
+          distribution/build-binary-distribution.sh
 
-          # SAL outputs
-          cp -a bin lib bundle/
-
-          # Bundle yices2
-          YICES_PREFIX="$(brew --prefix yices2)"
-          cp -a "$YICES_PREFIX/bin" bundle/third_party/yices2/
-          if [ -d "$YICES_PREFIX/lib" ]; then
-            cp -a "$YICES_PREFIX/lib" bundle/third_party/yices2/
-          fi
-
-          # Best-effort: include license files from the keg
-          find "$YICES_PREFIX" -maxdepth 4 -type f \( -iname 'LICENSE*' -o -iname 'COPYING*' \) \
-            -exec cp -f {} bundle/LICENSES/ \; || true
-
-          # Best-effort: include the exact Homebrew source tarball (helps redistribution compliance)
-          brew fetch --force --build-from-source yices2
-          YICES_SRC_TARBALL="$(brew --cache yices2)"
-          if [ -f "$YICES_SRC_TARBALL" ]; then
-            cp -f "$YICES_SRC_TARBALL" bundle/SOURCES/
-          fi
-
-          # Optional: wrapper to prefer bundled yices at runtime
-          cat > bundle/run-salenv.sh <<'EOF'
-          #!/usr/bin/env bash
-          set -euo pipefail
-          ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-          export PATH="$ROOT/third_party/yices2/bin:$PATH"
-          export DYLD_LIBRARY_PATH="$ROOT/third_party/yices2/lib:${DYLD_LIBRARY_PATH:-}"
-          SALENV="$(ls "$ROOT"/bin/*/salenv-exec 2>/dev/null | head -n 1 || true)"
-          if [ -z "$SALENV" ]; then
-            echo "Could not find salenv-exec under $ROOT/bin/*" >&2
+          shopt -s nullglob
+          tarballs=(sal-*-bin-*.tar.gz)
+          if [ "${#tarballs[@]}" -ne 1 ]; then
+            echo "Expected one distribution tarball, found ${#tarballs[@]}" >&2
+            ls -la sal-*-bin-*.tar.gz || true
             exit 1
           fi
-          exec "$SALENV" "$@"
-          EOF
-          chmod +x bundle/run-salenv.sh
+          PKG_TARBALL="${tarballs[0]}"
 
-          tar -czf "dist/sal-${{ matrix.name }}.tar.gz" -C bundle .
+          # Validate installer output is relocatable and does not bake CI paths into wrappers.
+          VERIFY_ROOT="$(mktemp -d)"
+          tar -xzf "$PKG_TARBALL" -C "$VERIFY_ROOT"
+          PKG_DIR="$(find "$VERIFY_ROOT" -maxdepth 1 -type d -name 'sal-*' | head -n 1)"
+          if [ -z "$PKG_DIR" ]; then
+            echo "Could not find extracted package directory under $VERIFY_ROOT" >&2
+            exit 1
+          fi
+
+          (cd "$PKG_DIR" && chmod +x install.sh && ./install.sh)
+
+          if grep -R -n -I -F "$GITHUB_WORKSPACE" "$PKG_DIR/bin"; then
+            echo "Build path leaked into installed wrapper scripts: $GITHUB_WORKSPACE" >&2
+            exit 1
+          fi
+
+          RELOCATE_ROOT="$(mktemp -d)"
+          mv "$PKG_DIR" "$RELOCATE_ROOT/sal"
+          "$RELOCATE_ROOT/sal/bin/salenv-safe" --version
+
+          mkdir -p dist
+          cp "$PKG_TARBALL" "dist/sal-${{ matrix.name }}.tar.gz"
 
       - uses: actions/upload-artifact@v4
         with:

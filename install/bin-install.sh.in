@@ -12,6 +12,11 @@ echo "Installation summary:"
 echo "  SAL directory: $salenv_dir"
 warning=0
 
+runtime_salenv_dir='$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)'
+runtime_bigloolib="$runtime_salenv_dir/lib"
+runtime_salenv_dir_escaped=`printf "%s" "$runtime_salenv_dir" | sed 's/&/\\\&/g'`
+runtime_bigloolib_escaped=`printf "%s" "$runtime_bigloolib" | sed 's/&/\\\&/g'`
+
 DOT_A_LIBS=""
 for lib in $DOT_A_LIB_NAMES
 do
@@ -22,7 +27,7 @@ gen_script ()
 {
   template=src/$1.template
   script=$salenv_dir/bin/$1
-  if sed -e "s|__SALENV_DIR__|$salenv_dir|g;s|__BIGLOO_LIB_DIR__|$salenv_dir/lib|g;s|__DOT_A_LIBS__|$DOT_A_LIBS|g" $template > $script
+  if sed -e "s|__SALENV_DIR__|$runtime_salenv_dir_escaped|g;s|__BIGLOO_LIB_DIR__|$runtime_bigloolib_escaped|g;s|__DOT_A_LIBS__|$DOT_A_LIBS|g" $template > $script
   then
     chmod +x $script
   else
@@ -41,4 +46,3 @@ fi
 
 echo "Installation completed!"
 echo "It is also a good idea to add the directory $salenv_dir/bin to your command search PATH environment variable."
-

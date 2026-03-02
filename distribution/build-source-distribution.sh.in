@@ -85,9 +85,6 @@ cp contrib/* $SALENVDIR/contrib
 echo "Copying etc..."
 cp etc/* $SALENVDIR/etc
 
-echo "Copying ics sources.."
-cp ics-2.0c-src.tar.gz $SALENVDIR/etc
-
 echo "Copying macros..."
 cp src/*.macros $SALENVDIR/src
 cp src/*.in $SALENVDIR/src
@@ -119,4 +116,3 @@ cp gui/*.in $SALENVDIR/gui
 echo "Generating tar file..."
 chmod -R og+rX $SALENVDIR
 tar -cvzf $SRC_DISTRIB_FILE $SALENVDIR
-
