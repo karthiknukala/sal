@@ -94,6 +94,22 @@ jobs:
 
           (cd "$PKG_DIR" && chmod +x install.sh && ./install.sh)
 
+          # Ensure all expected SAL command binaries/wrappers were produced.
+          expected_bins=(
+            salenv salenv-safe salenv-exec salenv-exec-safe
+            sal-wfc lsal2xml sal2bool sal-smc sal-bmc sal-inf-bmc
+            sal-path-finder sal-deadlock-checker sal-sim sal-wmc
+            ltl2buchi sal-emc sal-path-explorer sal-atg sal-atg2
+            sal-sld sal-sc
+          )
+          for name in "${expected_bins[@]}"; do
+            if [ ! -x "$PKG_DIR/bin/$name" ]; then
+              echo "Missing expected binary artifact: $name" >&2
+              ls -la "$PKG_DIR/bin" >&2 || true
+              exit 1
+            fi
+          done
+
           if grep -R -n -I -F "$GITHUB_WORKSPACE" "$PKG_DIR/bin"; then
             echo "Build path leaked into installed wrapper scripts: $GITHUB_WORKSPACE" >&2
             exit 1
@@ -102,9 +118,18 @@ jobs:
           RELOCATE_ROOT="$(mktemp -d)"
           mv "$PKG_DIR" "$RELOCATE_ROOT/sal"
           "$RELOCATE_ROOT/sal/bin/salenv-safe" --version
+          "$RELOCATE_ROOT/sal/bin/sal-smc" --version
+
+          # Publish only runtime artifacts (no docs/examples/source tree).
+          ARTIFACT_ROOT="$(mktemp -d)"
+          mkdir -p "$ARTIFACT_ROOT/sal"
+          cp -a "$RELOCATE_ROOT/sal/bin" "$ARTIFACT_ROOT/sal/"
+          cp -a "$RELOCATE_ROOT/sal/lib" "$ARTIFACT_ROOT/sal/"
+          cp -a "$RELOCATE_ROOT/sal/src" "$ARTIFACT_ROOT/sal/"
+          find "$ARTIFACT_ROOT/sal/src" -type f -name '*.template' -delete
 
           mkdir -p dist
-          cp "$PKG_TARBALL" "dist/sal-${{ matrix.name }}.tar.gz"
+          tar -czf "dist/sal-${{ matrix.name }}.tar.gz" -C "$ARTIFACT_ROOT/sal" .
 
       - uses: actions/upload-artifact@v4
         with:
