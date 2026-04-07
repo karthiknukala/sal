@@ -1,4 +1,5 @@
 # Build artifacts
+/bin/
 /bin/arm-apple-darwin*/
 /lib/arm-apple-darwin*/
 /obj/arm-apple-darwin*/
@@ -63,3 +64,7 @@ GPATH
 
 doc/version.texi
 gui/version.py
+src/sal-version.scm
+
+Makefile
+src/code-analyzer
