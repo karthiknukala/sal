@@ -68,3 +68,5 @@ src/sal-version.scm
 
 Makefile
 src/code-analyzer
+src/compilation-support-code.scm
+src/sal-class-info.data
