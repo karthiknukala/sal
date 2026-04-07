@@ -1,3 +1,0 @@
-@c -- Automatically generated file (don't edit) -------------------------------- @c
-@c -- Version and Date ----------------------------------------------------------@c
-@set salenvvers 3.3
