@@ -38,6 +38,6 @@
       (else 
        (if demangle
          (pp/text (sal/original-name n))
-         (pp/text n)))))
+         (pp/text n)))))))
         
 

@@ -63,12 +63,11 @@ status-message-parser sal2scm-type sal-transient-vars
 sal-scm-obj-table sal-esm-alt sal-esm-case sal-esm-lhs
 sal-esm-may-delay sal-esm-initialization
 sal-esm-access-level-table mathsat-interface sal-esm-bitstream
-sal-esm-engine-scm-context sal-ast-used-contexts
+sal-esm-engine-scm-context sal-ast-used-contexts sal2scm-random
+sal-esm-util sal-esm-symmetry sal-esm-action sal-esm-state
+sal-esm-engine sal-esm-counterexample sal-esm-reflexivity
+sal-esm-random-simulation sal-esm-guided-simulation
+sal-esmc-core sal-esmc-idfs-support sal-esmc-dfs-support
+sal-esmc-bfs sal-esmc-dfs sal-esmc-guided sal-esmc-ndfs
+sal-esmc sal-path-explorer
 yices-interface yices2-interface))
-
-;; sal-esmc sal-esm-symmetry sal-esm-counterexample sal-esm-random-simulation
-;; sal-esmc-core sal-esmc-dfs
-;; sal-esmc-bfs sal-path-explorer sal-esm-reflexivity sal-esmc-guided
-;; sal-esm-guided-simulation
-;;  sal2scm-random
-;; sal-transient-varssal-esm-action sal-esm-state sal-esm-engine 

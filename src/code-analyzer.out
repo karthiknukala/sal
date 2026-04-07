@@ -2820,7 +2820,7 @@ SUBCLASSES: ()
 CLASS: <sal-scm-context>
 FAST SLOT ACCESS: #t
 IDX: 458
-SLOTS: (:global-function-decl-table :global-constant-decl-table :idx-val-table :val-idx-table :scm-decl-queue :gmp? :runtime-type-check? :debug? :loop-detection? :max-vector-size :compile? :type-check-table :pick-random-table)
+SLOTS: (:global-function-decl-table :global-constant-decl-table :idx-val-table :val-idx-table :scm-decl-queue :scm-decl-loaded-count :gmp? :runtime-type-check? :debug? :loop-detection? :max-vector-size :compile? :type-check-table :pick-random-table)
 SUBCLASSES: (<sal-esm-engine-scm-context>)
 ---------------------------
 CLASS: <sal-esm-expansion-context>
@@ -2844,7 +2844,13 @@ SUBCLASSES: ()
 CLASS: <sal-esm-engine-scm-context>
 FAST SLOT ACCESS: #t
 IDX: 462
-SLOTS: (:global-function-decl-table :global-constant-decl-table :idx-val-table :val-idx-table :scm-decl-queue :gmp? :runtime-type-check? :debug? :loop-detection? :max-vector-size :compile? :type-check-table :pick-random-table :curr-var-idx-table :next-var-idx-table :section-id :cached-code :action-scm-decl-queue :randomize? :restricted-randomization? :symmetry? :curr-var-name-table :next-var-name-table :to-bitstream-proc-table :from-bitstream-proc-table :normalized-proc-table :cmp-proc-table :symmetry-constraint-table)
+SLOTS: (:global-function-decl-table :global-constant-decl-table :idx-val-table :val-idx-table :scm-decl-queue :scm-decl-loaded-count :gmp? :runtime-type-check? :debug? :loop-detection? :max-vector-size :compile? :type-check-table :pick-random-table :curr-var-idx-table :next-var-idx-table :section-id :cached-code :action-scm-decl-queue :action-scm-decl-loaded-count :randomize? :restricted-randomization? :symmetry? :curr-var-name-table :next-var-name-table :to-bitstream-proc-table :from-bitstream-proc-table :normalized-proc-table :cmp-proc-table :symmetry-constraint-table)
+SUBCLASSES: ()
+---------------------------
+CLASS: <sal-esm-engine>
+FAST SLOT ACCESS: #t
+IDX: 463
+SLOTS: (:esm-module :sal-scm-context :num-state-vars :state-vars :choice-vars :input-vars :det-defined-vars :non-det-defined-vars :transient-vars :var-vector :choice-var-first-idx :non-det-defined-var-first-idx :det-defined-var-first-idx :transient-var-first-idx :curr-state-var-first-idx :next-state-var-first-idx :transition-access-level-table :initialization-access-level-table :initialization-action :transition-action :det-definition-action :memory-layout :num-bits :num-objects :input-memory-layout :choice-memory-layout :non-det-definition-memory-layout :aux-num-bits :layout-defition-vector :constraint-vector :cached-choice-value-proc)
 SUBCLASSES: ()
 ---------------------------
 GENERIC: api-entry/print
@@ -4547,336 +4553,416 @@ IDX: 339
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: scm-value->sal
+GENERIC: sal-scm-context/load-pending-decls!
 IDX: 340
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: scm-value->sal
+IDX: 341
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (1)
 ----------------------------
 GENERIC: scm-value->sal-array
-IDX: 341
+IDX: 342
 NUM DISCRIMINATORS: 2
 DISCRIMINATORS POSITIONS: (1 2)
 ----------------------------
 GENERIC: sal-type/simple-idx-val?
-IDX: 342
-NUM DISCRIMINATORS: 1
-DISCRIMINATORS POSITIONS: (0)
-----------------------------
-GENERIC: sal-type/idx->val
 IDX: 343
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-type/idx->val-proc
+GENERIC: sal-type/idx->val
 IDX: 344
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-type/val->idx
+GENERIC: sal-type/idx->val-proc
 IDX: 345
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-type/val->idx-proc
+GENERIC: sal-type/val->idx
 IDX: 346
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-type/setup-code
+GENERIC: sal-type/val->idx-proc
 IDX: 347
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-scm/encoded-as-lambda?
+GENERIC: sal-type/setup-code
 IDX: 348
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal->scm
+GENERIC: sal-scm/encoded-as-lambda?
 IDX: 349
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-scm/create-lambda
+GENERIC: sal->scm
 IDX: 350
-NUM DISCRIMINATORS: 1
-DISCRIMINATORS POSITIONS: (0)
+NUM DISCRIMINATORS: 2
+DISCRIMINATORS POSITIONS: (0 1)
 ----------------------------
-GENERIC: sal-type->scm-iterator
+GENERIC: sal-scm/create-lambda
 IDX: 351
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: subrange-iterator
+GENERIC: sal-type->scm-iterator
 IDX: 352
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: subrange-iterator
+IDX: 353
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
 GENERIC: sal-type/gen-eq-pred
-IDX: 353
-NUM DISCRIMINATORS: 1
-DISCRIMINATORS POSITIONS: (0)
-----------------------------
-GENERIC: sal-type/gen-check-membership-pred-core
 IDX: 354
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: esm->dnf-esm
+GENERIC: sal-type/gen-check-membership-pred-core
 IDX: 355
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: esm->dnf-esm-core
+GENERIC: esm->dnf-esm
 IDX: 356
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-esm-expansion-context/expand
+GENERIC: esm->dnf-esm-core
 IDX: 357
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm-expansion-context/expand
+IDX: 358
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
 GENERIC: sal-esm/expand-core
-IDX: 358
-NUM DISCRIMINATORS: 1
-DISCRIMINATORS POSITIONS: (0)
-----------------------------
-GENERIC: sal-ast/collect-state-lhs!
 IDX: 359
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-esm/collect-dependencies!
+GENERIC: sal-ast/collect-state-lhs!
 IDX: 360
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-lhs/subsumes?
+GENERIC: sal-esm/collect-dependencies!
 IDX: 361
 NUM DISCRIMINATORS: 1
-DISCRIMINATORS POSITIONS: (1)
+DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: merge-common-lhs-core
+GENERIC: sal-lhs/subsumes?
 IDX: 362
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (1)
 ----------------------------
-GENERIC: sal-lhs-target-type/num-components
+GENERIC: merge-common-lhs-core
 IDX: 363
 NUM DISCRIMINATORS: 1
-DISCRIMINATORS POSITIONS: (0)
+DISCRIMINATORS POSITIONS: (1)
 ----------------------------
-GENERIC: sal-lhs-type/components
+GENERIC: sal-lhs-target-type/num-components
 IDX: 364
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-esm/used-and-provided-lhs
+GENERIC: sal-lhs-type/components
 IDX: 365
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-esm/rearrange
+GENERIC: sal-esm/used-and-provided-lhs
 IDX: 366
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-esm-engine-scm-context/compile-code!
+GENERIC: sal-esm/rearrange
 IDX: 367
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esm-engine-scm-context/compile-code!
+IDX: 368
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
 GENERIC: sal-module/transient-vars
-IDX: 368
-NUM DISCRIMINATORS: 1
-DISCRIMINATORS POSITIONS: (0)
-----------------------------
-GENERIC: sal-ast/collect-non-transient!
 IDX: 369
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-esm/collect-lhs-name-expr
+GENERIC: sal-ast/collect-non-transient!
 IDX: 370
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-esm/uses-next-operator?
+GENERIC: sal-esm/collect-lhs-name-expr
 IDX: 371
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: collect-defined-vars-input-dependent!
+GENERIC: sal-esm/uses-next-operator?
 IDX: 372
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: break-definitions-in-two-lists
+GENERIC: collect-defined-vars-input-dependent!
 IDX: 373
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: decide-definition-kind
+GENERIC: break-definitions-in-two-lists
 IDX: 374
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-esm/remove-non-det-parts
+GENERIC: decide-definition-kind
 IDX: 375
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-esm/num-alternatives
+GENERIC: sal-esm/remove-non-det-parts
 IDX: 376
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-esm/has-guards?
+GENERIC: sal-esm/num-alternatives
 IDX: 377
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-esm->next-alt-proc
+GENERIC: sal-esm/has-guards?
 IDX: 378
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-esm->exec-alt-proc
+GENERIC: sal-esm->next-alt-proc
 IDX: 379
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: collect-case-target-core!
+GENERIC: sal-esm->exec-alt-proc
 IDX: 380
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: erase-guard-exprs-subsumed-by-case-stmt
+GENERIC: collect-case-target-core!
 IDX: 381
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-esm/promote-choice-to-case
+GENERIC: erase-guard-exprs-subsumed-by-case-stmt
 IDX: 382
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-esm/mark-may-delay!
+GENERIC: sal-esm/promote-choice-to-case
 IDX: 383
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-esm/collect-access-levels!
+GENERIC: sal-esm/mark-may-delay!
 IDX: 384
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-lhs/access-level
+GENERIC: sal-esm/collect-access-levels!
 IDX: 385
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-esm-module/initialization-access-levels
+GENERIC: sal-lhs/access-level
 IDX: 386
-NUM DISCRIMINATORS: 0
-DISCRIMINATORS POSITIONS: ()
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-esm-module/transition-access-levels
+GENERIC: sal-esm-module/initialization-access-levels
 IDX: 387
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: sal-esm/collect-must-initialization
+GENERIC: sal-esm-module/transition-access-levels
 IDX: 388
-NUM DISCRIMINATORS: 1
-DISCRIMINATORS POSITIONS: (0)
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: sal-esm/collect-may-initialization
+GENERIC: sal-esm/collect-must-initialization
 IDX: 389
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: lhs->ground-lhs
+GENERIC: sal-esm/collect-may-initialization
 IDX: 390
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: add-implicit-initialization!
+GENERIC: lhs->ground-lhs
 IDX: 391
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-type/val->bitstream
+GENERIC: add-implicit-initialization!
 IDX: 392
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-type/val->bitstream-proc
+GENERIC: sal-type/val->bitstream
 IDX: 393
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-function-type/val->bitstream-proc
+GENERIC: sal-type/val->bitstream-proc
 IDX: 394
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-type/simple?
+GENERIC: sal-function-type/val->bitstream-proc
 IDX: 395
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-type/bitstream->val
+GENERIC: sal-type/simple?
 IDX: 396
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-type/bitstream->vector-proc
+GENERIC: sal-type/bitstream->val
 IDX: 397
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-type/gen-normalize
+GENERIC: sal-type/bitstream->vector-proc
 IDX: 398
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-type/gen-normalize-proc
+GENERIC: sal-type/gen-normalize
 IDX: 399
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-function-type/gen-normalize-proc
+GENERIC: sal-type/gen-normalize-proc
 IDX: 400
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-type/gen-cmp
+GENERIC: sal-function-type/gen-normalize-proc
 IDX: 401
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-type/gen-cmp-proc
+GENERIC: sal-type/gen-cmp
 IDX: 402
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-function-type/gen-cmp-proc
+GENERIC: sal-type/gen-cmp-proc
 IDX: 403
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: sal-ast/used-contexts-core
+GENERIC: sal-function-type/gen-cmp-proc
 IDX: 404
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
+GENERIC: sal-ast/used-contexts-core
+IDX: 405
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/gen-pick-random-elem
+IDX: 406
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/esm-symmetric-memory-layout
+IDX: 407
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-symmetric-type/layout-tag
+IDX: 408
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-domain/make-array-layout
+IDX: 409
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/symmetry-friendliness-core
+IDX: 410
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/uses-symmetric-type?
+IDX: 411
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: get-type-components
+IDX: 412
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-type/esm-memory-layout
+IDX: 413
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: has-monitor?
+IDX: 414
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: esm->scm
+IDX: 415
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-lhs->access-list
+IDX: 416
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: make-assignment-body
+IDX: 417
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
+GENERIC: sal-esmc/verify
+IDX: 418
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esmc/verify-core
+IDX: 419
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: sal-esmc/simulate
+IDX: 420
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
 STATISTICS:
-number of classes: 462
-number of classes which support fast slot access: 460
-number of generic methods: 405
-number of static dispatch generic methods: 19
-number of single dispatch generic methods: 349
-number of double dispatch generic methods: 33
+number of classes: 463
+number of classes which support fast slot access: 461
+number of generic methods: 421
+number of static dispatch generic methods: 21
+number of single dispatch generic methods: 362
+number of double dispatch generic methods: 34
 number of multi dispatch generic methods: 4

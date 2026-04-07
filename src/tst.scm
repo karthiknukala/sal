@@ -329,7 +329,7 @@
   (sal-env/set-salpath! env '("."))
   (define ctx (sal-env/context env 'rename-tst))
   (define mod (sal-context/module-declaration ctx 'tst))
-  (sxml/pp (sal/expand-renames mod)))
+  (sxml/pp (sal/expand-renames mod))
   (sxml/match-or-fail mod
     ((MODULEDECLARATION ?- ?- ?mod-body)
      (sxml/pp (sal/expand-renames mod-body)))))
@@ -441,7 +441,7 @@
                                       (QUALIFIEDMODULENAME (IDENTIFIER system)
                                                            (CONTEXTNAME (IDENTIFIER simplemutex3)))
                                       (MODULEACTUALS))))
-  (sxml/pp (sal-env/module-instance env system-mod)))
+  (sxml/pp (sal-env/module-instance env system-mod))
   (sxml/pp (sal/module-type (sal-env/module-instance env system-mod))))
 
 
@@ -1682,8 +1682,8 @@
 
 
 
-  (define ctx (sal-env/context env 'pcp-scheduler))
-  (sal-ast/pp ctx))
+  ;; (define ctx (sal-env/context env 'pcp-scheduler))
+  ;; (sal-ast/pp ctx))
 
 (define-method (sal-builtin-constant-decl/update-application-type! (self <sal-builtin-constant-decl>) (app <sal-application>))
   (sal-ast/pp self)
@@ -1924,7 +1924,7 @@
   (define ctx (sal-env/context env 'tst-pcp-generic))
   (sal-ast/pp ctx))
 
-(define-method (sal-module-name/definition :around (self <sal-qualified-module-name>))
+(define-method (sal-module-name/definition :around (self <sal-qualified-module-name>)))
   
 
 

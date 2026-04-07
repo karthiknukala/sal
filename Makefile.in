@@ -240,11 +240,17 @@ state-entry-channel state-cache compile-and-load code-table             \
 state-entry state-to-do-list sal-promote-inputs                         \
 sal-value-to-assignments sal-display-variable-value                     \
 sal-transition-step sal-esm-options sal-esm-options-support             \
-sal-transient-vars status-message-parser sal2scm-type                   \
+sal-transient-vars status-message-parser sal2scm-type sal2scm-random    \
 sal-scm-obj-table sal-esm-alt sal-esm-case sal-esm-lhs                  \
 sal-esm-may-delay sal-esm-initialization sal-esm-access-level-table     \
-mathsat-interface sal-esm-bitstream sal-esm-runtime                     \
-sal-esm-engine-scm-context sal-ast-used-contexts smt-interface          \
+mathsat-interface sal-esm-bitstream sal-esm-runtime sal-esm-util        \
+sal-esm-symmetry sal-esm-state sal-esm-action                           \
+sal-esm-counterexample sal-esm-reflexivity sal-esm-engine               \
+sal-esm-engine-scm-context sal-ast-used-contexts                        \
+sal-esmc-core sal-esmc-idfs-support sal-esmc-dfs-support                \
+sal-esm-random-simulation sal-esm-guided-simulation                     \
+sal-esmc-bfs sal-esmc-dfs sal-esmc-guided sal-esmc-ndfs                 \
+sal-esmc sal-path-explorer smt-interface                                \
 sat-boolean-smt-context sat-boolean-smt-bmc-context                     \
 sal-module-simplifications yices-interface                              \
 sat-boolean-yices-bmc-context sat-yices-context sat-yices-bmc-context   \
@@ -559,6 +565,8 @@ clean: common-clean
 	rm -f $(SRC_DIR)/compilation-support-code.scm
 	rm -f $(SRC_DIR)/sal-class-info.data
 	rm -f $(SRC_DIR)/code-analyzer
+	rm -f $(SRC_DIR)/gui/config.py $(SRC_DIR)/gui/version.py
+	rm -f $(SRC_DIR)/doc/version.texi
 
 global-clean: common-clean
 	(cd bin;	ls -I CVS . | xargs rm -r -f)

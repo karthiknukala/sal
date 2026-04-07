@@ -140,6 +140,7 @@
     (mk-esm-seq-action* (map (lambda (input-var)
                                (lambda ()
                                  (let* ((it (sal-type->scm-iterator (slot-value input-var :type) sal-scm-ctx empty-env))
+                                        (_ (sal-scm-context/load-pending-decls! sal-scm-ctx))
                                         (values (iterator->list (eval it)))
                                         (curr-idx idx)
                                         (result (mk-choice-proc values (lambda ()
@@ -249,6 +250,7 @@
                  (lambda ()
                    (try 
                     (let ((it (sal-type->scm-iterator type sal-scm-ctx empty-env)))
+                      (sal-scm-context/load-pending-decls! sal-scm-ctx)
                       (mk-lazy-choice-proc (lambda ()
                                              (iterator->list (eval it)))
                                            (lambda ()
@@ -688,7 +690,6 @@
                   (internal-error)))))])
     (fill-value-vect var-vector layout first-idx)))
             
-
 
 
 

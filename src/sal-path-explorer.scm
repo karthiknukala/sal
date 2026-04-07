@@ -21,7 +21,7 @@
         (import sal-esm-random-simulation sal-module sal-esm
                 sal-api sal-esm-options-support sal-esm-engine
                 sal-esm-reflexivity sal-esm-options 
-                sal-esm-guided-simulation)
+                sal-esm-guided-simulation sal-esm-engine-scm-context)
         (export (sal-esmc/simulate module))
         )
 
@@ -49,4 +49,3 @@
      (else
       (sal-esm-engine-scm-context/compile-code! ctx)
       (sal-esm/random-simulation engine)))))
-

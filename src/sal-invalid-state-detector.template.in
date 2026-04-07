@@ -19,4 +19,4 @@
 #
 #
 
-__SALENV_DIR__/bin/salenv "$@" __SALENV_DIR__/src/sal-invalid-state-detector-front-end.scm
+exec "__SALENV_DIR__/bin/salenv" "$@" "__SALENV_DIR__/src/sal-invalid-state-detector-front-end.scm"

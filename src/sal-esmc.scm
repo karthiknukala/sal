@@ -23,7 +23,7 @@
                 fast-hash-table sal-module sal-esm-support runtime
                 sal-esmc-bfs sal-esmc-dfs sal-esm-options sal-esm-random-simulation
                 sal-esm-guided-simulation sal-esm-reflexivity sal-esmc-guided sal-decls
-                sal-esmc-ndfs)
+                sal-esmc-ndfs sal-esm-engine-scm-context)
         (export (sal-esmc/verify assertion))
         )
 

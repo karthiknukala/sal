@@ -32,6 +32,7 @@
                                                                 :section-id
                                                                 :cached-code
                                                                 :action-scm-decl-queue
+                                                                :action-scm-decl-loaded-count
                                                                 :randomize?
                                                                 ;; A restricted randomized context do not allow 
                                                                 ;; the generation of all possible alternatives.
@@ -70,16 +71,35 @@
 
 (define-generic (sal-esm-engine-scm-context/compile-code! ctx))
 
+(define (drop-action-elements lst num-to-drop)
+  (let loop ((lst lst)
+             (num-to-drop num-to-drop))
+    (if (= num-to-drop 0)
+      lst
+      (loop (cdr lst) (- num-to-drop 1)))))
+
+(define (sal-esm-engine-scm-context/load-pending-action-code! ctx)
+  (let* ((decl-queue (slot-value ctx :action-scm-decl-queue))
+         (decls (queue->list decl-queue))
+         (loaded-count (slot-value ctx :action-scm-decl-loaded-count))
+         (pending-decls (drop-action-elements decls loaded-count)))
+    (unless (null? pending-decls)
+      (for-each eval pending-decls)
+      (set-slot-value! ctx :action-scm-decl-loaded-count (+ loaded-count (length pending-decls))))))
+
 (define-method (sal-esm-engine-scm-context/compile-code! (ctx <sal-esm-engine-scm-context>))
   (if (slot-value ctx :compile?)
     (compile-and-load (queue->list (queue/append! (slot-value ctx :scm-decl-queue)
                                                   (queue->list (slot-value ctx :action-scm-decl-queue)))))
-    (for-each eval (queue->list (slot-value ctx :action-scm-decl-queue)))))
+    (begin
+      (sal-scm-context/load-pending-decls! ctx)
+      (sal-esm-engine-scm-context/load-pending-action-code! ctx))))
   
 (define (sal-esm-engine-scm-context/init! ctx)
   (sal-scm-context/init! ctx)
   (set-slot-value! ctx :cached-code (make-code-table))
   (set-slot-value! ctx :action-scm-decl-queue (make-queue))
+  (set-slot-value! ctx :action-scm-decl-loaded-count 0)
 
   (set-slot-value! ctx :to-bitstream-proc-table (make-sal-ast-table))
   (set-slot-value! ctx :from-bitstream-proc-table (make-sal-ast-table))

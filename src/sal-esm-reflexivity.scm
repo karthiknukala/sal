@@ -21,7 +21,7 @@
         (import sal-type sal-esm-engine sal2scm-core sal-ast-env
                 sal-expression sal-module sal-ast-simplify
                 sal-ast-expand sal-ast-for-each fast-hash-table
-                sal-esm-support)
+                sal-esm-support sal-esm-engine-scm-context)
         (export (sal-esm/convert-user-function module user-sal-function ctx user-next-vars?))
         )
 
@@ -61,6 +61,5 @@
                               (sign-unsupported-feature ast
                                                         "User provided state function must not use defined variables.")))))
                       ast)))
-
 
 

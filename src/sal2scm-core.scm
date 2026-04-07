@@ -25,6 +25,7 @@
                 <sal-scm-context>
                 (sal-scm-context/init! ctx)
                 (sal-scm-context/add-decl! ctx code)
+                (sal-scm-context/load-pending-decls! ctx)
                 (sal->scm ast ctx env)
                 (sal-data-type/max-constructor-size data-type)
                 (sal-constructor/max-constructor-size constructor)
@@ -46,6 +47,7 @@
    :idx-val-table              ;; maps (cache) SAL types -> idx->val procedures
    :val-idx-table              ;; maps (cache) SAL types -> val->idx procedures
    :scm-decl-queue             ;; list of global scheme definitions
+   :scm-decl-loaded-count      ;; number of generated declarations already loaded into the eval environment
    :gmp?                       ;; #t when GMP is used to represent SAL numerals
    :runtime-type-check?        ;; #t when runtime type checking code must be included in the generated code
    :debug?                     ;; #t when debugging primitives should be included in the generated code
@@ -61,6 +63,24 @@
 (define-method (sal-scm-context/add-decl! (ctx <sal-scm-context>) (code <primitive>))
   (queue/insert! (slot-value ctx :scm-decl-queue) code))
 
+(define-generic (sal-scm-context/load-pending-decls! ctx))
+
+(define (drop-elements lst num-to-drop)
+  (let loop ((lst lst)
+             (num-to-drop num-to-drop))
+    (if (= num-to-drop 0)
+      lst
+      (loop (cdr lst) (- num-to-drop 1)))))
+
+(define-method (sal-scm-context/load-pending-decls! (ctx <sal-scm-context>))
+  (let* ((decl-queue (slot-value ctx :scm-decl-queue))
+         (decls (queue->list decl-queue))
+         (loaded-count (slot-value ctx :scm-decl-loaded-count))
+         (pending-decls (drop-elements decls loaded-count)))
+    (unless (null? pending-decls)
+      (for-each eval pending-decls)
+      (set-slot-value! ctx :scm-decl-loaded-count (+ loaded-count (length pending-decls))))))
+
 (define (sal-scm-context/init! ctx)
   (set-slot-value! ctx :global-function-decl-table (make-sal-ast-table))
   (set-slot-value! ctx :global-constant-decl-table (make-sal-ast-table))
@@ -69,6 +89,7 @@
   (set-slot-value! ctx :idx-val-table (make-sal-ast-table))
   (set-slot-value! ctx :val-idx-table (make-sal-ast-table))
   (set-slot-value! ctx :scm-decl-queue (make-queue))
+  (set-slot-value! ctx :scm-decl-loaded-count 0)
   (set-slot-value! ctx :max-vector-size *sal-scm-max-vector-size*))
 
 (define-generic (sal->scm ast ctx env))

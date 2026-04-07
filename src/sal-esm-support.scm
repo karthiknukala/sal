@@ -306,7 +306,9 @@
 
 (define (calculate-bound bound sal-scm-ctx)
   (try
-   (object->mpq (eval (sal->scm bound sal-scm-ctx (make-empty-env))))
+   (let* ((bound-code (sal->scm bound sal-scm-ctx (make-empty-env)))
+          (_ (sal-scm-context/load-pending-decls! sal-scm-ctx)))
+     (object->mpq (eval bound-code)))
    (lambda (escape p m o)
      (escape #f))))
 

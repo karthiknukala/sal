@@ -27,17 +27,13 @@
                 scm2sal state-entry-channel sal-esm-symmetry sal-ast-for-each
                 sal-display-variable-value sal-transition-step
                 sal-esm-options sal-module sal-transient-vars sal-decls
-                sal2scm-type sal-esm-access-level-table sal-ast-table)
+                sal2scm-type sal-esm-access-level-table sal-ast-table
+                sal-esm-engine-scm-context)
         (export <sal-esm-engine>
-                <sal-esm-engine-scm-context>
                 *esm-var-vector*
                 *esm-deadlock-detected*
                 (inline sal-esm-engine/deadlock?)
                 (make-sal-esm-engine esm-module sal-scm-ctx property-used-vars)
-                (sal-esm-engine-scm-context/init! ctx)
-                (make-sal-esm-engine-scm-context)
-                (sal-esm-engine-scm-context/compile-code! ctx)
-                (sal-esm-engine-scm-context/add-definition! ctx code id-prefix)
                 (sal-esm-engine/reset-var-vector! esm-engine)
                 (sal-esm-engine/set-curr-memory-layout! esm-engine)
                 (sal-esm-engine/set-other-memory-layout! esm-engine)
@@ -1051,6 +1047,7 @@
                          local-decls))
          (value-lists (map (lambda (decl)
                              (let ((it (sal-type->scm-iterator (slot-value decl :type) ctx env)))
+                               (sal-scm-context/load-pending-decls! ctx)
                                ;; (print it)
                                (iterator->list (eval it))))
                            local-decls))
@@ -1404,4 +1401,3 @@
     (status-message :esm-invalid)
     (verbose-message 2 "  INVALID, generating counterexample..."))))
   
-
