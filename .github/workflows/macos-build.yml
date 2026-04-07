@@ -1,13 +1,14 @@
 name: build-sal-macos
 
 on:
+  push:
+    branches:
+      - '**'
   pull_request:
   workflow_dispatch:
   schedule:
     # Nightly build (UTC)
     - cron: '0 3 * * *'
-  # push:
-  #   branches: [ci/macos-build]
 
 jobs:
   build:
