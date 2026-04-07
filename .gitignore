@@ -46,6 +46,20 @@
 *.swp
 *.swo
 
+# Editor-generated index files
+TAGS
+tags
+GTAGS
+GRTAGS
+GPATH
+
+# Distribution artifacts
+/sal-[0-9]*/
+/sal-*-src.tar.gz
+/sal-*-bin-*.tar.gz
+
+# Local Codex scratch
+/.codex/
+
 doc/version.texi
 gui/version.py
-
