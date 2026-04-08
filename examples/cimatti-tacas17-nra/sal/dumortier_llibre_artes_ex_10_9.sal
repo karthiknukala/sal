@@ -1,0 +1,127 @@
+% Auto-generated from dumortier_llibre_artes_ex_10_9.vmt
+% Source suite: benchmarks/vmt/nra/dumortier_llibre_artes_ex_10_9.vmt
+dumortier_llibre_artes_ex_10_9: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    instance_jump: BOOLEAN
+
+  OUTPUT
+    instance_x: REAL,
+    instance_y: REAL
+
+  LOCAL
+    def_18: REAL,
+    def_19: REAL,
+    def_15: REAL,
+    def_16: REAL,
+    def_20: REAL,
+    def_21: BOOLEAN,
+    def_22: BOOLEAN,
+    def_26: REAL,
+    def_34: REAL,
+    def_65: REAL,
+    def_63: REAL,
+    def_25: REAL,
+    def_64: REAL,
+    def_66: REAL,
+    def_61: REAL,
+    def_62: REAL,
+    def_67: REAL,
+    def_74: REAL,
+    def_30: REAL,
+    def_59: REAL,
+    def_75: REAL,
+    def_27: REAL,
+    def_28: REAL,
+    def_58: REAL,
+    def_76: REAL,
+    def_38: REAL,
+    def_39: REAL,
+    def_35: REAL,
+    def_36: REAL,
+    def_40: REAL,
+    def_49: REAL,
+    def_32: REAL,
+    def_33: REAL,
+    def_50: REAL,
+    def_29: REAL,
+    def_43: REAL,
+    def_51: REAL,
+    def_55: REAL,
+    def_23: BOOLEAN,
+    def_84: BOOLEAN,
+    def_85: BOOLEAN
+
+  DEFINITION
+    def_18 = (instance_x + (-(1)));
+    def_19 = (def_18 * def_18);
+    def_15 = (instance_y + 1);
+    def_16 = (def_15 * def_15);
+    def_20 = (def_16 + def_19);
+    def_21 = ((1 / 4) <= def_20);
+    def_22 = (NOT def_21);
+    def_26 = (instance_x * instance_x);
+    def_34 = (instance_x * def_26);
+    def_65 = (instance_x * def_34);
+    def_63 = (2 * instance_x);
+    def_25 = (instance_y * instance_y);
+    def_64 = (def_25 * def_63);
+    def_66 = (def_64 + def_65);
+    def_61 = (6 * def_26);
+    def_62 = (def_25 * def_61);
+    def_67 = ((-(1)) * def_62);
+    def_74 = (def_67 + def_66);
+    def_30 = (instance_y * def_25);
+    def_59 = (instance_y * def_30);
+    def_75 = (def_59 + def_74);
+    def_27 = ((-(1)) * def_25);
+    def_28 = (def_26 + def_27);
+    def_58 = (instance_x * def_28);
+    def_76 = (def_58 + def_75);
+    def_38 = (2 * def_26);
+    def_39 = (instance_y * def_38);
+    def_35 = (4 * def_34);
+    def_36 = (instance_y * def_35);
+    def_40 = ((-(1)) * def_36);
+    def_49 = (def_40 + def_39);
+    def_32 = (4 * instance_x);
+    def_33 = (def_30 * def_32);
+    def_50 = (def_33 + def_49);
+    def_29 = (instance_y * def_28);
+    def_43 = ((-(1)) * def_29);
+    def_51 = (def_43 + def_50);
+    def_55 = (2 * instance_y);
+    def_23 = (NOT instance_jump);
+    def_84 = (1 <= instance_y);
+    def_85 = (NOT def_84);
+
+  INITIALIZATION
+  [
+      def_22 -->
+        instance_x IN { v_instance_x: REAL | TRUE };
+        instance_y IN { v_instance_y: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_77: REAL = ((-(2)) * instance_x') IN
+        LET def_78: REAL = (def_77 + def_76) IN
+        LET def_79: REAL = (def_63 + def_78) IN
+        LET def_80: BOOLEAN = (def_79 = 0) IN
+        LET def_53: REAL = ((-(2)) * instance_y') IN
+        LET def_54: REAL = (def_53 + def_51) IN
+        LET def_56: REAL = (def_55 + def_54) IN
+        LET def_57: BOOLEAN = (def_56 = 0) IN
+        LET def_81: BOOLEAN = (def_57 AND def_80) IN
+        LET def_82: BOOLEAN = (instance_jump OR def_81) IN
+        LET def_83: BOOLEAN = (def_23 AND def_82) IN
+        def_83 -->
+        instance_x' IN { v_instance_x: REAL | TRUE };
+        instance_y' IN { v_instance_y: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_85);
+END

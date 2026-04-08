@@ -1,0 +1,133 @@
+% Auto-generated from testdiv.vmt
+% Source suite: benchmarks/vmt/nra/testdiv.vmt
+testdiv: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    a_2: REAL,
+    div_7_9: REAL,
+    nondet: BOOLEAN
+
+  OUTPUT
+    pc_2: BOOLEAN,
+    pc_1: BOOLEAN,
+    pc_0: BOOLEAN,
+    b: REAL,
+    a: REAL
+
+  LOCAL
+    def_31: BOOLEAN,
+    def_29: BOOLEAN,
+    def_28: BOOLEAN,
+    def_30: BOOLEAN,
+    def_32: BOOLEAN,
+    def_69: BOOLEAN,
+    def_70: BOOLEAN,
+    def_63: BOOLEAN,
+    def_56: BOOLEAN,
+    def_54: REAL,
+    def_55: BOOLEAN,
+    def_57: BOOLEAN,
+    def_60: BOOLEAN,
+    def_65: BOOLEAN,
+    def_66: BOOLEAN,
+    def_67: BOOLEAN,
+    def_58: BOOLEAN,
+    def_45: BOOLEAN,
+    def_46: BOOLEAN,
+    def_25: BOOLEAN,
+    def_22: BOOLEAN,
+    def_23: BOOLEAN,
+    def_20: BOOLEAN,
+    def_21: BOOLEAN,
+    def_91: BOOLEAN
+
+  DEFINITION
+    def_31 = (NOT pc_2);
+    def_29 = (NOT pc_1);
+    def_28 = (NOT pc_0);
+    def_30 = (def_28 AND def_29);
+    def_32 = (def_30 AND def_31);
+    def_69 = (pc_0 AND def_29);
+    def_70 = (def_31 AND def_69);
+    def_63 = (div_7_9 = a_2);
+    def_56 = (b = 0);
+    def_54 = (b * div_7_9);
+    def_55 = (a = def_54);
+    def_57 = (def_55 OR def_56);
+    def_60 = (nondet AND def_57);
+    def_65 = (def_60 AND def_63);
+    def_66 = (a_2 <= 1);
+    def_67 = (NOT def_66);
+    def_58 = (NOT nondet);
+    def_45 = (pc_1 AND def_28);
+    def_46 = (def_31 AND def_45);
+    def_25 = (1 <= b);
+    def_22 = (b <= a);
+    def_23 = (NOT def_22);
+    def_20 = (a <= 0);
+    def_21 = (NOT def_20);
+    def_91 = (NOT def_46);
+
+  INITIALIZATION
+  [
+      def_32 -->
+        pc_2 IN { v_pc_2: BOOLEAN | TRUE };
+        pc_1 IN { v_pc_1: BOOLEAN | TRUE };
+        pc_0 IN { v_pc_0: BOOLEAN | TRUE };
+        b IN { v_b: REAL | TRUE };
+        a IN { v_a: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_84: BOOLEAN = (pc_0' AND pc_1') IN
+        LET def_35: BOOLEAN = (NOT pc_2') IN
+        LET def_85: BOOLEAN = (def_35 AND def_84) IN
+        LET def_87: BOOLEAN = (def_70 AND def_85) IN
+        LET def_77: BOOLEAN = (a' = a_2) IN
+        LET def_38: BOOLEAN = (b = b') IN
+        LET def_78: BOOLEAN = (def_38 AND def_77) IN
+        LET def_86: BOOLEAN = (def_65 AND def_78) IN
+        LET def_88: BOOLEAN = (def_86 AND def_87) IN
+        LET def_47: BOOLEAN = (NOT pc_0') IN
+        LET def_48: BOOLEAN = (pc_1' AND def_47) IN
+        LET def_49: BOOLEAN = (def_35 AND def_48) IN
+        LET def_81: BOOLEAN = (def_49 AND def_70) IN
+        LET def_79: BOOLEAN = (def_67 AND def_78) IN
+        LET def_80: BOOLEAN = (def_65 AND def_79) IN
+        LET def_82: BOOLEAN = (def_80 AND def_81) IN
+        LET def_33: BOOLEAN = (NOT pc_1') IN
+        LET def_34: BOOLEAN = (pc_0' AND def_33) IN
+        LET def_36: BOOLEAN = (def_34 AND def_35) IN
+        LET def_75: BOOLEAN = (def_36 AND def_70) IN
+        LET def_71: BOOLEAN = (a' = div_7_9) IN
+        LET def_72: BOOLEAN = (def_38 AND def_71) IN
+        LET def_73: BOOLEAN = (def_58 AND def_72) IN
+        LET def_74: BOOLEAN = (def_57 AND def_73) IN
+        LET def_76: BOOLEAN = (def_74 AND def_75) IN
+        LET def_83: BOOLEAN = (def_76 OR def_82) IN
+        LET def_89: BOOLEAN = (def_83 OR def_88) IN
+        LET def_50: BOOLEAN = (def_46 AND def_49) IN
+        LET def_37: BOOLEAN = (a = a') IN
+        LET def_39: BOOLEAN = (def_37 AND def_38) IN
+        LET def_51: BOOLEAN = (def_39 AND def_50) IN
+        LET def_43: BOOLEAN = (def_32 AND def_36) IN
+        LET def_40: BOOLEAN = (def_25 AND def_39) IN
+        LET def_41: BOOLEAN = (def_23 AND def_40) IN
+        LET def_42: BOOLEAN = (def_21 AND def_41) IN
+        LET def_44: BOOLEAN = (def_42 AND def_43) IN
+        LET def_52: BOOLEAN = (def_44 OR def_51) IN
+        LET def_90: BOOLEAN = (def_52 OR def_89) IN
+        def_90 -->
+        pc_2' IN { v_pc_2: BOOLEAN | TRUE };
+        pc_1' IN { v_pc_1: BOOLEAN | TRUE };
+        pc_0' IN { v_pc_0: BOOLEAN | TRUE };
+        b' IN { v_b: REAL | TRUE };
+        a' IN { v_a: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_91);
+END

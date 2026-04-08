@@ -1,0 +1,151 @@
+% Auto-generated from sas13-floatitp-rangevMain2b.vmt
+% Source suite: benchmarks/vmt/nra/sas13-floatitp-rangevMain2b.vmt
+sas13_floatitp_rangevmain2b: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    div_11_13: REAL
+
+  OUTPUT
+    pc_2: BOOLEAN,
+    pc_1: BOOLEAN,
+    pc_0: BOOLEAN,
+    state: REAL,
+    in_main_0_in_rangevmain2b_0_in_heronsqrt_0_target: REAL,
+    in_main_0_guess: REAL,
+    in_main_0_target: REAL
+
+  LOCAL
+    def_44: BOOLEAN,
+    def_42: BOOLEAN,
+    def_41: BOOLEAN,
+    def_43: BOOLEAN,
+    def_45: BOOLEAN,
+    def_92: BOOLEAN,
+    def_93: BOOLEAN,
+    def_82: BOOLEAN,
+    def_76: BOOLEAN,
+    def_74: REAL,
+    def_75: BOOLEAN,
+    def_77: BOOLEAN,
+    def_78: REAL,
+    def_86: BOOLEAN,
+    def_85: BOOLEAN,
+    def_87: BOOLEAN,
+    def_88: BOOLEAN,
+    def_83: BOOLEAN,
+    def_61: BOOLEAN,
+    def_62: BOOLEAN,
+    def_37: BOOLEAN,
+    def_36: BOOLEAN,
+    def_38: BOOLEAN,
+    def_34: BOOLEAN,
+    def_32: BOOLEAN,
+    def_35: BOOLEAN,
+    def_118: BOOLEAN
+
+  DEFINITION
+    def_44 = (NOT pc_2);
+    def_42 = (NOT pc_1);
+    def_41 = (NOT pc_0);
+    def_43 = (def_41 AND def_42);
+    def_45 = (def_43 AND def_44);
+    def_92 = (pc_0 AND def_42);
+    def_93 = (def_44 AND def_92);
+    def_82 = (state = div_11_13);
+    def_76 = (state = 0);
+    def_74 = (state * div_11_13);
+    def_75 = (in_main_0_in_rangevmain2b_0_in_heronsqrt_0_target = def_74);
+    def_77 = (def_75 OR def_76);
+    def_78 = (state + div_11_13);
+    def_86 = (def_78 <= 4);
+    def_85 = (1 <= def_78);
+    def_87 = (def_85 AND def_86);
+    def_88 = (NOT def_87);
+    def_83 = (NOT def_82);
+    def_61 = (pc_1 AND def_41);
+    def_62 = (def_44 AND def_61);
+    def_37 = (in_main_0_guess <= 4);
+    def_36 = ((1 / 4) <= in_main_0_guess);
+    def_38 = (def_36 AND def_37);
+    def_34 = (in_main_0_target <= 4);
+    def_32 = ((1 / 4) <= in_main_0_target);
+    def_35 = (def_32 AND def_34);
+    def_118 = (NOT def_62);
+
+  INITIALIZATION
+  [
+      def_45 -->
+        pc_2 IN { v_pc_2: BOOLEAN | TRUE };
+        pc_1 IN { v_pc_1: BOOLEAN | TRUE };
+        pc_0 IN { v_pc_0: BOOLEAN | TRUE };
+        state IN { v_state: REAL | TRUE };
+        in_main_0_in_rangevmain2b_0_in_heronsqrt_0_target IN { v_in_main_0_in_rangevmain2b_0_in_heronsqrt_0_target: REAL | TRUE };
+        in_main_0_guess IN { v_in_main_0_guess: REAL | TRUE };
+        in_main_0_target IN { v_in_main_0_target: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_110: BOOLEAN = (pc_0' AND pc_1') IN
+        LET def_48: BOOLEAN = (NOT pc_2') IN
+        LET def_111: BOOLEAN = (def_48 AND def_110) IN
+        LET def_114: BOOLEAN = (def_93 AND def_111) IN
+        LET def_95: REAL = ((-(2)) * state') IN
+        LET def_96: REAL = (def_95 + div_11_13) IN
+        LET def_97: REAL = (state + def_96) IN
+        LET def_98: BOOLEAN = (def_97 = 0) IN
+        LET def_66: BOOLEAN = (in_main_0_in_rangevmain2b_0_in_heronsqrt_0_target = in_main_0_in_rangevmain2b_0_in_heronsqrt_0_target') IN
+        LET def_51: BOOLEAN = (in_main_0_guess = in_main_0_guess') IN
+        LET def_50: BOOLEAN = (in_main_0_target = in_main_0_target') IN
+        LET def_52: BOOLEAN = (def_50 AND def_51) IN
+        LET def_67: BOOLEAN = (def_52 AND def_66) IN
+        LET def_99: BOOLEAN = (def_67 AND def_98) IN
+        LET def_112: BOOLEAN = (def_82 AND def_99) IN
+        LET def_113: BOOLEAN = (def_77 AND def_112) IN
+        LET def_115: BOOLEAN = (def_113 AND def_114) IN
+        LET def_63: BOOLEAN = (NOT pc_0') IN
+        LET def_64: BOOLEAN = (pc_1' AND def_63) IN
+        LET def_65: BOOLEAN = (def_48 AND def_64) IN
+        LET def_107: BOOLEAN = (def_65 AND def_93) IN
+        LET def_104: BOOLEAN = (def_88 AND def_99) IN
+        LET def_105: BOOLEAN = (def_82 AND def_104) IN
+        LET def_106: BOOLEAN = (def_77 AND def_105) IN
+        LET def_108: BOOLEAN = (def_106 AND def_107) IN
+        LET def_46: BOOLEAN = (NOT pc_1') IN
+        LET def_47: BOOLEAN = (pc_0' AND def_46) IN
+        LET def_49: BOOLEAN = (def_47 AND def_48) IN
+        LET def_102: BOOLEAN = (def_49 AND def_93) IN
+        LET def_100: BOOLEAN = (def_83 AND def_99) IN
+        LET def_101: BOOLEAN = (def_77 AND def_100) IN
+        LET def_103: BOOLEAN = (def_101 AND def_102) IN
+        LET def_109: BOOLEAN = (def_103 OR def_108) IN
+        LET def_116: BOOLEAN = (def_109 OR def_115) IN
+        LET def_70: BOOLEAN = (def_62 AND def_65) IN
+        LET def_68: BOOLEAN = (state = state') IN
+        LET def_69: BOOLEAN = (def_67 AND def_68) IN
+        LET def_71: BOOLEAN = (def_69 AND def_70) IN
+        LET def_59: BOOLEAN = (def_45 AND def_49) IN
+        LET def_55: BOOLEAN = (in_main_0_guess = state') IN
+        LET def_53: BOOLEAN = (in_main_0_target = in_main_0_in_rangevmain2b_0_in_heronsqrt_0_target') IN
+        LET def_54: BOOLEAN = (def_52 AND def_53) IN
+        LET def_56: BOOLEAN = (def_54 AND def_55) IN
+        LET def_57: BOOLEAN = (def_38 AND def_56) IN
+        LET def_58: BOOLEAN = (def_35 AND def_57) IN
+        LET def_60: BOOLEAN = (def_58 AND def_59) IN
+        LET def_72: BOOLEAN = (def_60 OR def_71) IN
+        LET def_117: BOOLEAN = (def_72 OR def_116) IN
+        def_117 -->
+        pc_2' IN { v_pc_2: BOOLEAN | TRUE };
+        pc_1' IN { v_pc_1: BOOLEAN | TRUE };
+        pc_0' IN { v_pc_0: BOOLEAN | TRUE };
+        state' IN { v_state: REAL | TRUE };
+        in_main_0_in_rangevmain2b_0_in_heronsqrt_0_target' IN { v_in_main_0_in_rangevmain2b_0_in_heronsqrt_0_target: REAL | TRUE };
+        in_main_0_guess' IN { v_in_main_0_guess: REAL | TRUE };
+        in_main_0_target' IN { v_in_main_0_target: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_118);
+END

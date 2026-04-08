@@ -1,0 +1,76 @@
+This directory vendors and translates the 114 nonlinear real arithmetic
+benchmark transition systems used in the TACAS'17 ic3-nra evaluation and
+referenced again by the 2021 interpolation paper at:
+
+  https://arxiv.org/pdf/2106.04340
+
+The source models came from the Zenodo archive:
+
+  https://zenodo.org/records/1300853
+
+More specifically, these SAL models were generated from:
+
+  benchmarks/vmt/nra/*.vmt
+
+within `smt-vmt-benchmarks-nra-nta.tar.gz`.
+
+Layout:
+
+  vmt/          Original 114 VMT source files from the archive
+  sal/          Generated SAL translations
+  sal/MANIFEST.tsv
+                Mapping from original VMT filename to generated SAL file
+  benchmark_metadata.tsv
+                Family labels plus source-backed per-benchmark expected
+                results where currently available
+  paper_results_2021.tsv
+                Figure/Table data for ic3-nra, kind, and pdkind from the
+                2021 interpolation paper
+  paper_results_2018_vmt_nra.tsv
+                Family-level VMT(NRA) results, including the direct
+                k-induction rows, from the 2018 TOCL paper
+  generate_sal_from_vmt.py
+                Regenerates the SAL files and manifest from `vmt/`
+  build_benchmark_metadata.py
+                Rebuilds `benchmark_metadata.tsv` from the manifest and the
+                in-tree family/status rules
+
+Translation notes:
+
+  - State variables come from the VMT `:next` annotations.
+  - Non-state VMT symbols become SAL `INPUT`s.
+  - Current-state helper definitions become SAL `LOCAL` definitions.
+  - Transition-only helper DAGs are emitted as nested `LET` expressions in
+    the SAL transition guard so that next-state subexpressions remain legal.
+  - The VMT transition relation is preserved relationally as a guarded SAL
+    command, with each next-state variable assigned nondeterministically via
+    `IN { ... | TRUE }`.
+
+To regenerate:
+
+  python3 examples/cimatti-tacas17-nra/generate_sal_from_vmt.py \
+    --src-dir examples/cimatti-tacas17-nra/vmt \
+    --dst-dir examples/cimatti-tacas17-nra/sal \
+    --clean
+
+For a quick validation pass, use:
+
+  tests/run_cimatti_tacas17_nra_smoke.sh
+
+To regenerate the benchmark metadata used by the timing harness:
+
+  python3 examples/cimatti-tacas17-nra/build_benchmark_metadata.py
+
+To run SAL's k-induction path across the source-backed subset and compare
+the aggregate results with the 2018/2021 paper tables:
+
+  python3 tests/run_cimatti_tacas17_nra_kind_bench.py \
+    --yices2 /path/to/yices \
+    --known-only \
+    --timeout-s 20 \
+    --max-k 32
+
+The current metadata is intentionally conservative: it records source-backed
+expected statuses for the handcrafted, isat3-cfg, nuxmv, and TCM families,
+and marks the remaining families as `unknown` until their per-benchmark
+truth labels are curated.

@@ -1,0 +1,6 @@
+Benchmarks for isat3 generated with the vmt2isat.py script.
+
+Suggested command-line parameters for isat3 (as given by Ahmed Mahdi):
+
+  -I --use-craig-interpolation --use-cegar --cegar-abstraction-inductive --interpolant-rules-mcmillan --interpolant-a-biased --interpolation-offset --interpolant-offset 2
+

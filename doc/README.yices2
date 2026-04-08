@@ -37,6 +37,14 @@ To use Yices 2 has backend solver for SAL:
 3) To select Yices 2 instead of Yices 1 when using sal-bmc or sal-inf-bmc,
    use the command-line option -s yices2.
 
+For sal-inf-bmc, SAL now invokes the Yices 2 SMT solver with the
+option `--mcsat` so that nonlinear arithmetic can be delegated to
+Yices2's MCSAT engine. This requires a Yices2 build compiled with
+MCSAT support. If you need to fall back to the classic solver, add
+
+   (sal/set-yices2-mcsat-mode! #f)
+
+to your `.salrc' file.
 
 
 

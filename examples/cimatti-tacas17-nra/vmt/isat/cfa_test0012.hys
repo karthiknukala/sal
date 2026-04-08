@@ -1,0 +1,88 @@
+------------------------------------------------------
+-- This case is borrowed from isat3 repository      --
+-- original name: bmc_non-linear_cruise_control.hys --
+-- where the specification is NOT REACHABLE         --
+------------------------------------------------------
+
+DECL
+
+-- some constants 
+
+define car_inertia               = 2000;              -- the inertia of the car in kg
+define car_face                  = 2;                 -- the face of the car in m^2
+define cw_factor                 = 1.11;              -- the drag coefficient
+define air_density               = 1.204;             -- density of the air
+define dt                        = 0.01;              -- discrete time advances in steps of size dt in sec
+define velocity_to_hold          = 10;                -- the velocity the cruise controller should hold in m/sec
+define delta_update_interval     = 1;                 
+define update_interval           = 3;                 
+
+float [-10000,10000] car_velocity;                    -- velocity of the car
+float [-10000,10000]  car_acc_interaction;            -- the accelerating interaction of the car
+float [-10000,10000]  res_acc_interaction;            -- the current resulting accelerating interaction of the car
+float [-300000,300000] acc;                           -- the acceleration of the car
+float [0,100] update_counter;
+
+
+NODES
+S0, S1, S2, S3, S4, S5, S6, S7;
+
+INIT
+edge(true, {update_counter = 0 &&
+	    car_velocity = velocity_to_hold &&
+	    car_acc_interaction = 1000 &&
+	    car_acc_interaction = acc * car_inertia &&
+	    res_acc_interaction = car_acc_interaction}, {true}, S0);
+
+FLOWS
+edge(S0, {update_counter >= update_interval},
+	 {car_acc_interaction' = car_acc_interaction,
+	  res_acc_interaction' = car_acc_interaction - (car_face * cw_factor * air_density * 0.5 * car_velocity^2),
+	  update_counter' = update_counter + delta_update_interval,
+          car_velocity' = car_velocity + acc * dt}, S1');
+edge(S1, {},{acc'=res_acc_interaction/ car_inertia}, S2');
+
+
+edge(S0, {update_counter < update_interval && car_velocity > velocity_to_hold},
+	 {update_counter' = 0,
+	  car_velocity' = car_velocity,
+	  res_acc_interaction' = res_acc_interaction,
+	  car_acc_interaction' = 0,
+	  acc' = acc}, S3');
+
+edge(S0, {update_counter < update_interval && car_velocity <= velocity_to_hold},
+	 {update_counter' = 0,
+	  car_velocity' = car_velocity,
+	  res_acc_interaction' = res_acc_interaction,
+	  car_acc_interaction' = 1000,
+	  acc' = acc}, S4');
+
+edge(S0, {true}, 
+	 {update_counter' = 0,
+	  car_velocity' = car_velocity,
+	  res_acc_interaction' = res_acc_interaction,
+	  car_acc_interaction' = 0,
+	  acc' = acc,
+	  car_acc_interaction' = car_acc_interaction,
+	  res_acc_interaction' = car_acc_interaction - (car_face * cw_factor * air_density * 0.5 * car_velocity^2),
+	  --res_acc_interaction' = acc' * car_inertia,
+	  update_counter' = update_counter + delta_update_interval,
+          car_velocity' = car_velocity + acc * dt}, S5');
+edge(S5, {},{acc'=res_acc_interaction/ car_inertia}, S6');
+
+
+
+edge(S2, {car_velocity < 9.8 or car_velocity > 10.2}   ,{}, S7');
+edge(S2, {car_velocity >= 9.8 and car_velocity <= 10.2},{}, S0');
+edge(S3, {car_velocity < 9.8 or car_velocity > 10.2}   ,{}, S7');
+edge(S3, {car_velocity >= 9.8 and car_velocity <= 10.2},{}, S0');
+edge(S4, {car_velocity < 9.8 or car_velocity > 10.2}   ,{}, S7');
+edge(S4, {car_velocity >= 9.8 and car_velocity <= 10.2},{}, S0');
+edge(S6, {car_velocity < 9.8 or car_velocity > 10.2}   ,{}, S7');
+edge(S6, {car_velocity >= 9.8 and car_velocity <= 10.2},{}, S0');
+
+SPECIFICATION
+S7;
+---- the property is that the velocity of the car will be between
+---- 9m/sec and 11m/sec after
+

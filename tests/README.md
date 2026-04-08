@@ -6,6 +6,9 @@ This directory contains the comprehensive test suite for SAL (Symbolic Analysis 
 
 - `TEST_CATALOGUE.md` - Complete catalogue of all SAL features, tools, options, edge cases, and test scenarios
 - `run_tests.sh` - Automated test runner script
+- `run_nonlinear_mcsat_smoke.sh` - Optional smoke test for `sal-inf-bmc` + Yices2/MCSAT nonlinear examples
+- `run_cimatti_tacas17_nra_smoke.sh` - Regenerates and syntax-checks the 114 translated TACAS'17 NRA benchmarks, with optional `sal-inf-bmc` spot checks
+- `run_cimatti_tacas17_nra_kind_bench.py` - Runs `sal-inf-bmc -i` over the TACAS'17 NRA suite and prints paper-style family summaries
 - `README.md` - This file
 
 ## Running Tests
@@ -38,6 +41,37 @@ Runs the comprehensive test suite including:
 Tests all available SAT and SMT solvers:
 - Yices, Kissat, MiniSat, Lingeling, etc.
 - ICS, Yices2, CVC Lite, etc.
+
+### Nonlinear Yices2/MCSAT Smoke Test
+```bash
+YICES2_MCSAT_COMMAND=/path/to/yices ./run_nonlinear_mcsat_smoke.sh
+```
+Runs the small nonlinear `sal-inf-bmc` examples in `examples/nonlinear/`
+against an MCSAT-enabled Yices2 executable configured through a temporary
+`.salrc`.
+
+### TACAS'17 NRA Benchmark Smoke Test
+```bash
+./run_cimatti_tacas17_nra_smoke.sh
+YICES2_MCSAT_COMMAND=/path/to/yices ./run_cimatti_tacas17_nra_smoke.sh
+```
+Regenerates the SAL translations for the 114-source `benchmarks/vmt/nra`
+suite under `examples/cimatti-tacas17-nra/`, syntax-checks every generated
+SAL file, and optionally runs two representative `sal-inf-bmc` cases against
+an MCSAT-capable Yices2 binary.
+
+### TACAS'17 NRA k-Induction Comparison Harness
+```bash
+python3 ./run_cimatti_tacas17_nra_kind_bench.py \
+  --yices2 /path/to/yices \
+  --known-only \
+  --timeout-s 20 \
+  --max-k 32
+```
+Reads `examples/cimatti-tacas17-nra/benchmark_metadata.tsv`, runs
+`sal-inf-bmc -i -it` on the selected benchmarks, writes a per-benchmark TSV,
+and prints family summaries that can be compared with the 2018/2021 paper
+tables checked in under `examples/cimatti-tacas17-nra/`.
 
 ## Test Catalogue
 
@@ -120,4 +154,3 @@ Some tests with large state spaces may require more memory. Try:
 ulimit -v unlimited
 ./run_tests.sh --full
 ```
-

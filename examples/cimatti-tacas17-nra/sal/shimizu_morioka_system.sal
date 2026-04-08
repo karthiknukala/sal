@@ -1,0 +1,76 @@
+% Auto-generated from shimizu_morioka_system.vmt
+% Source suite: benchmarks/vmt/nra/shimizu_morioka_system.vmt
+shimizu_morioka_system: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    instance_jump: BOOLEAN
+
+  OUTPUT
+    instance_x: REAL,
+    instance_y: REAL,
+    instance_z: REAL
+
+  LOCAL
+    def_22: BOOLEAN,
+    def_20: BOOLEAN,
+    def_23: BOOLEAN,
+    def_18: BOOLEAN,
+    def_24: BOOLEAN,
+    def_56: REAL,
+    def_38: REAL,
+    def_41: REAL,
+    def_27: REAL,
+    def_25: BOOLEAN,
+    def_64: BOOLEAN
+
+  DEFINITION
+    def_22 = (instance_x = 5);
+    def_20 = (instance_y = 3);
+    def_23 = (def_20 AND def_22);
+    def_18 = (instance_z = (-(4)));
+    def_24 = (def_18 AND def_23);
+    def_56 = (2 * instance_x);
+    def_38 = (instance_x * instance_z);
+    def_41 = ((-(1)) * def_38);
+    def_27 = (instance_x * instance_x);
+    def_25 = (NOT instance_jump);
+    def_64 = ((-(5)) <= instance_z);
+
+  INITIALIZATION
+  [
+      def_24 -->
+        instance_x IN { v_instance_x: REAL | TRUE };
+        instance_y IN { v_instance_y: REAL | TRUE };
+        instance_z IN { v_instance_z: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_53: REAL = ((-(2)) * instance_x') IN
+        LET def_54: REAL = (instance_y + def_53) IN
+        LET def_57: REAL = (def_56 + def_54) IN
+        LET def_58: BOOLEAN = (def_57 = 0) IN
+        LET def_45: REAL = ((-(2)) * instance_y') IN
+        LET def_46: REAL = (def_45 + def_41) IN
+        LET def_47: REAL = (instance_y + def_46) IN
+        LET def_48: REAL = (instance_x + def_47) IN
+        LET def_49: BOOLEAN = (def_48 = 0) IN
+        LET def_59: BOOLEAN = (def_49 AND def_58) IN
+        LET def_34: REAL = ((-(2)) * instance_z') IN
+        LET def_35: REAL = (def_34 + def_27) IN
+        LET def_36: REAL = (instance_z + def_35) IN
+        LET def_37: BOOLEAN = (def_36 = 0) IN
+        LET def_60: BOOLEAN = (def_37 AND def_59) IN
+        LET def_61: BOOLEAN = (instance_jump OR def_60) IN
+        LET def_62: BOOLEAN = (def_25 AND def_61) IN
+        def_62 -->
+        instance_x' IN { v_instance_x: REAL | TRUE };
+        instance_y' IN { v_instance_y: REAL | TRUE };
+        instance_z' IN { v_instance_z: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_64);
+END

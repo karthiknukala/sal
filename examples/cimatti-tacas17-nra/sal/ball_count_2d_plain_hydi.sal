@@ -1,0 +1,225 @@
+% Auto-generated from ball_count_2d_plain.hydi.vmt
+% Source suite: benchmarks/vmt/nra/ball_count_2d_plain.hydi.vmt
+ball_count_2d_plain_hydi: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    b_event_0: BOOLEAN,
+    b_event_1: BOOLEAN
+
+  OUTPUT
+    b_y: REAL,
+    b_speed_y: REAL,
+    b_counter: REAL,
+    b_time: REAL,
+    speed_loss: REAL,
+    g: REAL,
+    b_speed_x: REAL,
+    b_x: REAL
+
+  LOCAL
+    def_42: BOOLEAN,
+    def_41: BOOLEAN,
+    def_43: BOOLEAN,
+    def_40: BOOLEAN,
+    def_44: BOOLEAN,
+    def_39: BOOLEAN,
+    def_45: BOOLEAN,
+    def_38: BOOLEAN,
+    def_46: BOOLEAN,
+    def_35: BOOLEAN,
+    def_33: BOOLEAN,
+    def_36: BOOLEAN,
+    def_47: BOOLEAN,
+    def_30: BOOLEAN,
+    def_28: BOOLEAN,
+    def_31: BOOLEAN,
+    def_48: BOOLEAN,
+    def_61: BOOLEAN,
+    def_60: BOOLEAN,
+    def_171: BOOLEAN,
+    def_142: BOOLEAN,
+    def_91: BOOLEAN,
+    def_141: BOOLEAN,
+    def_143: BOOLEAN,
+    def_155: BOOLEAN,
+    def_151: REAL,
+    def_149: REAL,
+    def_150: REAL,
+    def_152: REAL,
+    def_82: REAL,
+    def_77: REAL,
+    def_83: REAL,
+    def_110: BOOLEAN,
+    def_111: BOOLEAN,
+    def_84: REAL,
+    def_88: BOOLEAN,
+    def_74: BOOLEAN,
+    def_75: BOOLEAN,
+    def_62: BOOLEAN,
+    def_63: BOOLEAN,
+    def_174: BOOLEAN,
+    def_175: BOOLEAN
+
+  DEFINITION
+    def_42 = (b_y = 10);
+    def_41 = (0 <= b_y);
+    def_43 = (def_41 AND def_42);
+    def_40 = (b_speed_y = 0);
+    def_44 = (def_40 AND def_43);
+    def_39 = (b_counter = 0);
+    def_45 = (def_39 AND def_44);
+    def_38 = (b_time = 0);
+    def_46 = (def_38 AND def_45);
+    def_35 = ((1 / 10) <= speed_loss);
+    def_33 = (speed_loss <= (1 / 2));
+    def_36 = (def_33 AND def_35);
+    def_47 = (def_36 AND def_46);
+    def_30 = (8 <= g);
+    def_28 = (g <= 10);
+    def_31 = (def_28 AND def_30);
+    def_48 = (def_31 AND def_47);
+    def_61 = (NOT b_event_1);
+    def_60 = (NOT b_event_0);
+    def_171 = (def_60 OR def_61);
+    def_142 = (b_y = 0);
+    def_91 = (0 <= b_speed_y);
+    def_141 = (NOT def_91);
+    def_143 = (def_141 AND def_142);
+    def_155 = (NOT def_143);
+    def_151 = ((-(1)) * b_speed_y);
+    def_149 = ((-(1)) * speed_loss);
+    def_150 = (1 + def_149);
+    def_152 = (def_150 * def_151);
+    def_82 = ((-(1)) * g);
+    def_77 = ((-(1)) * b_time);
+    def_83 = ((1 / 2) * def_82);
+    def_110 = (def_30 AND def_36);
+    def_111 = (def_28 AND def_110);
+    def_84 = (2 * def_83);
+    def_88 = (b_speed_y <= 0);
+    def_74 = (def_36 AND def_41);
+    def_75 = (def_31 AND def_74);
+    def_62 = (def_60 AND def_61);
+    def_63 = (NOT def_62);
+    def_174 = (2 <= b_counter);
+    def_175 = (NOT def_174);
+
+  INITIALIZATION
+  [
+      def_48 -->
+        b_y IN { v_b_y: REAL | TRUE };
+        b_speed_y IN { v_b_speed_y: REAL | TRUE };
+        b_counter IN { v_b_counter: REAL | TRUE };
+        b_time IN { v_b_time: REAL | TRUE };
+        speed_loss IN { v_speed_loss: REAL | TRUE };
+        g IN { v_g: REAL | TRUE };
+        b_speed_x IN { v_b_speed_x: REAL | TRUE };
+        b_x IN { v_b_x: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_169: BOOLEAN = (g = g') IN
+        LET def_168: BOOLEAN = (speed_loss = speed_loss') IN
+        LET def_170: BOOLEAN = (def_168 AND def_169) IN
+        LET def_172: BOOLEAN = (def_170 AND def_171) IN
+        LET def_153: BOOLEAN = (b_speed_y' = def_152) IN
+        LET def_146: REAL = ((-(1)) * b_counter') IN
+        LET def_147: REAL = (b_counter + def_146) IN
+        LET def_148: BOOLEAN = (def_147 = (-(1))) IN
+        LET def_154: BOOLEAN = (def_148 AND def_153) IN
+        LET def_156: BOOLEAN = (def_154 OR def_155) IN
+        LET def_51: BOOLEAN = (b_speed_y = b_speed_y') IN
+        LET def_50: BOOLEAN = (b_counter = b_counter') IN
+        LET def_140: BOOLEAN = (def_50 AND def_51) IN
+        LET def_144: BOOLEAN = (def_140 OR def_143) IN
+        LET def_157: BOOLEAN = (def_144 AND def_156) IN
+        LET def_53: BOOLEAN = (b_y = b_y') IN
+        LET def_158: BOOLEAN = (def_53 AND def_157) IN
+        LET def_52: BOOLEAN = (b_speed_x = b_speed_x') IN
+        LET def_159: BOOLEAN = (def_52 AND def_158) IN
+        LET def_54: BOOLEAN = (b_x = b_x') IN
+        LET def_160: BOOLEAN = (def_54 AND def_159) IN
+        LET def_49: BOOLEAN = (b_time = b_time') IN
+        LET def_161: BOOLEAN = (def_49 AND def_160) IN
+        LET def_162: BOOLEAN = (b_event_1 OR def_161) IN
+        LET def_78: REAL = (b_time' + def_77) IN
+        LET def_123: REAL = (def_78 * def_82) IN
+        LET def_125: REAL = ((-(1)) * b_speed_y') IN
+        LET def_126: REAL = (def_125 + def_123) IN
+        LET def_127: REAL = (b_speed_y + def_126) IN
+        LET def_128: BOOLEAN = (def_127 = 0) IN
+        LET def_129: BOOLEAN = (def_52 AND def_128) IN
+        LET def_95: REAL = (def_78 * def_78) IN
+        LET def_96: REAL = (def_83 * def_95) IN
+        LET def_94: REAL = (b_speed_y * def_78) IN
+        LET def_97: REAL = (def_94 + def_96) IN
+        LET def_119: REAL = ((-(1)) * b_y') IN
+        LET def_120: REAL = (def_119 + def_97) IN
+        LET def_121: REAL = (b_y + def_120) IN
+        LET def_122: BOOLEAN = (def_121 = 0) IN
+        LET def_130: BOOLEAN = (def_122 AND def_129) IN
+        LET def_113: REAL = (b_speed_x * def_78) IN
+        LET def_115: REAL = ((-(1)) * b_x') IN
+        LET def_116: REAL = (def_115 + def_113) IN
+        LET def_117: REAL = (b_x + def_116) IN
+        LET def_118: BOOLEAN = (def_117 = 0) IN
+        LET def_131: BOOLEAN = (def_118 AND def_130) IN
+        LET def_132: BOOLEAN = (def_35 AND def_131) IN
+        LET def_133: BOOLEAN = (def_36 AND def_132) IN
+        LET def_134: BOOLEAN = (def_110 AND def_133) IN
+        LET def_135: BOOLEAN = (def_111 AND def_134) IN
+        LET def_98: REAL = (b_y + def_97) IN
+        LET def_99: BOOLEAN = (0 <= def_98) IN
+        LET def_100: BOOLEAN = (def_41 AND def_99) IN
+        LET def_85: REAL = (def_78 * def_84) IN
+        LET def_86: REAL = (b_speed_y + def_85) IN
+        LET def_90: BOOLEAN = (0 <= def_86) IN
+        LET def_92: BOOLEAN = (def_90 AND def_91) IN
+        LET def_87: BOOLEAN = (def_86 <= 0) IN
+        LET def_89: BOOLEAN = (def_87 AND def_88) IN
+        LET def_93: BOOLEAN = (def_89 OR def_92) IN
+        LET def_101: BOOLEAN = (def_93 AND def_100) IN
+        LET def_112: BOOLEAN = (def_101 AND def_111) IN
+        LET def_136: BOOLEAN = (def_112 AND def_135) IN
+        LET def_79: BOOLEAN = (b_time <= b_time') IN
+        LET def_137: BOOLEAN = (def_79 AND def_136) IN
+        LET def_138: BOOLEAN = (def_50 AND def_137) IN
+        LET def_139: BOOLEAN = (def_61 OR def_138) IN
+        LET def_163: BOOLEAN = (def_139 AND def_162) IN
+        LET def_164: BOOLEAN = (def_75 AND def_163) IN
+        LET def_71: BOOLEAN = (0 <= b_y') IN
+        LET def_69: BOOLEAN = ((1 / 10) <= speed_loss') IN
+        LET def_68: BOOLEAN = (speed_loss' <= (1 / 2)) IN
+        LET def_70: BOOLEAN = (def_68 AND def_69) IN
+        LET def_72: BOOLEAN = (def_70 AND def_71) IN
+        LET def_66: BOOLEAN = (8 <= g') IN
+        LET def_65: BOOLEAN = (g' <= 10) IN
+        LET def_67: BOOLEAN = (def_65 AND def_66) IN
+        LET def_73: BOOLEAN = (def_67 AND def_72) IN
+        LET def_165: BOOLEAN = (def_73 AND def_164) IN
+        LET def_166: BOOLEAN = (def_62 OR def_165) IN
+        LET def_55: BOOLEAN = (def_53 AND def_54) IN
+        LET def_56: BOOLEAN = (def_52 AND def_55) IN
+        LET def_57: BOOLEAN = (def_51 AND def_56) IN
+        LET def_58: BOOLEAN = (def_50 AND def_57) IN
+        LET def_59: BOOLEAN = (def_49 AND def_58) IN
+        LET def_64: BOOLEAN = (def_59 OR def_63) IN
+        LET def_167: BOOLEAN = (def_64 AND def_166) IN
+        LET def_173: BOOLEAN = (def_167 AND def_172) IN
+        def_173 -->
+        b_y' IN { v_b_y: REAL | TRUE };
+        b_speed_y' IN { v_b_speed_y: REAL | TRUE };
+        b_counter' IN { v_b_counter: REAL | TRUE };
+        b_time' IN { v_b_time: REAL | TRUE };
+        speed_loss' IN { v_speed_loss: REAL | TRUE };
+        g' IN { v_g: REAL | TRUE };
+        b_speed_x' IN { v_b_speed_x: REAL | TRUE };
+        b_x' IN { v_b_x: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_175);
+END

@@ -1,0 +1,67 @@
+% Auto-generated from liu_zhan_zhao_emsoft11_ex_25.vmt
+% Source suite: benchmarks/vmt/nra/liu_zhan_zhao_emsoft11_ex_25.vmt
+liu_zhan_zhao_emsoft11_ex_25: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    instance_jump: BOOLEAN
+
+  OUTPUT
+    instance_y: REAL,
+    instance_x: REAL
+
+  LOCAL
+    def_14: REAL,
+    def_15: BOOLEAN,
+    def_21: REAL,
+    def_18: REAL,
+    def_27: REAL,
+    def_16: BOOLEAN,
+    def_44: BOOLEAN,
+    def_45: BOOLEAN,
+    def_43: BOOLEAN,
+    def_46: BOOLEAN,
+    def_47: BOOLEAN
+
+  DEFINITION
+    def_14 = (instance_x + instance_y);
+    def_15 = (0 <= def_14);
+    def_21 = ((-(1)) * instance_y);
+    def_18 = (instance_x * instance_x);
+    def_27 = (2 * instance_y);
+    def_16 = (NOT instance_jump);
+    def_44 = ((-(1)) <= instance_x);
+    def_45 = (NOT def_44);
+    def_43 = (instance_y <= (-((1 / 2))));
+    def_46 = (def_43 AND def_45);
+    def_47 = (NOT def_46);
+
+  INITIALIZATION
+  [
+      def_15 -->
+        instance_y IN { v_instance_y: REAL | TRUE };
+        instance_x IN { v_instance_x: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_34: REAL = ((-(1)) * instance_x') IN
+        LET def_35: REAL = (def_21 + def_34) IN
+        LET def_36: REAL = (instance_x + def_35) IN
+        LET def_37: BOOLEAN = (def_36 = 0) IN
+        LET def_24: REAL = ((-(2)) * instance_y') IN
+        LET def_25: REAL = (def_24 + def_18) IN
+        LET def_28: REAL = (def_27 + def_25) IN
+        LET def_29: BOOLEAN = (def_28 = 0) IN
+        LET def_38: BOOLEAN = (def_29 AND def_37) IN
+        LET def_39: BOOLEAN = (instance_jump OR def_38) IN
+        LET def_40: BOOLEAN = (def_16 AND def_39) IN
+        def_40 -->
+        instance_y' IN { v_instance_y: REAL | TRUE };
+        instance_x' IN { v_instance_x: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_47);
+END

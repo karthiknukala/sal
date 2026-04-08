@@ -1,0 +1,652 @@
+% Auto-generated from etcs_braking_2.hydi.vmt
+% Source suite: benchmarks/vmt/nra/etcs_braking_2.hydi.vmt
+etcs_braking_2_hydi: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    train1_event_0: BOOLEAN,
+    train1_event_1: BOOLEAN,
+    train1_train_rear_loc: REAL,
+    train2_event_0: BOOLEAN,
+    train2_event_1: BOOLEAN,
+    train2_train_rear_loc: REAL
+
+  OUTPUT
+    train1_front_position: REAL,
+    train1_speed: REAL,
+    train1_timer: REAL,
+    train1_acceleration: REAL,
+    train1_mode_0: BOOLEAN,
+    train1_time: REAL,
+    train2_front_position: REAL,
+    train2_speed: REAL,
+    train2_timer: REAL,
+    train2_acceleration: REAL,
+    train2_mode_0: BOOLEAN,
+    train2_time: REAL
+
+  LOCAL
+    def_104: BOOLEAN,
+    def_103: BOOLEAN,
+    def_105: BOOLEAN,
+    def_100: BOOLEAN,
+    def_99: BOOLEAN,
+    def_101: BOOLEAN,
+    def_98: BOOLEAN,
+    def_102: BOOLEAN,
+    def_106: BOOLEAN,
+    def_95: BOOLEAN,
+    def_94: BOOLEAN,
+    def_96: BOOLEAN,
+    def_93: BOOLEAN,
+    def_97: BOOLEAN,
+    def_107: BOOLEAN,
+    def_88: BOOLEAN,
+    def_87: BOOLEAN,
+    def_89: BOOLEAN,
+    def_90: BOOLEAN,
+    def_85: BOOLEAN,
+    def_91: BOOLEAN,
+    def_83: BOOLEAN,
+    def_82: BOOLEAN,
+    def_84: BOOLEAN,
+    def_86: BOOLEAN,
+    def_92: BOOLEAN,
+    def_108: BOOLEAN,
+    def_81: BOOLEAN,
+    def_109: BOOLEAN,
+    def_75: BOOLEAN,
+    def_73: BOOLEAN,
+    def_76: BOOLEAN,
+    def_70: BOOLEAN,
+    def_69: BOOLEAN,
+    def_71: BOOLEAN,
+    def_68: BOOLEAN,
+    def_72: BOOLEAN,
+    def_77: BOOLEAN,
+    def_64: BOOLEAN,
+    def_63: BOOLEAN,
+    def_65: BOOLEAN,
+    def_62: BOOLEAN,
+    def_66: BOOLEAN,
+    def_78: BOOLEAN,
+    def_56: BOOLEAN,
+    def_54: BOOLEAN,
+    def_57: BOOLEAN,
+    def_58: BOOLEAN,
+    def_51: BOOLEAN,
+    def_59: BOOLEAN,
+    def_49: BOOLEAN,
+    def_45: BOOLEAN,
+    def_50: BOOLEAN,
+    def_52: BOOLEAN,
+    def_60: BOOLEAN,
+    def_79: BOOLEAN,
+    def_44: BOOLEAN,
+    def_80: BOOLEAN,
+    def_110: BOOLEAN,
+    def_473: BOOLEAN,
+    def_123: BOOLEAN,
+    def_299: BOOLEAN,
+    def_509: BOOLEAN,
+    def_289: BOOLEAN,
+    def_290: BOOLEAN,
+    def_510: BOOLEAN,
+    def_432: REAL,
+    def_506: REAL,
+    def_507: BOOLEAN,
+    def_300: BOOLEAN,
+    def_508: BOOLEAN,
+    def_511: BOOLEAN,
+    def_321: BOOLEAN,
+    def_425: BOOLEAN,
+    def_122: BOOLEAN,
+    def_231: BOOLEAN,
+    def_502: BOOLEAN,
+    def_512: BOOLEAN,
+    def_154: REAL,
+    def_232: BOOLEAN,
+    def_322: BOOLEAN,
+    def_323: BOOLEAN,
+    def_495: BOOLEAN,
+    def_483: BOOLEAN,
+    def_484: BOOLEAN,
+    def_124: BOOLEAN,
+    def_494: BOOLEAN,
+    def_477: BOOLEAN,
+    def_474: BOOLEAN,
+    def_435: REAL,
+    def_439: REAL,
+    def_440: REAL,
+    def_441: REAL,
+    def_442: REAL,
+    def_443: REAL,
+    def_447: BOOLEAN,
+    def_433: REAL,
+    def_446: BOOLEAN,
+    def_448: BOOLEAN,
+    def_444: BOOLEAN,
+    def_434: BOOLEAN,
+    def_445: BOOLEAN,
+    def_449: BOOLEAN,
+    def_450: BOOLEAN,
+    def_469: BOOLEAN,
+    def_454: REAL,
+    def_455: REAL,
+    def_456: REAL,
+    def_457: REAL,
+    def_460: BOOLEAN,
+    def_461: BOOLEAN,
+    def_458: BOOLEAN,
+    def_459: BOOLEAN,
+    def_462: BOOLEAN,
+    def_463: BOOLEAN,
+    def_465: BOOLEAN,
+    def_426: BOOLEAN,
+    def_353: REAL,
+    def_368: REAL,
+    def_369: REAL,
+    def_373: BOOLEAN,
+    def_348: BOOLEAN,
+    def_349: BOOLEAN,
+    def_347: BOOLEAN,
+    def_350: BOOLEAN,
+    def_346: BOOLEAN,
+    def_351: BOOLEAN,
+    def_324: BOOLEAN,
+    def_293: BOOLEAN,
+    def_242: REAL,
+    def_248: REAL,
+    def_250: REAL,
+    def_251: REAL,
+    def_253: REAL,
+    def_254: REAL,
+    def_258: BOOLEAN,
+    def_239: REAL,
+    def_240: REAL,
+    def_257: BOOLEAN,
+    def_259: BOOLEAN,
+    def_255: BOOLEAN,
+    def_241: BOOLEAN,
+    def_256: BOOLEAN,
+    def_260: BOOLEAN,
+    def_261: BOOLEAN,
+    def_285: BOOLEAN,
+    def_269: REAL,
+    def_270: REAL,
+    def_272: REAL,
+    def_273: REAL,
+    def_276: BOOLEAN,
+    def_277: BOOLEAN,
+    def_274: BOOLEAN,
+    def_275: BOOLEAN,
+    def_278: BOOLEAN,
+    def_279: BOOLEAN,
+    def_281: BOOLEAN,
+    def_173: REAL,
+    def_174: REAL,
+    def_178: BOOLEAN,
+    def_149: BOOLEAN,
+    def_150: BOOLEAN,
+    def_148: BOOLEAN,
+    def_151: BOOLEAN,
+    def_147: BOOLEAN,
+    def_152: BOOLEAN,
+    def_125: BOOLEAN,
+    def_518: REAL,
+    def_519: REAL,
+    def_520: BOOLEAN
+
+  DEFINITION
+    def_104 = (train1_front_position = 0);
+    def_103 = (0 <= train1_front_position);
+    def_105 = (def_103 AND def_104);
+    def_100 = (train1_speed = 0);
+    def_99 = (0 <= train1_speed);
+    def_101 = (def_99 AND def_100);
+    def_98 = (train1_speed <= (417 / 5));
+    def_102 = (def_98 AND def_101);
+    def_106 = (def_102 AND def_105);
+    def_95 = (train1_timer = 0);
+    def_94 = (0 <= train1_timer);
+    def_96 = (def_94 AND def_95);
+    def_93 = (train1_timer <= 8);
+    def_97 = (def_93 AND def_96);
+    def_107 = (def_97 AND def_106);
+    def_88 = ((-((7 / 10))) <= train1_acceleration);
+    def_87 = (train1_acceleration <= (7 / 10));
+    def_89 = (def_87 AND def_88);
+    def_90 = (train1_mode_0 OR def_89);
+    def_85 = (NOT train1_mode_0);
+    def_91 = (def_85 AND def_90);
+    def_83 = ((-((7 / 5))) <= train1_acceleration);
+    def_82 = (train1_acceleration <= 0);
+    def_84 = (def_82 AND def_83);
+    def_86 = (def_84 OR def_85);
+    def_92 = (def_86 AND def_91);
+    def_108 = (def_92 AND def_107);
+    def_81 = (train1_time = 0);
+    def_109 = (def_81 AND def_108);
+    def_75 = (train2_front_position = 400);
+    def_73 = (0 <= train2_front_position);
+    def_76 = (def_73 AND def_75);
+    def_70 = (train2_speed = 0);
+    def_69 = (0 <= train2_speed);
+    def_71 = (def_69 AND def_70);
+    def_68 = (train2_speed <= (417 / 5));
+    def_72 = (def_68 AND def_71);
+    def_77 = (def_72 AND def_76);
+    def_64 = (train2_timer = 0);
+    def_63 = (0 <= train2_timer);
+    def_65 = (def_63 AND def_64);
+    def_62 = (train2_timer <= 8);
+    def_66 = (def_62 AND def_65);
+    def_78 = (def_66 AND def_77);
+    def_56 = ((-((7 / 10))) <= train2_acceleration);
+    def_54 = (train2_acceleration <= (7 / 10));
+    def_57 = (def_54 AND def_56);
+    def_58 = (train2_mode_0 OR def_57);
+    def_51 = (NOT train2_mode_0);
+    def_59 = (def_51 AND def_58);
+    def_49 = ((-((7 / 5))) <= train2_acceleration);
+    def_45 = (train2_acceleration <= 0);
+    def_50 = (def_45 AND def_49);
+    def_52 = (def_50 OR def_51);
+    def_60 = (def_52 AND def_59);
+    def_79 = (def_60 AND def_78);
+    def_44 = (train2_time = 0);
+    def_80 = (def_44 AND def_79);
+    def_110 = (def_80 AND def_109);
+    def_473 = (train1_event_1 AND train1_event_0);
+    def_123 = (NOT train2_event_1);
+    def_299 = (train2_event_0 AND def_123);
+    def_509 = (def_299 = def_473);
+    def_289 = (train2_event_1 AND train2_event_0);
+    def_290 = (NOT def_289);
+    def_510 = (def_290 AND def_509);
+    def_432 = ((-(1)) * train1_train_rear_loc);
+    def_506 = (train2_front_position + def_432);
+    def_507 = (def_506 = 200);
+    def_300 = (NOT def_299);
+    def_508 = (def_300 OR def_507);
+    def_511 = (def_508 AND def_510);
+    def_321 = (NOT train1_event_0);
+    def_425 = (train1_event_1 AND def_321);
+    def_122 = (NOT train2_event_0);
+    def_231 = (train2_event_1 AND def_122);
+    def_502 = (def_231 = def_425);
+    def_512 = (def_502 AND def_511);
+    def_154 = ((-(1)) * train2_time);
+    def_232 = (NOT def_231);
+    def_322 = (NOT train1_event_1);
+    def_323 = (def_321 AND def_322);
+    def_495 = (def_290 OR def_323);
+    def_483 = (train1_event_0 AND def_322);
+    def_484 = (NOT def_483);
+    def_124 = (def_122 AND def_123);
+    def_494 = (def_124 OR def_484);
+    def_477 = (train1_timer = 8);
+    def_474 = (NOT def_473);
+    def_435 = (train1_speed * train1_speed);
+    def_439 = ((-(5)) * def_435);
+    def_440 = ((-(7)) * train1_train_rear_loc);
+    def_441 = (def_440 + def_439);
+    def_442 = (7 * train1_front_position);
+    def_443 = (def_442 + def_441);
+    def_447 = (def_443 <= (-(2800)));
+    def_433 = (train1_front_position + def_432);
+    def_446 = (def_433 <= (-(400)));
+    def_448 = (def_446 AND def_447);
+    def_444 = ((-(2800)) <= def_443);
+    def_434 = ((-(400)) <= def_433);
+    def_445 = (def_434 AND def_444);
+    def_449 = (def_445 OR def_448);
+    def_450 = (def_85 AND def_449);
+    def_469 = (NOT def_450);
+    def_454 = ((-(3)) * train1_train_rear_loc);
+    def_455 = (def_454 + def_439);
+    def_456 = (3 * train1_front_position);
+    def_457 = (def_456 + def_455);
+    def_460 = ((-(1200)) <= def_457);
+    def_461 = (def_446 AND def_460);
+    def_458 = (def_457 <= (-(1200)));
+    def_459 = (def_434 AND def_458);
+    def_462 = (def_459 OR def_461);
+    def_463 = (train1_mode_0 AND def_462);
+    def_465 = (NOT def_463);
+    def_426 = (NOT def_425);
+    def_353 = ((-(1)) * train1_time);
+    def_368 = ((1 / 2) * train1_acceleration);
+    def_369 = (2 * def_368);
+    def_373 = (train1_speed <= 0);
+    def_348 = (def_98 AND def_99);
+    def_349 = (def_103 AND def_348);
+    def_347 = (def_93 AND def_94);
+    def_350 = (def_347 AND def_349);
+    def_346 = (def_86 AND def_90);
+    def_351 = (def_346 AND def_350);
+    def_324 = (NOT def_323);
+    def_293 = (train2_timer = 8);
+    def_242 = (train2_speed * train2_speed);
+    def_248 = ((-(5)) * def_242);
+    def_250 = ((-(7)) * train2_train_rear_loc);
+    def_251 = (def_250 + def_248);
+    def_253 = (7 * train2_front_position);
+    def_254 = (def_253 + def_251);
+    def_258 = (def_254 <= (-(2800)));
+    def_239 = ((-(1)) * train2_train_rear_loc);
+    def_240 = (train2_front_position + def_239);
+    def_257 = (def_240 <= (-(400)));
+    def_259 = (def_257 AND def_258);
+    def_255 = ((-(2800)) <= def_254);
+    def_241 = ((-(400)) <= def_240);
+    def_256 = (def_241 AND def_255);
+    def_260 = (def_256 OR def_259);
+    def_261 = (def_51 AND def_260);
+    def_285 = (NOT def_261);
+    def_269 = ((-(3)) * train2_train_rear_loc);
+    def_270 = (def_269 + def_248);
+    def_272 = (3 * train2_front_position);
+    def_273 = (def_272 + def_270);
+    def_276 = ((-(1200)) <= def_273);
+    def_277 = (def_257 AND def_276);
+    def_274 = (def_273 <= (-(1200)));
+    def_275 = (def_241 AND def_274);
+    def_278 = (def_275 OR def_277);
+    def_279 = (train2_mode_0 AND def_278);
+    def_281 = (NOT def_279);
+    def_173 = ((1 / 2) * train2_acceleration);
+    def_174 = (2 * def_173);
+    def_178 = (train2_speed <= 0);
+    def_149 = (def_68 AND def_69);
+    def_150 = (def_73 AND def_149);
+    def_148 = (def_62 AND def_63);
+    def_151 = (def_148 AND def_150);
+    def_147 = (def_52 AND def_58);
+    def_152 = (def_147 AND def_151);
+    def_125 = (NOT def_124);
+    def_518 = ((-(1)) * train1_front_position);
+    def_519 = (train2_front_position + def_518);
+    def_520 = (200 <= def_519);
+
+  INITIALIZATION
+  [
+      def_110 -->
+        train1_front_position IN { v_train1_front_position: REAL | TRUE };
+        train1_speed IN { v_train1_speed: REAL | TRUE };
+        train1_timer IN { v_train1_timer: REAL | TRUE };
+        train1_acceleration IN { v_train1_acceleration: REAL | TRUE };
+        train1_mode_0 IN { v_train1_mode_0: BOOLEAN | TRUE };
+        train1_time IN { v_train1_time: REAL | TRUE };
+        train2_front_position IN { v_train2_front_position: REAL | TRUE };
+        train2_speed IN { v_train2_speed: REAL | TRUE };
+        train2_timer IN { v_train2_timer: REAL | TRUE };
+        train2_acceleration IN { v_train2_acceleration: REAL | TRUE };
+        train2_mode_0 IN { v_train2_mode_0: BOOLEAN | TRUE };
+        train2_time IN { v_train2_time: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_496: REAL = ((-(1)) * train1_time') IN
+        LET def_497: REAL = (def_496 + train2_time') IN
+        LET def_498: REAL = (def_154 + def_497) IN
+        LET def_499: REAL = (train1_time + def_498) IN
+        LET def_500: BOOLEAN = (def_499 = 0) IN
+        LET def_501: BOOLEAN = (def_232 OR def_500) IN
+        LET def_513: BOOLEAN = (def_501 AND def_512) IN
+        LET def_514: BOOLEAN = (def_495 AND def_513) IN
+        LET def_515: BOOLEAN = (def_494 AND def_514) IN
+        LET def_476: BOOLEAN = (train1_timer' = 0) IN
+        LET def_478: BOOLEAN = (def_476 AND def_477) IN
+        LET def_312: BOOLEAN = (train1_mode_0 = train1_mode_0') IN
+        LET def_479: BOOLEAN = (def_312 AND def_478) IN
+        LET def_315: BOOLEAN = (train1_front_position = train1_front_position') IN
+        LET def_480: BOOLEAN = (def_315 AND def_479) IN
+        LET def_314: BOOLEAN = (train1_speed = train1_speed') IN
+        LET def_481: BOOLEAN = (def_314 AND def_480) IN
+        LET def_311: BOOLEAN = (train1_acceleration = train1_acceleration') IN
+        LET def_482: BOOLEAN = (def_311 AND def_481) IN
+        LET def_485: BOOLEAN = (def_482 OR def_484) IN
+        LET def_470: BOOLEAN = (train1_mode_0' OR def_469) IN
+        LET def_329: BOOLEAN = (NOT train1_mode_0') IN
+        LET def_466: BOOLEAN = (def_329 OR def_465) IN
+        LET def_464: BOOLEAN = (def_312 OR def_463) IN
+        LET def_467: BOOLEAN = (def_464 AND def_466) IN
+        LET def_468: BOOLEAN = (def_450 OR def_467) IN
+        LET def_471: BOOLEAN = (def_468 AND def_470) IN
+        LET def_316: BOOLEAN = (def_314 AND def_315) IN
+        LET def_313: BOOLEAN = (train1_timer = train1_timer') IN
+        LET def_317: BOOLEAN = (def_313 AND def_316) IN
+        LET def_472: BOOLEAN = (def_317 AND def_471) IN
+        LET def_475: BOOLEAN = (def_472 OR def_474) IN
+        LET def_486: BOOLEAN = (def_475 AND def_485) IN
+        LET def_310: BOOLEAN = (train1_time = train1_time') IN
+        LET def_487: BOOLEAN = (def_310 AND def_486) IN
+        LET def_488: BOOLEAN = (def_425 OR def_487) IN
+        LET def_354: REAL = (train1_time' + def_353) IN
+        LET def_379: REAL = (def_354 * def_354) IN
+        LET def_380: REAL = (def_368 * def_379) IN
+        LET def_378: REAL = (train1_speed * def_354) IN
+        LET def_381: REAL = (def_378 + def_380) IN
+        LET def_410: REAL = ((-(1)) * train1_front_position') IN
+        LET def_411: REAL = (def_410 + def_381) IN
+        LET def_412: REAL = (train1_front_position + def_411) IN
+        LET def_413: BOOLEAN = (def_412 = 0) IN
+        LET def_405: REAL = ((-(1)) * train1_timer') IN
+        LET def_406: REAL = (def_405 + train1_time') IN
+        LET def_407: REAL = (def_353 + def_406) IN
+        LET def_408: REAL = (train1_timer + def_407) IN
+        LET def_409: BOOLEAN = (def_408 = 0) IN
+        LET def_414: BOOLEAN = (def_409 AND def_413) IN
+        LET def_360: REAL = (train1_acceleration * def_354) IN
+        LET def_401: REAL = ((-(1)) * train1_speed') IN
+        LET def_402: REAL = (def_401 + def_360) IN
+        LET def_403: REAL = (train1_speed + def_402) IN
+        LET def_404: BOOLEAN = (def_403 = 0) IN
+        LET def_415: BOOLEAN = (def_404 AND def_414) IN
+        LET def_388: REAL = (def_353 + train1_time') IN
+        LET def_389: REAL = (train1_timer + def_388) IN
+        LET def_393: BOOLEAN = (0 <= def_389) IN
+        LET def_394: BOOLEAN = (def_94 AND def_393) IN
+        LET def_416: BOOLEAN = (def_394 AND def_415) IN
+        LET def_390: BOOLEAN = (def_389 <= 8) IN
+        LET def_392: BOOLEAN = (def_93 AND def_390) IN
+        LET def_395: BOOLEAN = (def_392 AND def_394) IN
+        LET def_417: BOOLEAN = (def_395 AND def_416) IN
+        LET def_382: REAL = (train1_front_position + def_381) IN
+        LET def_383: BOOLEAN = (0 <= def_382) IN
+        LET def_384: BOOLEAN = (def_103 AND def_383) IN
+        LET def_370: REAL = (def_354 * def_369) IN
+        LET def_371: REAL = (train1_speed + def_370) IN
+        LET def_375: BOOLEAN = (0 <= def_371) IN
+        LET def_376: BOOLEAN = (def_99 AND def_375) IN
+        LET def_372: BOOLEAN = (def_371 <= 0) IN
+        LET def_374: BOOLEAN = (def_372 AND def_373) IN
+        LET def_377: BOOLEAN = (def_374 OR def_376) IN
+        LET def_385: BOOLEAN = (def_377 AND def_384) IN
+        LET def_396: BOOLEAN = (def_385 AND def_395) IN
+        LET def_418: BOOLEAN = (def_396 AND def_417) IN
+        LET def_361: REAL = (train1_speed + def_360) IN
+        LET def_366: BOOLEAN = (0 <= def_361) IN
+        LET def_367: BOOLEAN = (def_99 AND def_366) IN
+        LET def_397: BOOLEAN = (def_367 AND def_396) IN
+        LET def_419: BOOLEAN = (def_397 AND def_418) IN
+        LET def_363: BOOLEAN = (def_361 <= (417 / 5)) IN
+        LET def_365: BOOLEAN = (def_98 AND def_363) IN
+        LET def_398: BOOLEAN = (def_365 AND def_397) IN
+        LET def_420: BOOLEAN = (def_398 AND def_419) IN
+        LET def_399: BOOLEAN = (def_90 AND def_398) IN
+        LET def_421: BOOLEAN = (def_399 AND def_420) IN
+        LET def_400: BOOLEAN = (def_86 AND def_399) IN
+        LET def_422: BOOLEAN = (def_400 AND def_421) IN
+        LET def_355: BOOLEAN = (train1_time <= train1_time') IN
+        LET def_423: BOOLEAN = (def_355 AND def_422) IN
+        LET def_352: BOOLEAN = (def_311 AND def_312) IN
+        LET def_424: BOOLEAN = (def_352 AND def_423) IN
+        LET def_427: BOOLEAN = (def_424 OR def_426) IN
+        LET def_489: BOOLEAN = (def_427 AND def_488) IN
+        LET def_490: BOOLEAN = (def_351 AND def_489) IN
+        LET def_342: BOOLEAN = (0 <= train1_front_position') IN
+        LET def_340: BOOLEAN = (0 <= train1_speed') IN
+        LET def_339: BOOLEAN = (train1_speed' <= (417 / 5)) IN
+        LET def_341: BOOLEAN = (def_339 AND def_340) IN
+        LET def_343: BOOLEAN = (def_341 AND def_342) IN
+        LET def_337: BOOLEAN = (0 <= train1_timer') IN
+        LET def_336: BOOLEAN = (train1_timer' <= 8) IN
+        LET def_338: BOOLEAN = (def_336 AND def_337) IN
+        LET def_344: BOOLEAN = (def_338 AND def_343) IN
+        LET def_332: BOOLEAN = ((-((7 / 10))) <= train1_acceleration') IN
+        LET def_331: BOOLEAN = (train1_acceleration' <= (7 / 10)) IN
+        LET def_333: BOOLEAN = (def_331 AND def_332) IN
+        LET def_334: BOOLEAN = (train1_mode_0' OR def_333) IN
+        LET def_327: BOOLEAN = ((-((7 / 5))) <= train1_acceleration') IN
+        LET def_326: BOOLEAN = (train1_acceleration' <= 0) IN
+        LET def_328: BOOLEAN = (def_326 AND def_327) IN
+        LET def_330: BOOLEAN = (def_328 OR def_329) IN
+        LET def_335: BOOLEAN = (def_330 AND def_334) IN
+        LET def_345: BOOLEAN = (def_335 AND def_344) IN
+        LET def_491: BOOLEAN = (def_345 AND def_490) IN
+        LET def_492: BOOLEAN = (def_323 OR def_491) IN
+        LET def_318: BOOLEAN = (def_312 AND def_317) IN
+        LET def_319: BOOLEAN = (def_311 AND def_318) IN
+        LET def_320: BOOLEAN = (def_310 AND def_319) IN
+        LET def_325: BOOLEAN = (def_320 OR def_324) IN
+        LET def_493: BOOLEAN = (def_325 AND def_492) IN
+        LET def_516: BOOLEAN = (def_493 AND def_515) IN
+        LET def_292: BOOLEAN = (train2_timer' = 0) IN
+        LET def_294: BOOLEAN = (def_292 AND def_293) IN
+        LET def_113: BOOLEAN = (train2_mode_0 = train2_mode_0') IN
+        LET def_295: BOOLEAN = (def_113 AND def_294) IN
+        LET def_116: BOOLEAN = (train2_front_position = train2_front_position') IN
+        LET def_296: BOOLEAN = (def_116 AND def_295) IN
+        LET def_115: BOOLEAN = (train2_speed = train2_speed') IN
+        LET def_297: BOOLEAN = (def_115 AND def_296) IN
+        LET def_112: BOOLEAN = (train2_acceleration = train2_acceleration') IN
+        LET def_298: BOOLEAN = (def_112 AND def_297) IN
+        LET def_301: BOOLEAN = (def_298 OR def_300) IN
+        LET def_286: BOOLEAN = (train2_mode_0' OR def_285) IN
+        LET def_130: BOOLEAN = (NOT train2_mode_0') IN
+        LET def_282: BOOLEAN = (def_130 OR def_281) IN
+        LET def_280: BOOLEAN = (def_113 OR def_279) IN
+        LET def_283: BOOLEAN = (def_280 AND def_282) IN
+        LET def_284: BOOLEAN = (def_261 OR def_283) IN
+        LET def_287: BOOLEAN = (def_284 AND def_286) IN
+        LET def_117: BOOLEAN = (def_115 AND def_116) IN
+        LET def_114: BOOLEAN = (train2_timer = train2_timer') IN
+        LET def_118: BOOLEAN = (def_114 AND def_117) IN
+        LET def_288: BOOLEAN = (def_118 AND def_287) IN
+        LET def_291: BOOLEAN = (def_288 OR def_290) IN
+        LET def_302: BOOLEAN = (def_291 AND def_301) IN
+        LET def_111: BOOLEAN = (train2_time = train2_time') IN
+        LET def_303: BOOLEAN = (def_111 AND def_302) IN
+        LET def_304: BOOLEAN = (def_231 OR def_303) IN
+        LET def_215: REAL = ((-(1)) * train2_timer') IN
+        LET def_216: REAL = (def_215 + train2_time') IN
+        LET def_217: REAL = (def_154 + def_216) IN
+        LET def_218: REAL = (train2_timer + def_217) IN
+        LET def_219: BOOLEAN = (def_218 = 0) IN
+        LET def_155: REAL = (train2_time' + def_154) IN
+        LET def_163: REAL = (train2_acceleration * def_155) IN
+        LET def_211: REAL = ((-(1)) * train2_speed') IN
+        LET def_212: REAL = (def_211 + def_163) IN
+        LET def_213: REAL = (train2_speed + def_212) IN
+        LET def_214: BOOLEAN = (def_213 = 0) IN
+        LET def_220: BOOLEAN = (def_214 AND def_219) IN
+        LET def_184: REAL = (def_155 * def_155) IN
+        LET def_185: REAL = (def_173 * def_184) IN
+        LET def_183: REAL = (train2_speed * def_155) IN
+        LET def_186: REAL = (def_183 + def_185) IN
+        LET def_207: REAL = ((-(1)) * train2_front_position') IN
+        LET def_208: REAL = (def_207 + def_186) IN
+        LET def_209: REAL = (train2_front_position + def_208) IN
+        LET def_210: BOOLEAN = (def_209 = 0) IN
+        LET def_221: BOOLEAN = (def_210 AND def_220) IN
+        LET def_194: REAL = (def_154 + train2_time') IN
+        LET def_195: REAL = (train2_timer + def_194) IN
+        LET def_199: BOOLEAN = (0 <= def_195) IN
+        LET def_200: BOOLEAN = (def_63 AND def_199) IN
+        LET def_222: BOOLEAN = (def_200 AND def_221) IN
+        LET def_196: BOOLEAN = (def_195 <= 8) IN
+        LET def_198: BOOLEAN = (def_62 AND def_196) IN
+        LET def_201: BOOLEAN = (def_198 AND def_200) IN
+        LET def_223: BOOLEAN = (def_201 AND def_222) IN
+        LET def_187: REAL = (train2_front_position + def_186) IN
+        LET def_188: BOOLEAN = (0 <= def_187) IN
+        LET def_189: BOOLEAN = (def_73 AND def_188) IN
+        LET def_175: REAL = (def_155 * def_174) IN
+        LET def_176: REAL = (train2_speed + def_175) IN
+        LET def_180: BOOLEAN = (0 <= def_176) IN
+        LET def_181: BOOLEAN = (def_69 AND def_180) IN
+        LET def_177: BOOLEAN = (def_176 <= 0) IN
+        LET def_179: BOOLEAN = (def_177 AND def_178) IN
+        LET def_182: BOOLEAN = (def_179 OR def_181) IN
+        LET def_190: BOOLEAN = (def_182 AND def_189) IN
+        LET def_202: BOOLEAN = (def_190 AND def_201) IN
+        LET def_224: BOOLEAN = (def_202 AND def_223) IN
+        LET def_164: REAL = (train2_speed + def_163) IN
+        LET def_169: BOOLEAN = (0 <= def_164) IN
+        LET def_170: BOOLEAN = (def_69 AND def_169) IN
+        LET def_203: BOOLEAN = (def_170 AND def_202) IN
+        LET def_225: BOOLEAN = (def_203 AND def_224) IN
+        LET def_166: BOOLEAN = (def_164 <= (417 / 5)) IN
+        LET def_168: BOOLEAN = (def_68 AND def_166) IN
+        LET def_204: BOOLEAN = (def_168 AND def_203) IN
+        LET def_226: BOOLEAN = (def_204 AND def_225) IN
+        LET def_205: BOOLEAN = (def_58 AND def_204) IN
+        LET def_227: BOOLEAN = (def_205 AND def_226) IN
+        LET def_206: BOOLEAN = (def_52 AND def_205) IN
+        LET def_228: BOOLEAN = (def_206 AND def_227) IN
+        LET def_156: BOOLEAN = (train2_time <= train2_time') IN
+        LET def_229: BOOLEAN = (def_156 AND def_228) IN
+        LET def_153: BOOLEAN = (def_112 AND def_113) IN
+        LET def_230: BOOLEAN = (def_153 AND def_229) IN
+        LET def_233: BOOLEAN = (def_230 OR def_232) IN
+        LET def_305: BOOLEAN = (def_233 AND def_304) IN
+        LET def_306: BOOLEAN = (def_152 AND def_305) IN
+        LET def_143: BOOLEAN = (0 <= train2_front_position') IN
+        LET def_141: BOOLEAN = (0 <= train2_speed') IN
+        LET def_140: BOOLEAN = (train2_speed' <= (417 / 5)) IN
+        LET def_142: BOOLEAN = (def_140 AND def_141) IN
+        LET def_144: BOOLEAN = (def_142 AND def_143) IN
+        LET def_138: BOOLEAN = (0 <= train2_timer') IN
+        LET def_137: BOOLEAN = (train2_timer' <= 8) IN
+        LET def_139: BOOLEAN = (def_137 AND def_138) IN
+        LET def_145: BOOLEAN = (def_139 AND def_144) IN
+        LET def_133: BOOLEAN = ((-((7 / 10))) <= train2_acceleration') IN
+        LET def_132: BOOLEAN = (train2_acceleration' <= (7 / 10)) IN
+        LET def_134: BOOLEAN = (def_132 AND def_133) IN
+        LET def_135: BOOLEAN = (train2_mode_0' OR def_134) IN
+        LET def_128: BOOLEAN = ((-((7 / 5))) <= train2_acceleration') IN
+        LET def_127: BOOLEAN = (train2_acceleration' <= 0) IN
+        LET def_129: BOOLEAN = (def_127 AND def_128) IN
+        LET def_131: BOOLEAN = (def_129 OR def_130) IN
+        LET def_136: BOOLEAN = (def_131 AND def_135) IN
+        LET def_146: BOOLEAN = (def_136 AND def_145) IN
+        LET def_307: BOOLEAN = (def_146 AND def_306) IN
+        LET def_308: BOOLEAN = (def_124 OR def_307) IN
+        LET def_119: BOOLEAN = (def_113 AND def_118) IN
+        LET def_120: BOOLEAN = (def_112 AND def_119) IN
+        LET def_121: BOOLEAN = (def_111 AND def_120) IN
+        LET def_126: BOOLEAN = (def_121 OR def_125) IN
+        LET def_309: BOOLEAN = (def_126 AND def_308) IN
+        LET def_517: BOOLEAN = (def_309 AND def_516) IN
+        def_517 -->
+        train1_front_position' IN { v_train1_front_position: REAL | TRUE };
+        train1_speed' IN { v_train1_speed: REAL | TRUE };
+        train1_timer' IN { v_train1_timer: REAL | TRUE };
+        train1_acceleration' IN { v_train1_acceleration: REAL | TRUE };
+        train1_mode_0' IN { v_train1_mode_0: BOOLEAN | TRUE };
+        train1_time' IN { v_train1_time: REAL | TRUE };
+        train2_front_position' IN { v_train2_front_position: REAL | TRUE };
+        train2_speed' IN { v_train2_speed: REAL | TRUE };
+        train2_timer' IN { v_train2_timer: REAL | TRUE };
+        train2_acceleration' IN { v_train2_acceleration: REAL | TRUE };
+        train2_mode_0' IN { v_train2_mode_0: BOOLEAN | TRUE };
+        train2_time' IN { v_train2_time: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_520);
+END

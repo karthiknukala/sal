@@ -1,0 +1,48 @@
+% Auto-generated from cfa_test0016.vmt
+% Source suite: benchmarks/vmt/nra/cfa_test0016.vmt
+cfa_test0016: CONTEXT =
+BEGIN
+  square(v: REAL): REAL = (v * v);
+
+  system: MODULE =
+  BEGIN
+  OUTPUT
+    x: REAL,
+    y: REAL,
+    s: REAL
+
+  LOCAL
+    a: REAL,
+    b: REAL,
+    range: BOOLEAN,
+    init: BOOLEAN,
+    prop: BOOLEAN
+
+  DEFINITION
+    a = 1.25;
+    b = 0.3;
+    range = (((-(100)) <= y) AND (y <= 100) AND ((-(100)) <= x) AND (x <= 100));
+    init = ((s = 0) AND (x = (-(1.09))) AND (y = 0.386) AND range);
+    prop = (NOT (s = 2));
+
+  INITIALIZATION
+  [
+      init -->
+        x IN { v_x: REAL | TRUE };
+        y IN { v_y: REAL | TRUE };
+        s IN { v_s: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET range_2: BOOLEAN = (((-(100)) <= y') AND (y' <= 100) AND ((-(100)) <= x') AND (x' <= 100)) IN
+        LET trans: BOOLEAN = (range AND range_2 AND (((s = 0) AND TRUE AND (s' = 0) AND (x' = (y + 1 + ((-(a)) * square(x)))) AND (y' = y)) OR ((s = 1) AND TRUE AND (s' = 0) AND (y' = (b * x)) AND (x' = x)) OR ((s = 0) AND (NOT (((x >= 1.263) AND (x <= 1.313)) OR ((x >= (-(1.115))) AND (x <= (-(1.065)))) OR ((x >= (-(0.124))) AND (x <= (-(0.074)))) OR ((x >= 0.636) AND (x <= 0.686)) OR ((x >= 0.400) AND (x <= 0.450)) OR ((x >= 0.948) AND (x <= 0.998)) OR ((x >= (-(0.080))) AND (x <= (-(0.030)))))) AND (s' = 2) AND (x' = x) AND (y' = y)))) IN
+        trans -->
+        x' IN { v_x: REAL | TRUE };
+        y' IN { v_y: REAL | TRUE };
+        s' IN { v_s: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(prop);
+END

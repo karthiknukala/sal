@@ -1,0 +1,22 @@
+nonlinear_product: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+    OUTPUT x: REAL, y: REAL
+
+    INITIALIZATION
+      x = 2;
+      y = 3
+
+    TRANSITION
+    [
+      TRUE -->
+        x' = x + 1;
+        y' = x * y
+    ]
+  END;
+
+  positive: THEOREM system |- G(x > 0 AND y > 0);
+
+  bad_bound: THEOREM system |- G(y <= 5);
+END

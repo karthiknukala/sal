@@ -1,0 +1,42 @@
+----------------------------------------------------
+-- This case is borrowed from Nim's master thesis --
+-- p. 76                                          --
+-- where the specification is REACHABLE       	  --
+-- Problem is polynomial						  --
+----------------------------------------------------
+
+DECL
+float [-10000000,10000000] k,m,n,x,y,z;
+
+
+NODES
+S0,S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,S11,S12,S13,S14;
+
+INIT
+edge(true, 
+     {k=10.355 && m = 5.211 && n = -56.324},
+     {true}, 
+     S0);
+
+
+FLOWS
+edge(S0, {n<0}       ,{z'=k^2 + m^2 + n^2}				    , S1');
+edge(S1, {true}      ,{y'= z- 2*k*m}					    , S2');
+edge(S2, {true}      ,{x'=3*z + y +34.654}				    , S3');
+edge(S3, {m>0}       ,{m'=m-1, k' = k*2, n'=n+0.5}                          , S3');
+edge(S3, {m<=0}      ,{true}                                                , S4');
+edge(S4, {z>1000.23} ,{z'= z+x+y}                                           , S5');
+edge(S4, {z<=1000.23},{z'= z-x-y}                                           , S6');
+edge(S5, {}          ,{}                                                    , S7');
+edge(S6, {}          ,{}                                                    , S7');
+edge(S7, {true}      ,{true}                                                , S8');
+edge(S0, {n>=0}      ,{z'= z+143.223}                                       , S8');
+edge(S8, {k<5.5}     ,{y'= y*3 +1}                                          , S9');
+edge(S8, {k>=5.5}    ,{y'=1}                                                , S10');
+edge(S9, {}          ,{}                                                    , S11');
+edge(S10, {}         ,{}                                                    , S11');
+edge(S11, {x=y}      ,{z'=1}                                                , S12');
+edge(S11, {x!=y}     ,{z'=-1}                                               , S13');
+
+SPECIFICATION
+S13;

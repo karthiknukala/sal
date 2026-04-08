@@ -1,0 +1,47 @@
+% Auto-generated from cfa_test0013.vmt
+% Source suite: benchmarks/vmt/nra/cfa_test0013.vmt
+cfa_test0013: CONTEXT =
+BEGIN
+  fourth(v: REAL): REAL = ((v * v) * (v * v));
+
+  system: MODULE =
+  BEGIN
+  OUTPUT
+    x: REAL,
+    y: REAL,
+    offset: REAL,
+    s: REAL
+
+  LOCAL
+    range: BOOLEAN,
+    init: BOOLEAN,
+    prop: BOOLEAN
+
+  DEFINITION
+    range = ((0 <= offset) AND (offset <= 100000) AND (0 <= y) AND (y <= 100000) AND (0 <= x) AND (x <= 100));
+    init = ((s = 0) AND (y >= fourth(x)) AND range);
+    prop = (NOT (s = 2));
+
+  INITIALIZATION
+  [
+      init -->
+        x IN { v_x: REAL | TRUE };
+        y IN { v_y: REAL | TRUE };
+        offset IN { v_offset: REAL | TRUE };
+        s IN { v_s: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET range_2: BOOLEAN = ((0 <= offset') AND (offset' <= 100000) AND (0 <= y') AND (y' <= 100000) AND (0 <= x') AND (x' <= 100)) IN
+        LET trans: BOOLEAN = (range AND range_2 AND (((s = 0) AND (((x <= 4) => (offset = 1)) AND (((x > 4) AND (x <= 17)) => (offset = fourth((x - 17)))) AND (((x > 17) AND (x <= 20.1)) => (offset = 0)) AND (((x > 20.1) AND (x <= 100)) => (offset = 5))) AND (s' = 1) AND (x' = (x + offset)) AND (y' = y) AND (offset' = offset)) OR ((s = 1) AND (y > fourth((x - 40))) AND (s' = 2) AND (x' = x) AND (y' = y) AND (offset' = offset)) OR ((s = 1) AND (y <= fourth((x - 40))) AND (s' = 0) AND (x' = x) AND (y' = y) AND (offset' = offset)))) IN
+        trans -->
+        x' IN { v_x: REAL | TRUE };
+        y' IN { v_y: REAL | TRUE };
+        offset' IN { v_offset: REAL | TRUE };
+        s' IN { v_s: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(prop);
+END

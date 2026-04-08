@@ -1,0 +1,75 @@
+% Auto-generated from strogatz_ex_6_1_9_dipole.vmt
+% Source suite: benchmarks/vmt/nra/strogatz_ex_6_1_9_dipole.vmt
+strogatz_ex_6_1_9_dipole: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    instance_jump: BOOLEAN
+
+  OUTPUT
+    instance_x: REAL,
+    instance_y: REAL
+
+  LOCAL
+    def_18: REAL,
+    def_19: REAL,
+    def_14: REAL,
+    def_20: REAL,
+    def_21: BOOLEAN,
+    def_22: BOOLEAN,
+    def_39: REAL,
+    def_40: REAL,
+    def_25: REAL,
+    def_26: REAL,
+    def_27: REAL,
+    def_36: REAL,
+    def_23: BOOLEAN,
+    def_50: BOOLEAN,
+    def_51: BOOLEAN
+
+  DEFINITION
+    def_18 = (instance_x + (-((3333333333333333 / 10000000000000000))));
+    def_19 = (def_18 * def_18);
+    def_14 = (instance_y * instance_y);
+    def_20 = (def_14 + def_19);
+    def_21 = ((1 / 25) <= def_20);
+    def_22 = (NOT def_21);
+    def_39 = (2 * instance_x);
+    def_40 = (instance_y * def_39);
+    def_25 = ((-(1)) * instance_x);
+    def_26 = (def_25 * def_25);
+    def_27 = (def_14 + def_26);
+    def_36 = (2 * instance_y);
+    def_23 = (NOT instance_jump);
+    def_50 = (instance_x <= (-(2)));
+    def_51 = (NOT def_50);
+
+  INITIALIZATION
+  [
+      def_22 -->
+        instance_x IN { v_instance_x: REAL | TRUE };
+        instance_y IN { v_instance_y: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_43: REAL = ((-(2)) * instance_x') IN
+        LET def_44: REAL = (def_43 + def_40) IN
+        LET def_45: REAL = (def_39 + def_44) IN
+        LET def_46: BOOLEAN = (def_45 = 0) IN
+        LET def_33: REAL = ((-(2)) * instance_y') IN
+        LET def_34: REAL = (def_33 + def_27) IN
+        LET def_37: REAL = (def_36 + def_34) IN
+        LET def_38: BOOLEAN = (def_37 = 0) IN
+        LET def_47: BOOLEAN = (def_38 AND def_46) IN
+        LET def_48: BOOLEAN = (instance_jump OR def_47) IN
+        LET def_49: BOOLEAN = (def_23 AND def_48) IN
+        def_49 -->
+        instance_x' IN { v_instance_x: REAL | TRUE };
+        instance_y' IN { v_instance_y: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_51);
+END

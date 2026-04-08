@@ -1,0 +1,174 @@
+--------------------------------------------------------------------------------
+--
+--  HYSAT sample input file.
+--
+--  Author : Christian Herde
+--
+--  Last Modified :
+--              Wed Apr 14 10:23:00 CEST 2004
+--
+--------------------------------------------------------------------------------
+
+
+DECL
+    -- Lane.
+    define x0 = 0.0;
+    define x1 = 1.0;
+    define x2 = 3.0;
+    define x3 = 4.0;
+    define y0 = 0.0;
+    define y1 = 4.0;
+    define y2 = 5.0;
+    define y3 = 9.0;
+
+    -- Teeing-off area.
+    define xl = 1.5;
+    define yd = 0.75;
+    define xr = 2.5;
+    define yu = 1.25;
+
+    -- Position of hole.
+    define xh = 2.0;
+    define yh = 8.0;
+
+    -- Position of ball.
+    float [x0, x3] x;
+    float [y0, y3] y;
+
+    -- Horizontal component of velocity.
+    -- Negative values: left. Positive values: right.
+    float [-20, 20] vx;
+
+    -- Vertical component of velocity.
+    -- Negative values: down. Positive values: up.
+    float [-20, 20] vy;
+
+    -- Duration of a flow.
+    float [0.0, 10.0] dt;
+
+    -- Locations.
+    boole s1, s2, s3;
+
+    -- To jump or not to jump?
+    boole jump;
+
+    -- Minium duration of a flow. To exclude zeno trajectories.
+    define flow_min = 0.01;
+
+    -- By setting fg to a small negative value it is possible to slightly
+    -- tilt the lane such that the hole is on a higher level than the
+    -- teeing-off field.
+    define fg = -1.8;
+
+    -- If fl equals 1.0, the ball loses no energy when colliding with
+    -- a boundary or an obstacle. Setting it to 0.9, e.g., will cause a
+    -- loss of 10 per cent in the respective component of the velocity vector.
+    define fl = 0.6;
+
+INIT
+    -- Ball is within the teeing-off area.
+    xl <= x; x <= xr;
+    yd <= y; y <= yu;
+    -- x = 2.0;
+    -- y = 1.0;
+
+    -- Motion starts with a flow in location s3.
+    !jump;
+    !s1 and !s2 and s3;
+
+TRANS
+    -- At any time control is at exactly in one location.
+    s1' + s2' + s3' = 1;
+
+    -- The components of the velocity vector are non-zero throughout.
+    vx != 0 and vy != 0;
+
+    -- Jumps and flows alternate.
+    jump <-> !jump';
+
+    -- Jumps don't consume time. Flows do.
+     jump -> dt = 0;
+    !jump -> dt > flow_min;
+
+    -- Evolution of continuous variables during a flow.
+    !jump ->
+        (x' = x + dt * vx and
+         y' = y + dt * vy + 0.5 * fg * dt^2 and
+         vx' = vx and
+         vy' = vy + dt * fg);
+
+    -- Flows have to preserve the location invariants.
+    !jump ->
+        (x0 <= x' and x' <= x3);
+
+    (!jump and s1) ->
+        (y2 <= y' and y' <= y3);
+
+    (!jump and s2) ->
+        (y1 <= y' and y' <= y2);
+
+    (!jump and s3) ->
+        (y0 <= y' and y' <= y1);
+
+    -- The transition relation only talks about start- and endpoints
+    -- of trajectories, not about the states in-between. We have to make
+    -- sure that a trajectory does not leave the region defined by the
+    -- location invariants, thereafter returning to it.
+    !(!jump and s3 and y' = y1 and vy' < 0);
+    !(!jump and s2 and y' = y2 and vy' < 0);
+    !(!jump and s1 and y' = y3 and vy' < 0);
+
+    -- Flows do not change the location.
+    (!jump and s1) -> s1';
+    (!jump and s2) -> s2';
+    (!jump and s3) -> s3';
+
+    -- Jumps do not change the position of the ball.
+    jump -> (x' = x and y' = y);
+
+    -- Jumps only happen on boundaries.
+    (jump and s1) -> (x = x0 or x = x3 or y = y3 or y = y2);
+    (jump and s2) -> (x = x0 or x = x3 or y = y2 or y = y1);
+    (jump and s3) -> (x = x0 or x = x3 or y = y1 or y = y0);
+
+    -- We cannot jump from s1 to s3 or from s3 to s1.
+    (jump and s1) -> (s1' or s2');
+    (jump and s3) -> (s3' or s2');
+
+    -- How do jumps modify the state?
+    -- Horizontal component.
+    (jump and x = x0 and vx < 0) -> vx' = -fl * vx;
+    (jump and x = x3 and vx > 0) -> vx' = -fl * vx;
+    (jump and x0 < x and x < x3) -> vx' =  vx;
+
+    -- We never hit a lower boundary while moving upward.
+    (jump and s1 and y = y2 and vy > 0) -> false;
+    (jump and s2 and y = y1 and vy > 0) -> false;
+    (jump and s3 and y = y0 and vy > 0) -> false;
+
+    -- We never hit an upper boundary while moving downward.
+    (jump and s1 and y = y3 and vy < 0) -> false;
+    (jump and s2 and y = y2 and vy < 0) -> false;
+    (jump and s3 and y = y1 and vy < 0) -> false;
+
+    -- How do jumps modify the state?
+    -- Vertical component.
+    (jump and s1 and y = y3 and vy > 0)             -> (s1' and vy' = -fl * vy);
+    (jump and s1 and y = y2 and vy < 0 and x <= x2) -> (s1' and vy' = -fl * vy);
+    (jump and s1 and y = y2 and vy < 0 and x >  x2) -> (s2' and vy' =  vy);
+    (jump and s1 and y2 < y and y < y3)             -> (s1' and vy' = vy);
+
+    (jump and s2 and y = y2 and vy > 0 and x >  x2) -> (s1' and vy' =  vy);
+    (jump and s2 and y = y2 and vy > 0 and x <= x2) -> (s2' and vy' = -fl * vy);
+    (jump and s2 and y = y1 and vy < 0 and x >= x1) -> (s2' and vy' = -fl * vy);
+    (jump and s2 and y = y1 and vy < 0 and x <  x1) -> (s3' and vy' =  vy);
+    (jump and s2 and y1 < y and y < y2)             -> (s2' and vy' = vy);
+
+    (jump and s3 and y = y1 and vy > 0 and x <  x1) -> (s2' and vy' =  vy);
+    (jump and s3 and y = y1 and vy > 0 and x >= x1) -> (s3' and vy' = -fl * vy);
+    (jump and s3 and y = y0 and vy < 0)             -> (s3' and vy' = -fl * vy);
+    (jump and s3 and y0 < y and y < y1)             -> (s3' and vy' = vy);
+
+TARGET
+    x = xh;
+    y = yh;

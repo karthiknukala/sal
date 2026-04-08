@@ -1,0 +1,118 @@
+% Auto-generated from vinograd_system_chicone_1_145_page_80.vmt
+% Source suite: benchmarks/vmt/nra/vinograd_system_chicone_1_145_page_80.vmt
+vinograd_system_chicone_1_145_page_80: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    instance_jump: BOOLEAN
+
+  OUTPUT
+    instance_location_0: BOOLEAN,
+    instance_x: REAL,
+    instance_y: REAL
+
+  LOCAL
+    def_19: BOOLEAN,
+    def_18: BOOLEAN,
+    def_20: BOOLEAN,
+    def_16: BOOLEAN,
+    def_21: BOOLEAN,
+    def_52: REAL,
+    def_63: REAL,
+    def_64: REAL,
+    def_65: REAL,
+    def_61: REAL,
+    def_43: REAL,
+    def_60: REAL,
+    def_62: REAL,
+    def_66: REAL,
+    def_70: REAL,
+    def_50: REAL,
+    def_51: REAL,
+    def_53: REAL,
+    def_57: REAL,
+    def_37: BOOLEAN,
+    def_30: BOOLEAN,
+    def_31: BOOLEAN,
+    def_32: BOOLEAN,
+    def_24: BOOLEAN,
+    def_25: BOOLEAN,
+    def_26: BOOLEAN
+
+  DEFINITION
+    def_19 = (NOT instance_location_0);
+    def_18 = (instance_x = 1);
+    def_20 = (def_18 AND def_19);
+    def_16 = (instance_y = 0);
+    def_21 = (def_16 AND def_20);
+    def_52 = (instance_y * instance_y);
+    def_63 = (instance_y * def_52);
+    def_64 = (instance_y * def_63);
+    def_65 = (instance_y * def_64);
+    def_61 = (instance_x * instance_x);
+    def_43 = ((-(1)) * instance_x);
+    def_60 = (instance_y + def_43);
+    def_62 = (def_60 * def_61);
+    def_66 = (def_62 + def_65);
+    def_70 = (2 * instance_x);
+    def_50 = ((-(2)) * instance_x);
+    def_51 = (instance_y + def_50);
+    def_53 = (def_51 * def_52);
+    def_57 = (2 * instance_y);
+    def_37 = (NOT instance_jump);
+    def_30 = (instance_y <= 0);
+    def_31 = (NOT def_30);
+    def_32 = (def_19 AND def_31);
+    def_24 = (0 <= instance_y);
+    def_25 = (NOT def_24);
+    def_26 = (def_19 AND def_25);
+
+  INITIALIZATION
+  [
+      def_21 -->
+        instance_location_0 IN { v_instance_location_0: BOOLEAN | TRUE };
+        instance_x IN { v_instance_x: REAL | TRUE };
+        instance_y IN { v_instance_y: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_76: BOOLEAN = (instance_location_0 = instance_location_0') IN
+        LET def_77: BOOLEAN = (instance_jump OR def_76) IN
+        LET def_68: REAL = ((-(2)) * instance_x') IN
+        LET def_69: REAL = (def_68 + def_66) IN
+        LET def_71: REAL = (def_70 + def_69) IN
+        LET def_72: BOOLEAN = (def_71 = 0) IN
+        LET def_55: REAL = ((-(2)) * instance_y') IN
+        LET def_56: REAL = (def_55 + def_53) IN
+        LET def_58: REAL = (def_57 + def_56) IN
+        LET def_59: BOOLEAN = (def_58 = 0) IN
+        LET def_73: BOOLEAN = (def_59 AND def_72) IN
+        LET def_74: BOOLEAN = (instance_location_0 OR def_73) IN
+        LET def_75: BOOLEAN = (instance_jump OR def_74) IN
+        LET def_78: BOOLEAN = (def_75 AND def_77) IN
+        LET def_23: BOOLEAN = (instance_x = instance_x') IN
+        LET def_22: BOOLEAN = (instance_y = instance_y') IN
+        LET def_45: BOOLEAN = (def_22 AND def_23) IN
+        LET def_46: BOOLEAN = (def_19 OR def_45) IN
+        LET def_47: BOOLEAN = (instance_jump OR def_46) IN
+        LET def_79: BOOLEAN = (def_47 AND def_78) IN
+        LET def_33: BOOLEAN = (instance_location_0' AND def_32) IN
+        LET def_34: BOOLEAN = (def_23 AND def_33) IN
+        LET def_35: BOOLEAN = (def_22 AND def_34) IN
+        LET def_27: BOOLEAN = (instance_location_0' AND def_26) IN
+        LET def_28: BOOLEAN = (def_23 AND def_27) IN
+        LET def_29: BOOLEAN = (def_22 AND def_28) IN
+        LET def_36: BOOLEAN = (def_29 OR def_35) IN
+        LET def_38: BOOLEAN = (def_36 OR def_37) IN
+        LET def_80: BOOLEAN = (def_38 AND def_79) IN
+        def_80 -->
+        instance_location_0' IN { v_instance_location_0: BOOLEAN | TRUE };
+        instance_x' IN { v_instance_x: REAL | TRUE };
+        instance_y' IN { v_instance_y: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_19);
+END

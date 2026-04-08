@@ -1,0 +1,68 @@
+% Auto-generated from keymaera_nonlinear1.vmt
+% Source suite: benchmarks/vmt/nra/keymaera_nonlinear1.vmt
+keymaera_nonlinear1: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    instance_jump: BOOLEAN
+
+  OUTPUT
+    instance_x: REAL,
+    instance_a: REAL
+
+  LOCAL
+    def_17: REAL,
+    def_18: REAL,
+    def_19: BOOLEAN,
+    def_14: BOOLEAN,
+    def_20: BOOLEAN,
+    def_28: REAL,
+    def_29: REAL,
+    def_30: REAL,
+    def_31: REAL,
+    def_41: REAL,
+    def_21: BOOLEAN
+
+  DEFINITION
+    def_17 = (instance_x * instance_x);
+    def_18 = (instance_x * def_17);
+    def_19 = ((-(1)) <= def_18);
+    def_14 = (0 <= instance_a);
+    def_20 = (def_14 AND def_19);
+    def_28 = (instance_x + (-(3)));
+    def_29 = (def_28 * def_28);
+    def_30 = (def_28 * def_29);
+    def_31 = (def_28 * def_30);
+    def_41 = (2 * instance_x);
+    def_21 = (NOT instance_jump);
+
+  INITIALIZATION
+  [
+      def_20 -->
+        instance_x IN { v_instance_x: REAL | TRUE };
+        instance_a IN { v_instance_a: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_47: BOOLEAN = (0 <= instance_a') IN
+        LET def_48: BOOLEAN = (def_14 AND def_47) IN
+        LET def_37: REAL = ((-(2)) * instance_x') IN
+        LET def_38: REAL = (def_37 + def_31) IN
+        LET def_39: REAL = (instance_a + def_38) IN
+        LET def_42: REAL = (def_41 + def_39) IN
+        LET def_43: BOOLEAN = (def_42 = 0) IN
+        LET def_25: BOOLEAN = (instance_a = instance_a') IN
+        LET def_44: BOOLEAN = (def_25 AND def_43) IN
+        LET def_45: BOOLEAN = (instance_jump OR def_44) IN
+        LET def_46: BOOLEAN = (def_21 AND def_45) IN
+        LET def_49: BOOLEAN = (def_46 AND def_48) IN
+        def_49 -->
+        instance_x' IN { v_instance_x: REAL | TRUE };
+        instance_a' IN { v_instance_a: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_19);
+END

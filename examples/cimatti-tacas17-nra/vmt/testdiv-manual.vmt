@@ -1,0 +1,22 @@
+(declare-const a Real)
+(declare-const b Real)
+(declare-const a.next Real)
+(declare-const b.next Real)
+(declare-const loop Bool)
+(declare-const loop.next Bool)
+
+(declare-const q Real)
+
+(define-fun sv.a () Real (! a :next a.next))
+(define-fun sv.b () Real (! b :next b.next))
+(define-fun sv.loop () Bool (! loop :next loop.next))
+
+(define-fun init () Bool (! (and (> a 0) (>= b a) (>= b 1) (not loop)) :init true))
+
+(define-fun trans () Bool
+  (! (and loop.next
+          (= a.next q)
+          (= b.next b)
+          (=> (not (= b 0)) (= (* b q) a))) :trans true))
+
+(define-fun prop () Bool (! (=> loop (<= a 1)) :invar-property 0))

@@ -29,7 +29,9 @@
                 (sal/set-yices2-out-tmp-file!)
                 (sal/set-yices2-command! cmd-name)
                 (sal/set-yices2-sat-command! cmd-name)
+                (sal/set-yices2-mcsat-mode! flag)
                 (sal/set-yices2-silent-mode! flag)
+                (sal/yices2-mcsat-mode?)
                 (sal/yices2-silent-mode?)
                 (yices2-sat/execute in-file)
                 (yices2/execute-core in-file)
@@ -46,6 +48,7 @@
 ;;
 (define *yices2-command* "yices2")
 (define *yices2-sat-command* "yices2-sat")
+(define *yices2-mcsat-mode?* #t)
 
 (define *sal-tmp-in-file-to-yices2* #f)
 (define *sal-tmp-out-file-to-yices2* #f)
@@ -57,9 +60,15 @@
   
 (define-api (sal/set-yices2-sat-command! (cmd-name string?))
   (set! *yices2-sat-command* cmd-name))
+
+(define-api (sal/set-yices2-mcsat-mode! flag)
+  (set! *yices2-mcsat-mode?* flag))
   
 (define (sal/set-yices2-silent-mode! flag)
   (set! *silent-mode* flag))
+
+(define (sal/yices2-mcsat-mode?)
+  *yices2-mcsat-mode?*)
 
 (define (sal/yices2-silent-mode?)
   *silent-mode*)
@@ -120,7 +129,7 @@
 
 
 (define (report-error-running-yices2 cmd)
-  (sign-error "Error running Yices.\nThe following command was used to execute Yices2:\n   ~a\nYou can change this command by adding\n\n  (sal/set-yices2-command! \"<path-to-yices2>/yices\")\n\nto a `.salrc' file in your home directory." cmd))
+  (sign-error "Error running Yices.\nThe following command was used to execute Yices2:\n   ~a\nYou can change this command by adding\n\n  (sal/set-yices2-command! \"<path-to-yices2>/yices\")\n\nto a `.salrc' file in your home directory.\nIf your Yices2 build does not support MCSAT, you can disable it with\n\n  (sal/set-yices2-mcsat-mode! #f)" cmd))
 
 (define (report-error-running-yices2-sat cmd)
   (sign-error "Error running Yices.\nThe following command was used to execute Yices2:\n   ~a\nYou can change this command by adding\n\n  (sal/set-yices2-sat-command! \"<path-to-yices2>/yices-sat\")\n\nto a `.salrc' file in your home directory." cmd))
@@ -239,8 +248,9 @@
   (show-yices2-version *yices2-command*)
   (let* ((verbose-flag (if (> (verbosity-level) 3) " --verbose" ""))
 	 (mode-flag " --mode=one-shot")
+         (mcsat-flag (if *yices2-mcsat-mode?* " --mcsat" ""))
 ;;	 (mode-flag " --full-model") ;; for testing on yices-smt
-	 (cmd (string-append *yices2-command* mode-flag verbose-flag 
+	 (cmd (string-append *yices2-command* mode-flag mcsat-flag verbose-flag 
 			     " \"" in-file "\" > \"" *sal-tmp-out-file-to-yices2* "\""
 			     (if *silent-mode* " 2> /dev/null " "")))
          (_ (verbose-message 3 "  Yices2 command: ~a" cmd))
@@ -273,12 +283,68 @@
 ;;
 ;; Parsing of the Yices output
 ;;
+(define *mpq-ten* (make-mpq "10"))
+
+(define (yices2-decimal-string->mpq str)
+  (let* ((len (string-length str))
+         (exp-pos (let loop ((i 0))
+                    (cond
+                     ((= i len) #f)
+                     ((or (char=? (string-ref str i) #\e)
+                          (char=? (string-ref str i) #\E))
+                      i)
+                     (else
+                      (loop (+ i 1))))))
+         (mantissa (if exp-pos (substring str 0 exp-pos) str))
+         (exponent (if exp-pos
+                     (string->integer (substring str (+ exp-pos 1) len))
+                     0))
+         (mantissa-len (string-length mantissa))
+         (negative? (and (> mantissa-len 0)
+                         (char=? (string-ref mantissa 0) #\-)))
+         (unsigned (if negative?
+                     (substring mantissa 1 mantissa-len)
+                     mantissa))
+         (dot-pos (let loop ((i 0))
+                    (cond
+                     ((= i (string-length unsigned)) #f)
+                     ((char=? (string-ref unsigned i) #\.) i)
+                     (else
+                      (loop (+ i 1))))))
+         (whole (if dot-pos (substring unsigned 0 dot-pos) unsigned))
+         (fraction (if dot-pos
+                     (substring unsigned (+ dot-pos 1) (string-length unsigned))
+                     ""))
+         (digits (let ((raw (string-append whole fraction)))
+                   (if (= (string-length raw) 0) "0" raw)))
+         (scale (string-length fraction))
+         (base (make-mpq digits))
+         (scaled (if (= scale 0)
+                   base
+                   (/mpq base (mpq/exp *mpq-ten* (integer->mpq scale)))))
+         (shifted (cond
+                   ((= exponent 0) scaled)
+                   ((> exponent 0)
+                    (*mpq scaled (mpq/exp *mpq-ten* (integer->mpq exponent))))
+                   (else
+                    (/mpq scaled (mpq/exp *mpq-ten* (integer->mpq (- 0 exponent))))))))
+    (if negative?
+      (-mpq *mpq-zero* shifted)
+      shifted)))
+
 (define *yices2-output-lexer*
   (regular-grammar
    ((first-ident-char (or alpha #\_))
     (next-ident-char (or digit #\! first-ident-char))
     (id (: first-ident-char (* next-ident-char)))
-    (num (+ digit)))
+    (num (+ digit))
+    (sign (? #\-))
+    (exp-part (: (in #\e #\E) (? (in #\+ #\-)) num))
+    (decimal (: sign
+                (or (: num #\. (* digit))
+                    (: #\. num))
+                (? exp-part)))
+    (scientific (: sign num exp-part)))
    ((+ (in #\newline #a012 #a013 #\space #\tab))
      (ignore))
    ("sat" 'SAT)
@@ -296,6 +362,10 @@
    (#\) 'RP)
    (#\. 'DOT)
    (#\= (the-symbol))
+   (decimal
+    (cons 'CONST (yices2-decimal-string->mpq (the-string))))
+   (scientific
+    (cons 'CONST (yices2-decimal-string->mpq (the-string))))
    (num 
     (cons 'CONST (make-mpq (the-string))))
    ((: #\- num)

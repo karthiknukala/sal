@@ -1,0 +1,39 @@
+------------------------------------------------------
+-- This case is borrowed from isat3 repository      --
+-- original name: bmc_non_linear_logistic_map_02.hys--
+-- where the specification is NOT REACHABLE         --
+-- Problem is polynomial						    --
+------------------------------------------------------
+
+-- Logistic map: x' = r * x (1 - x)
+-- Oscillates after 10 iterations between 0.5 and 0.8 (approx.)
+
+DECL
+float [-10, 10] x;
+
+define r = 3.2;
+
+NODES
+S0, S1, S2;
+
+INIT
+edge(true, {((x = 0.8) or (x = 0.5))}, {true}, S0);
+
+FLOWS
+edge(S0, {true}, {x' = r * x * (1 - x)}, S1');
+edge(S1, {!(
+	        ((x >= 0.78) and (x <= 0.82)) or -- ca. 0.8
+	        ((x >= 0.48) and (x <= 5.20))    -- ca. 0.5
+				       )}, {}, S2');
+edge(S1, {(
+	       ((x >= 0.78) and (x <= 0.82)) or -- ca. 0.8
+	       ((x >= 0.48) and (x <= 5.20))    -- ca. 0.5
+				       )}, {}, S0');
+
+    
+SPECIFICATION
+--!(
+--	((x >= 0.78) and (x <= 0.82)) or -- ca. 0.8
+--	((x >= 0.48) and (x <= 5.20))    -- ca. 0.5
+--);
+S2;

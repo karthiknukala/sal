@@ -1,0 +1,77 @@
+% Auto-generated from strogatz_ex_6_8_3.vmt
+% Source suite: benchmarks/vmt/nra/strogatz_ex_6_8_3.vmt
+strogatz_ex_6_8_3: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    instance_jump: BOOLEAN
+
+  OUTPUT
+    instance_x: REAL,
+    instance_y: REAL
+
+  LOCAL
+    def_18: REAL,
+    def_19: REAL,
+    def_21: REAL,
+    def_14: REAL,
+    def_22: REAL,
+    def_23: BOOLEAN,
+    def_24: BOOLEAN,
+    def_27: REAL,
+    def_41: REAL,
+    def_47: REAL,
+    def_28: REAL,
+    def_34: REAL,
+    def_38: REAL,
+    def_25: BOOLEAN,
+    def_53: BOOLEAN,
+    def_54: BOOLEAN
+
+  DEFINITION
+    def_18 = (instance_x + (-((3333333333333333 / 10000000000000000))));
+    def_19 = (def_18 * def_18);
+    def_21 = (2 * def_19);
+    def_14 = (instance_y * instance_y);
+    def_22 = (def_14 + def_21);
+    def_23 = ((1 / 16) <= def_22);
+    def_24 = (NOT def_23);
+    def_27 = (instance_x * instance_x);
+    def_41 = (instance_y * def_27);
+    def_47 = (2 * instance_x);
+    def_28 = ((-(1)) * def_14);
+    def_34 = (def_28 + def_27);
+    def_38 = (2 * instance_y);
+    def_25 = (NOT instance_jump);
+    def_53 = (instance_x <= (-(2)));
+    def_54 = (NOT def_53);
+
+  INITIALIZATION
+  [
+      def_24 -->
+        instance_x IN { v_instance_x: REAL | TRUE };
+        instance_y IN { v_instance_y: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_45: REAL = ((-(2)) * instance_x') IN
+        LET def_46: REAL = (def_45 + def_41) IN
+        LET def_48: REAL = (def_47 + def_46) IN
+        LET def_49: BOOLEAN = (def_48 = 0) IN
+        LET def_36: REAL = ((-(2)) * instance_y') IN
+        LET def_37: REAL = (def_36 + def_34) IN
+        LET def_39: REAL = (def_38 + def_37) IN
+        LET def_40: BOOLEAN = (def_39 = 0) IN
+        LET def_50: BOOLEAN = (def_40 AND def_49) IN
+        LET def_51: BOOLEAN = (instance_jump OR def_50) IN
+        LET def_52: BOOLEAN = (def_25 AND def_51) IN
+        def_52 -->
+        instance_x' IN { v_instance_x: REAL | TRUE };
+        instance_y' IN { v_instance_y: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_54);
+END

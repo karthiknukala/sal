@@ -1,0 +1,54 @@
+% Auto-generated from cfa_test0005.vmt
+% Source suite: benchmarks/vmt/nra/cfa_test0005.vmt
+cfa_test0005: CONTEXT =
+BEGIN
+  range(v: REAL): BOOLEAN = (((-(10000000)) <= v) AND (v <= 10000000));
+  square(v: REAL): REAL = (v * v);
+
+  system: MODULE =
+  BEGIN
+  OUTPUT
+    k: REAL,
+    m: REAL,
+    n: REAL,
+    x: REAL,
+    y: REAL,
+    z: REAL,
+    s: REAL
+
+  LOCAL
+    init: BOOLEAN,
+    prop: BOOLEAN
+
+  DEFINITION
+    init = ((s = 0) AND (k = 10.355) AND (m = 5.211) AND (n = (-(56.324))) AND range(x) AND range(y) AND range(z));
+    prop = (NOT (s = 13));
+
+  INITIALIZATION
+  [
+      init -->
+        k IN { v_k: REAL | TRUE };
+        m IN { v_m: REAL | TRUE };
+        n IN { v_n: REAL | TRUE };
+        x IN { v_x: REAL | TRUE };
+        y IN { v_y: REAL | TRUE };
+        z IN { v_z: REAL | TRUE };
+        s IN { v_s: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET trans: BOOLEAN = (range(k) AND range(k') AND range(m) AND range(m') AND range(n) AND range(n') AND range(x) AND range(x') AND range(y) AND range(y') AND range(z) AND range(z') AND (((s = 0) AND (n < 0) AND (s' = 1) AND (z' = (square(k) + square(m) + square(n))) AND (k' = k) AND (m' = m) AND (n' = n) AND (x' = x) AND (y' = y)) OR ((s = 1) AND TRUE AND (s' = 2) AND (y' = (z - (2 * (k * m)))) AND (k' = k) AND (m' = m) AND (n' = n) AND (x' = x) AND (z' = z)) OR ((s = 2) AND TRUE AND (s' = 3) AND (x' = ((3 * z) + y + 34.654)) AND (k' = k) AND (m' = m) AND (n' = n) AND (y' = y) AND (z' = z)) OR ((s = 3) AND (m > 0) AND (s' = 3) AND (m' = (m - 1)) AND (k' = (k * 2)) AND (n' = (n + 0.5)) AND (x' = x) AND (y' = y) AND (z' = z)) OR ((s = 3) AND (m <= 0) AND (s' = 4) AND (k' = k) AND (m' = m) AND (n' = n) AND (x' = x) AND (y' = y) AND (z' = z)) OR ((s = 4) AND (z > 1000.23) AND (s' = 5) AND (z' = (z + x + y)) AND (k' = k) AND (m' = m) AND (n' = n) AND (x' = x) AND (y' = y)) OR ((s = 4) AND (z <= 1000.23) AND (s' = 6) AND (z' = (z + (-(x)) + (-(y)))) AND (k' = k) AND (m' = m) AND (n' = n) AND (x' = x) AND (y' = y)) OR ((s = 5) AND TRUE AND (s' = 7) AND (k' = k) AND (m' = m) AND (n' = n) AND (x' = x) AND (y' = y) AND (z' = z)) OR ((s = 6) AND TRUE AND (s' = 7) AND (k' = k) AND (m' = m) AND (n' = n) AND (x' = x) AND (y' = y) AND (z' = z)) OR ((s = 7) AND TRUE AND (s' = 8) AND (k' = k) AND (m' = m) AND (n' = n) AND (x' = x) AND (y' = y) AND (z' = z)) OR ((s = 0) AND (n >= 0) AND (s' = 8) AND (z' = (z + 143.223)) AND (k' = k) AND (m' = m) AND (n' = n) AND (x' = x) AND (y' = y)) OR ((s = 8) AND (k < 5.5) AND (s' = 9) AND (y' = ((y * 3) + 1)) AND (k' = k) AND (m' = m) AND (n' = n) AND (x' = x) AND (z' = z)) OR ((s = 8) AND (k >= 5.5) AND (s' = 10) AND (y' = 1) AND (k' = k) AND (m' = m) AND (n' = n) AND (x' = x) AND (z' = z)) OR ((s = 9) AND TRUE AND (s' = 11) AND (k' = k) AND (m' = m) AND (n' = n) AND (x' = x) AND (y' = y) AND (z' = z)) OR ((s = 10) AND TRUE AND (s' = 11) AND (k' = k) AND (m' = m) AND (n' = n) AND (x' = x) AND (y' = y) AND (z' = z)) OR ((s = 11) AND (x = y) AND (s' = 12) AND (z' = 1) AND (k' = k) AND (m' = m) AND (n' = n) AND (x' = x) AND (y' = y)) OR ((s = 11) AND (NOT (x = y)) AND (s' = 13) AND (z' = (-(1))) AND (k' = k) AND (m' = m) AND (n' = n) AND (x' = x) AND (y' = y)))) IN
+        trans -->
+        k' IN { v_k: REAL | TRUE };
+        m' IN { v_m: REAL | TRUE };
+        n' IN { v_n: REAL | TRUE };
+        x' IN { v_x: REAL | TRUE };
+        y' IN { v_y: REAL | TRUE };
+        z' IN { v_z: REAL | TRUE };
+        s' IN { v_s: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(prop);
+END

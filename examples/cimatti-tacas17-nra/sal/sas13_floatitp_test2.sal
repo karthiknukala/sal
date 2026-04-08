@@ -1,0 +1,156 @@
+% Auto-generated from sas13-floatitp-test2.vmt
+% Source suite: benchmarks/vmt/nra/sas13-floatitp-test2.vmt
+sas13_floatitp_test2: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  OUTPUT
+    pc_2: BOOLEAN,
+    pc_1: BOOLEAN,
+    pc_0: BOOLEAN,
+    n: REAL,
+    f: REAL
+
+  LOCAL
+    def_36: BOOLEAN,
+    def_34: BOOLEAN,
+    def_33: BOOLEAN,
+    def_35: BOOLEAN,
+    def_37: BOOLEAN,
+    def_132: BOOLEAN,
+    def_133: BOOLEAN,
+    def_101: BOOLEAN,
+    def_102: BOOLEAN,
+    def_59: REAL,
+    def_60: REAL,
+    def_67: REAL,
+    def_68: REAL,
+    def_73: REAL,
+    def_74: REAL,
+    def_81: REAL,
+    def_82: REAL,
+    def_84: REAL,
+    def_85: REAL,
+    def_86: BOOLEAN,
+    def_98: BOOLEAN,
+    def_99: BOOLEAN,
+    def_87: BOOLEAN,
+    def_94: BOOLEAN,
+    def_48: BOOLEAN,
+    def_49: BOOLEAN,
+    def_31: BOOLEAN,
+    def_28: BOOLEAN,
+    def_26: BOOLEAN,
+    def_29: BOOLEAN,
+    def_32: BOOLEAN,
+    def_137: BOOLEAN,
+    def_138: BOOLEAN
+
+  DEFINITION
+    def_36 = (NOT pc_2);
+    def_34 = (NOT pc_1);
+    def_33 = (NOT pc_0);
+    def_35 = (def_33 AND def_34);
+    def_37 = (def_35 AND def_36);
+    def_132 = (pc_0 AND pc_1);
+    def_133 = (def_36 AND def_132);
+    def_101 = (pc_0 AND def_34);
+    def_102 = (def_36 AND def_101);
+    def_59 = (f * f);
+    def_60 = (f * def_59);
+    def_67 = (f * def_60);
+    def_68 = (f * def_67);
+    def_73 = (f * def_68);
+    def_74 = (f * def_73);
+    def_81 = ((-(42)) * def_68);
+    def_82 = (def_81 + def_74);
+    def_84 = (840 * def_60);
+    def_85 = (def_84 + def_82);
+    def_86 = (def_85 = 0);
+    def_98 = (5 <= n);
+    def_99 = (NOT def_98);
+    def_87 = (NOT def_86);
+    def_94 = (9 <= n);
+    def_48 = (pc_1 AND def_33);
+    def_49 = (def_36 AND def_48);
+    def_31 = (f = (1 / 1000));
+    def_28 = (f = (9 / 10000));
+    def_26 = (f = (1 / 1250));
+    def_29 = (def_26 OR def_28);
+    def_32 = (def_29 OR def_31);
+    def_137 = (def_49 OR def_133);
+    def_138 = (NOT def_137);
+
+  INITIALIZATION
+  [
+      def_37 -->
+        pc_2 IN { v_pc_2: BOOLEAN | TRUE };
+        pc_1 IN { v_pc_1: BOOLEAN | TRUE };
+        pc_0 IN { v_pc_0: BOOLEAN | TRUE };
+        n IN { v_n: REAL | TRUE };
+        f IN { v_f: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_103: BOOLEAN = (pc_0' AND pc_1') IN
+        LET def_40: BOOLEAN = (NOT pc_2') IN
+        LET def_104: BOOLEAN = (def_40 AND def_103) IN
+        LET def_134: BOOLEAN = (def_104 AND def_133) IN
+        LET def_53: BOOLEAN = (n = n') IN
+        LET def_42: BOOLEAN = (f = f') IN
+        LET def_54: BOOLEAN = (def_42 AND def_53) IN
+        LET def_135: BOOLEAN = (def_54 AND def_134) IN
+        LET def_50: BOOLEAN = (NOT pc_0') IN
+        LET def_38: BOOLEAN = (NOT pc_1') IN
+        LET def_125: BOOLEAN = (def_38 AND def_50) IN
+        LET def_126: BOOLEAN = (pc_2' AND def_125) IN
+        LET def_128: BOOLEAN = (def_102 AND def_126) IN
+        LET def_127: BOOLEAN = (def_54 AND def_86) IN
+        LET def_129: BOOLEAN = (def_127 AND def_128) IN
+        LET def_51: BOOLEAN = (pc_1' AND def_50) IN
+        LET def_52: BOOLEAN = (def_40 AND def_51) IN
+        LET def_122: BOOLEAN = (def_52 AND def_102) IN
+        LET def_120: BOOLEAN = (def_54 AND def_99) IN
+        LET def_121: BOOLEAN = (def_86 AND def_120) IN
+        LET def_123: BOOLEAN = (def_121 AND def_122) IN
+        LET def_39: BOOLEAN = (pc_0' AND def_38) IN
+        LET def_41: BOOLEAN = (def_39 AND def_40) IN
+        LET def_117: BOOLEAN = (def_41 AND def_102) IN
+        LET def_108: REAL = ((-(1)) * n') IN
+        LET def_109: REAL = (n + def_108) IN
+        LET def_110: BOOLEAN = (def_109 = (-(1))) IN
+        LET def_105: REAL = ((-(1)) * f') IN
+        LET def_106: REAL = (f + def_105) IN
+        LET def_107: BOOLEAN = (def_106 = (1 / 20000)) IN
+        LET def_111: BOOLEAN = (def_107 AND def_110) IN
+        LET def_116: BOOLEAN = (def_87 AND def_111) IN
+        LET def_118: BOOLEAN = (def_116 AND def_117) IN
+        LET def_114: BOOLEAN = (def_102 AND def_104) IN
+        LET def_112: BOOLEAN = (def_94 AND def_111) IN
+        LET def_113: BOOLEAN = (def_87 AND def_112) IN
+        LET def_115: BOOLEAN = (def_113 AND def_114) IN
+        LET def_119: BOOLEAN = (def_115 OR def_118) IN
+        LET def_124: BOOLEAN = (def_119 OR def_123) IN
+        LET def_130: BOOLEAN = (def_124 OR def_129) IN
+        LET def_55: BOOLEAN = (def_49 AND def_52) IN
+        LET def_56: BOOLEAN = (def_54 AND def_55) IN
+        LET def_46: BOOLEAN = (def_37 AND def_41) IN
+        LET def_43: BOOLEAN = (n' = 0) IN
+        LET def_44: BOOLEAN = (def_42 AND def_43) IN
+        LET def_45: BOOLEAN = (def_32 AND def_44) IN
+        LET def_47: BOOLEAN = (def_45 AND def_46) IN
+        LET def_57: BOOLEAN = (def_47 OR def_56) IN
+        LET def_131: BOOLEAN = (def_57 OR def_130) IN
+        LET def_136: BOOLEAN = (def_131 OR def_135) IN
+        def_136 -->
+        pc_2' IN { v_pc_2: BOOLEAN | TRUE };
+        pc_1' IN { v_pc_1: BOOLEAN | TRUE };
+        pc_0' IN { v_pc_0: BOOLEAN | TRUE };
+        n' IN { v_n: REAL | TRUE };
+        f' IN { v_f: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_138);
+END

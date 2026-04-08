@@ -1,0 +1,34 @@
+------------------------------------------------------
+-- This case is borrowed from isat3 repository      --
+-- original name: bmc_non_linear_frontier_01.hys    --
+-- where the specification is  	  REACHABLE!!!!>'-'<--
+-- Problem is polynomial						    --
+------------------------------------------------------
+
+DECL
+
+float [0,100] x;
+float [0,100000] y;
+float [0,100000] offset;
+
+NODES
+S0, S1, S2;
+
+INIT
+--y >= x^4;
+edge(true, {y >= x^4}, {true}, S0);
+
+FLOWS
+-- next we define the transition steps
+edge(S0, {((x <= 4) impl offset = 1) &&
+          ((x > 4 and x <= 17) impl offset = (x-17)^4) &&
+          ((x > 17 and x <= 20.1) impl offset = 0) &&
+	      ((x > 20.1 and x <= 100 ) impl offset = 5)},
+	     {x' = x + offset, y' = y}, S1');
+
+edge(S1, {y > (x-40)^4} ,{}, S2');
+edge(S1, {y <= (x-40)^4},{}, S0');
+
+SPECIFICATION
+--y > (x-40)^4;
+S2;

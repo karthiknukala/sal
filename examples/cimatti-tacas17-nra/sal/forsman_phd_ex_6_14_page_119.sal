@@ -1,0 +1,74 @@
+% Auto-generated from forsman_phd_ex_6_14_page_119.vmt
+% Source suite: benchmarks/vmt/nra/forsman_phd_ex_6_14_page_119.vmt
+forsman_phd_ex_6_14_page_119: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    instance_jump: BOOLEAN
+
+  OUTPUT
+    instance_x: REAL,
+    instance_y: REAL
+
+  LOCAL
+    def_18: REAL,
+    def_16: REAL,
+    def_17: REAL,
+    def_19: REAL,
+    def_20: BOOLEAN,
+    def_21: BOOLEAN,
+    def_24: REAL,
+    def_25: REAL,
+    def_39: REAL,
+    def_46: REAL,
+    def_27: REAL,
+    def_28: REAL,
+    def_22: BOOLEAN,
+    def_53: BOOLEAN,
+    def_54: BOOLEAN
+
+  DEFINITION
+    def_18 = (instance_x * instance_x);
+    def_16 = (instance_y + (-(1)));
+    def_17 = (def_16 * def_16);
+    def_19 = (def_17 + def_18);
+    def_20 = ((1 / 8) <= def_19);
+    def_21 = (NOT def_20);
+    def_24 = (instance_y * instance_y);
+    def_25 = (instance_y * def_24);
+    def_39 = (instance_y * def_25);
+    def_46 = ((-(1)) * def_39);
+    def_27 = (3 * instance_x);
+    def_28 = (def_25 * def_27);
+    def_22 = (NOT instance_jump);
+    def_53 = (instance_y <= (-(1)));
+    def_54 = (NOT def_53);
+
+  INITIALIZATION
+  [
+      def_21 -->
+        instance_x IN { v_instance_x: REAL | TRUE };
+        instance_y IN { v_instance_y: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_47: REAL = (2 * instance_x') IN
+        LET def_48: REAL = (def_47 + def_46) IN
+        LET def_49: BOOLEAN = (def_48 = 0) IN
+        LET def_35: REAL = ((-(2)) * instance_y') IN
+        LET def_36: REAL = (def_35 + def_28) IN
+        LET def_37: REAL = (instance_y + def_36) IN
+        LET def_38: BOOLEAN = (def_37 = 0) IN
+        LET def_50: BOOLEAN = (def_38 AND def_49) IN
+        LET def_51: BOOLEAN = (instance_jump OR def_50) IN
+        LET def_52: BOOLEAN = (def_22 AND def_51) IN
+        def_52 -->
+        instance_x' IN { v_instance_x: REAL | TRUE };
+        instance_y' IN { v_instance_y: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_54);
+END

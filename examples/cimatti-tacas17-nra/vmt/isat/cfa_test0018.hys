@@ -1,0 +1,45 @@
+------------------------------------------------------
+-- This case is borrowed from isat3 repository      --
+-- original name: bmc_non_linear_two_circles_01.hys --
+-- where the specification is NOT REACHABLE         --
+-- Problem is polynomial						    --
+------------------------------------------------------
+
+-- two circles:
+-- (1) the inner circle in INIT and TRANS includes all points in its radius,
+-- (2) the outer circle in TARGET excludes all points in its radius
+-- with every transition the inner circle has a smaller radius. both circles
+-- never have an intersection
+
+DECL
+float [-1000000, 1000000] a, b, x, y;
+
+define r1 = 100;
+define r1_jitter = 8000;
+define r2 = 10000;
+
+NODES
+S0, S1, S2, S3, S4, S5;
+
+INIT
+--a = 1;
+--a * b = r1_jitter;
+--(x + 0.5)^2 + (y + 0.5)^2 <= (r1 + b)^2;
+edge(true, {(a= 1 && a * b = r1_jitter && 
+	     (x + 0.5)^2 + (y + 0.5)^2 <= (r1 + b)^2)}, {true}, S0);
+
+FLOWS
+--a' = a + 1.0;
+--a' * b' = r1_jitter;
+--(x' + 0.5)^2 + (y' + 0.5)^2 <= (r1 + b')^2;
+
+edge(S0, {(x + 0.5)^2 + (y + 0.5)^2 <= (r1 + b)^2},{a' = a + 1.0}, S1');
+edge(S1, {(x + 0.5)^2 + (y + 0.5)^2 <= (r1 + b)^2},{a' =a}, S2');
+edge(S2, {(x + 0.5)^2 + (y + 0.5)^2 <= (r1 + b)^2},{b' =b}, S3');
+edge(S3, {a * b = r1_jitter &&
+          (x + 0.5)^2 + (y + 0.5)^2 <= (r1 + b)^2},{}, S4');
+edge(S4, {(x + 1.0)^2 + (y + 1.0)^2 >= r2^2}, {}, S5');
+edge(S4, {(x + 1.0)^2 + (y + 1.0)^2 < r2^2}, {}, S0');
+
+SPECIFICATION
+S5;

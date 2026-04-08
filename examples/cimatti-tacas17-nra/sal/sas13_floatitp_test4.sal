@@ -1,0 +1,213 @@
+% Auto-generated from sas13-floatitp-test4.vmt
+% Source suite: benchmarks/vmt/nra/sas13-floatitp-test4.vmt
+sas13_floatitp_test4: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    div_88_13: REAL,
+    in_my_cosf_0_res_2: REAL
+
+  OUTPUT
+    pc_2: BOOLEAN,
+    pc_1: BOOLEAN,
+    pc_0: BOOLEAN,
+    in_my_cosf_0_x: REAL,
+    in_my_cosf_0_n: REAL,
+    in_my_cosf_0_fact: REAL,
+    in_my_cosf_0_sign: REAL,
+    in_my_cosf_0_pow: REAL,
+    x: REAL,
+    in_my_cosf_0_res: REAL
+
+  LOCAL
+    def_46: BOOLEAN,
+    def_44: BOOLEAN,
+    def_43: BOOLEAN,
+    def_45: BOOLEAN,
+    def_47: BOOLEAN,
+    def_121: BOOLEAN,
+    def_122: BOOLEAN,
+    def_109: REAL,
+    def_110: REAL,
+    def_111: REAL,
+    def_112: BOOLEAN,
+    def_95: BOOLEAN,
+    def_92: BOOLEAN,
+    def_90: REAL,
+    def_88: REAL,
+    def_91: BOOLEAN,
+    def_93: BOOLEAN,
+    def_107: BOOLEAN,
+    def_114: BOOLEAN,
+    def_116: BOOLEAN,
+    def_115: BOOLEAN,
+    def_117: BOOLEAN,
+    def_118: BOOLEAN,
+    def_97: REAL,
+    def_98: REAL,
+    def_102: REAL,
+    def_103: REAL,
+    def_104: REAL,
+    def_105: REAL,
+    def_96: BOOLEAN,
+    def_68: BOOLEAN,
+    def_69: BOOLEAN,
+    def_39: BOOLEAN,
+    def_36: BOOLEAN,
+    def_34: BOOLEAN,
+    def_37: BOOLEAN,
+    def_40: BOOLEAN,
+    def_164: BOOLEAN
+
+  DEFINITION
+    def_46 = (NOT pc_2);
+    def_44 = (NOT pc_1);
+    def_43 = (NOT pc_0);
+    def_45 = (def_43 AND def_44);
+    def_47 = (def_45 AND def_46);
+    def_121 = (pc_0 AND def_44);
+    def_122 = (def_46 AND def_121);
+    def_109 = ((-(1)) * in_my_cosf_0_res_2);
+    def_110 = (div_88_13 + def_109);
+    def_111 = (in_my_cosf_0_res + def_110);
+    def_112 = (def_111 = 0);
+    def_95 = (div_88_13 = 0);
+    def_92 = (in_my_cosf_0_fact = 0);
+    def_90 = (in_my_cosf_0_fact * div_88_13);
+    def_88 = (in_my_cosf_0_sign * in_my_cosf_0_pow);
+    def_91 = (def_88 = def_90);
+    def_93 = (def_91 OR def_92);
+    def_107 = (def_93 AND def_95);
+    def_114 = (def_107 AND def_112);
+    def_116 = (in_my_cosf_0_res_2 <= 1);
+    def_115 = (0 <= in_my_cosf_0_res_2);
+    def_117 = (def_115 AND def_116);
+    def_118 = (NOT def_117);
+    def_97 = (in_my_cosf_0_x * in_my_cosf_0_x);
+    def_98 = (in_my_cosf_0_pow * def_97);
+    def_102 = (in_my_cosf_0_n + 2);
+    def_103 = ((-(1)) + def_102);
+    def_104 = (in_my_cosf_0_fact * def_103);
+    def_105 = (def_102 * def_104);
+    def_96 = (NOT def_95);
+    def_68 = (pc_1 AND def_43);
+    def_69 = (def_46 AND def_68);
+    def_39 = (x = (1 / 10));
+    def_36 = (x = (7 / 100));
+    def_34 = (x = (1 / 20));
+    def_37 = (def_34 OR def_36);
+    def_40 = (def_37 OR def_39);
+    def_164 = (NOT def_69);
+
+  INITIALIZATION
+  [
+      def_47 -->
+        pc_2 IN { v_pc_2: BOOLEAN | TRUE };
+        pc_1 IN { v_pc_1: BOOLEAN | TRUE };
+        pc_0 IN { v_pc_0: BOOLEAN | TRUE };
+        in_my_cosf_0_x IN { v_in_my_cosf_0_x: REAL | TRUE };
+        in_my_cosf_0_n IN { v_in_my_cosf_0_n: REAL | TRUE };
+        in_my_cosf_0_fact IN { v_in_my_cosf_0_fact: REAL | TRUE };
+        in_my_cosf_0_sign IN { v_in_my_cosf_0_sign: REAL | TRUE };
+        in_my_cosf_0_pow IN { v_in_my_cosf_0_pow: REAL | TRUE };
+        x IN { v_x: REAL | TRUE };
+        in_my_cosf_0_res IN { v_in_my_cosf_0_res: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_157: BOOLEAN = (pc_0' AND pc_1') IN
+        LET def_50: BOOLEAN = (NOT pc_2') IN
+        LET def_158: BOOLEAN = (def_50 AND def_157) IN
+        LET def_160: BOOLEAN = (def_122 AND def_158) IN
+        LET def_145: BOOLEAN = (in_my_cosf_0_res' = in_my_cosf_0_res_2) IN
+        LET def_73: BOOLEAN = (in_my_cosf_0_x = in_my_cosf_0_x') IN
+        LET def_146: BOOLEAN = (def_73 AND def_145) IN
+        LET def_76: BOOLEAN = (in_my_cosf_0_n = in_my_cosf_0_n') IN
+        LET def_147: BOOLEAN = (def_76 AND def_146) IN
+        LET def_78: BOOLEAN = (in_my_cosf_0_fact = in_my_cosf_0_fact') IN
+        LET def_148: BOOLEAN = (def_78 AND def_147) IN
+        LET def_80: BOOLEAN = (in_my_cosf_0_sign = in_my_cosf_0_sign') IN
+        LET def_149: BOOLEAN = (def_80 AND def_148) IN
+        LET def_82: BOOLEAN = (in_my_cosf_0_pow = in_my_cosf_0_pow') IN
+        LET def_150: BOOLEAN = (def_82 AND def_149) IN
+        LET def_63: BOOLEAN = (x = x') IN
+        LET def_151: BOOLEAN = (def_63 AND def_150) IN
+        LET def_159: BOOLEAN = (def_114 AND def_151) IN
+        LET def_161: BOOLEAN = (def_159 AND def_160) IN
+        LET def_70: BOOLEAN = (NOT pc_0') IN
+        LET def_71: BOOLEAN = (pc_1' AND def_70) IN
+        LET def_72: BOOLEAN = (def_50 AND def_71) IN
+        LET def_154: BOOLEAN = (def_72 AND def_122) IN
+        LET def_152: BOOLEAN = (def_118 AND def_151) IN
+        LET def_153: BOOLEAN = (def_114 AND def_152) IN
+        LET def_155: BOOLEAN = (def_153 AND def_154) IN
+        LET def_48: BOOLEAN = (NOT pc_1') IN
+        LET def_49: BOOLEAN = (pc_0' AND def_48) IN
+        LET def_51: BOOLEAN = (def_49 AND def_50) IN
+        LET def_143: BOOLEAN = (def_51 AND def_122) IN
+        LET def_138: BOOLEAN = (in_my_cosf_0_pow' = def_98) IN
+        LET def_135: REAL = (in_my_cosf_0_sign + in_my_cosf_0_sign') IN
+        LET def_136: BOOLEAN = (def_135 = 0) IN
+        LET def_133: BOOLEAN = (in_my_cosf_0_fact' = def_105) IN
+        LET def_129: REAL = ((-(1)) * in_my_cosf_0_n') IN
+        LET def_130: REAL = (in_my_cosf_0_n + def_129) IN
+        LET def_131: BOOLEAN = (def_130 = (-(2))) IN
+        LET def_123: REAL = ((-(1)) * in_my_cosf_0_res') IN
+        LET def_124: REAL = (def_123 + div_88_13) IN
+        LET def_125: REAL = (in_my_cosf_0_res + def_124) IN
+        LET def_126: BOOLEAN = (def_125 = 0) IN
+        LET def_127: BOOLEAN = (def_73 AND def_126) IN
+        LET def_132: BOOLEAN = (def_127 AND def_131) IN
+        LET def_134: BOOLEAN = (def_132 AND def_133) IN
+        LET def_137: BOOLEAN = (def_134 AND def_136) IN
+        LET def_139: BOOLEAN = (def_137 AND def_138) IN
+        LET def_140: BOOLEAN = (def_63 AND def_139) IN
+        LET def_141: BOOLEAN = (def_96 AND def_140) IN
+        LET def_142: BOOLEAN = (def_93 AND def_141) IN
+        LET def_144: BOOLEAN = (def_142 AND def_143) IN
+        LET def_156: BOOLEAN = (def_144 OR def_155) IN
+        LET def_162: BOOLEAN = (def_156 OR def_161) IN
+        LET def_85: BOOLEAN = (def_69 AND def_72) IN
+        LET def_74: BOOLEAN = (in_my_cosf_0_res = in_my_cosf_0_res') IN
+        LET def_75: BOOLEAN = (def_73 AND def_74) IN
+        LET def_77: BOOLEAN = (def_75 AND def_76) IN
+        LET def_79: BOOLEAN = (def_77 AND def_78) IN
+        LET def_81: BOOLEAN = (def_79 AND def_80) IN
+        LET def_83: BOOLEAN = (def_81 AND def_82) IN
+        LET def_84: BOOLEAN = (def_63 AND def_83) IN
+        LET def_86: BOOLEAN = (def_84 AND def_85) IN
+        LET def_66: BOOLEAN = (def_47 AND def_51) IN
+        LET def_61: BOOLEAN = (in_my_cosf_0_pow' = 1) IN
+        LET def_59: BOOLEAN = (in_my_cosf_0_sign' = 1) IN
+        LET def_57: BOOLEAN = (in_my_cosf_0_fact' = 1) IN
+        LET def_55: BOOLEAN = (in_my_cosf_0_n' = 0) IN
+        LET def_53: BOOLEAN = (in_my_cosf_0_res' = 0) IN
+        LET def_52: BOOLEAN = (in_my_cosf_0_x' = x) IN
+        LET def_54: BOOLEAN = (def_52 AND def_53) IN
+        LET def_56: BOOLEAN = (def_54 AND def_55) IN
+        LET def_58: BOOLEAN = (def_56 AND def_57) IN
+        LET def_60: BOOLEAN = (def_58 AND def_59) IN
+        LET def_62: BOOLEAN = (def_60 AND def_61) IN
+        LET def_64: BOOLEAN = (def_62 AND def_63) IN
+        LET def_65: BOOLEAN = (def_40 AND def_64) IN
+        LET def_67: BOOLEAN = (def_65 AND def_66) IN
+        LET def_87: BOOLEAN = (def_67 OR def_86) IN
+        LET def_163: BOOLEAN = (def_87 OR def_162) IN
+        def_163 -->
+        pc_2' IN { v_pc_2: BOOLEAN | TRUE };
+        pc_1' IN { v_pc_1: BOOLEAN | TRUE };
+        pc_0' IN { v_pc_0: BOOLEAN | TRUE };
+        in_my_cosf_0_x' IN { v_in_my_cosf_0_x: REAL | TRUE };
+        in_my_cosf_0_n' IN { v_in_my_cosf_0_n: REAL | TRUE };
+        in_my_cosf_0_fact' IN { v_in_my_cosf_0_fact: REAL | TRUE };
+        in_my_cosf_0_sign' IN { v_in_my_cosf_0_sign: REAL | TRUE };
+        in_my_cosf_0_pow' IN { v_in_my_cosf_0_pow: REAL | TRUE };
+        x' IN { v_x: REAL | TRUE };
+        in_my_cosf_0_res' IN { v_in_my_cosf_0_res: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_164);
+END

@@ -1,0 +1,42 @@
+% Auto-generated from cfa_test0006.vmt
+% Source suite: benchmarks/vmt/nra/cfa_test0006.vmt
+cfa_test0006: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  OUTPUT
+    x: REAL,
+    y: REAL,
+    z: REAL,
+    s: REAL
+
+  LOCAL
+    init: BOOLEAN,
+    prop: BOOLEAN
+
+  DEFINITION
+    init = ((s = 0) AND (x = 12) AND (y = 15.45) AND (z = (x + 12.654)));
+    prop = (NOT (s = 11));
+
+  INITIALIZATION
+  [
+      init -->
+        x IN { v_x: REAL | TRUE };
+        y IN { v_y: REAL | TRUE };
+        z IN { v_z: REAL | TRUE };
+        s IN { v_s: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET trans: BOOLEAN = (((-(1000000)) <= x) AND (x <= 1000000) AND ((-(1000000)) <= y) AND (y <= 1000000) AND ((-(1000000)) <= z) AND (z <= 1000000) AND ((-(1000000)) <= x') AND (x' <= 1000000) AND ((-(1000000)) <= y') AND (y' <= 1000000) AND ((-(1000000)) <= z') AND (z' <= 1000000) AND (((s = 0) AND (z > 100) AND (s' = 1) AND (y' = (x + z)) AND (x' = x) AND (z' = z)) OR ((s = 1) AND (y < 32) AND (s' = 2) AND (z' = (23.45 * (x * y))) AND (x' = (x + 1)) AND (y' = y)) OR ((s = 2) AND (x = 0) AND (s' = 3) AND (y' = (x + z + (-(50)))) AND (x' = x) AND (z' = z)) OR ((s = 2) AND (NOT (x = 0)) AND (s' = 4) AND (y' = 5) AND (x' = x) AND (z' = z)) OR ((s = 4) AND (y > 1) AND (s' = 5) AND (z' = (2 * y)) AND (y' = y) AND (x' = x)) OR ((s = 4) AND (y <= 1) AND (s' = 6) AND (x' = 1234.3) AND (y' = y) AND (z' = z)) OR ((s = 3) AND (s' = 10) AND (x' = x) AND (y' = y) AND (z' = z)) OR ((s = 5) AND (s' = 10) AND (x' = x) AND (y' = y) AND (z' = z)) OR ((s = 6) AND (s' = 10) AND (x' = x) AND (y' = y) AND (z' = z)) OR ((s = 1) AND (y >= 32) AND (s' = 7) AND (z' = (x * y)) AND (y' = y) AND (x' = x)) OR ((s = 0) AND (z <= 100) AND (s' = 8) AND (z' = (z + 43.3)) AND (y' = y) AND (x' = x)) OR ((s = 7) AND (s' = 9) AND (x' = x) AND (y' = y) AND (z' = z)) OR ((s = 8) AND (s' = 9) AND (x' = x) AND (y' = y) AND (z' = z)) OR ((s = 9) AND (s' = 10) AND (x' = (z * (z * z))) AND (y' = y) AND (z' = z)) OR ((s = 10) AND (z = 0) AND (s' = 11) AND (z' = 5) AND (x' = x) AND (y' = y)) OR ((s = 10) AND (NOT (z = 0)) AND (s' = 12) AND (z' = (-(5))) AND (x' = x) AND (y' = y)))) IN
+        trans -->
+        x' IN { v_x: REAL | TRUE };
+        y' IN { v_y: REAL | TRUE };
+        z' IN { v_z: REAL | TRUE };
+        s' IN { v_s: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(prop);
+END

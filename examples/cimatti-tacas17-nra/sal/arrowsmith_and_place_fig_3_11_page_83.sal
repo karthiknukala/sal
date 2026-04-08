@@ -1,0 +1,67 @@
+% Auto-generated from arrowsmith_and_place_fig_3_11_page_83.vmt
+% Source suite: benchmarks/vmt/nra/arrowsmith_and_place_fig_3_11_page_83.vmt
+arrowsmith_and_place_fig_3_11_page_83: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    instance_jump: BOOLEAN
+
+  OUTPUT
+    instance_x: REAL,
+    instance_y: REAL
+
+  LOCAL
+    def_16: BOOLEAN,
+    def_14: BOOLEAN,
+    def_17: BOOLEAN,
+    def_20: REAL,
+    def_22: REAL,
+    def_42: REAL,
+    def_23: REAL,
+    def_24: REAL,
+    def_33: REAL,
+    def_18: BOOLEAN,
+    def_48: BOOLEAN
+
+  DEFINITION
+    def_16 = (instance_x = 1);
+    def_14 = (instance_y = (1 / 8));
+    def_17 = (def_14 AND def_16);
+    def_20 = (instance_y * instance_y);
+    def_22 = ((-(1)) * def_20);
+    def_42 = (3 * instance_x);
+    def_23 = (instance_x + def_22);
+    def_24 = (instance_y * def_23);
+    def_33 = (2 * instance_y);
+    def_18 = (NOT instance_jump);
+    def_48 = (0 <= instance_x);
+
+  INITIALIZATION
+  [
+      def_17 -->
+        instance_x IN { v_instance_x: REAL | TRUE };
+        instance_y IN { v_instance_y: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_39: REAL = ((-(2)) * instance_x') IN
+        LET def_40: REAL = (def_39 + def_22) IN
+        LET def_43: REAL = (def_42 + def_40) IN
+        LET def_44: BOOLEAN = (def_43 = 0) IN
+        LET def_30: REAL = ((-(2)) * instance_y') IN
+        LET def_31: REAL = (def_30 + def_24) IN
+        LET def_34: REAL = (def_33 + def_31) IN
+        LET def_35: BOOLEAN = (def_34 = 0) IN
+        LET def_45: BOOLEAN = (def_35 AND def_44) IN
+        LET def_46: BOOLEAN = (instance_jump OR def_45) IN
+        LET def_47: BOOLEAN = (def_18 AND def_46) IN
+        def_47 -->
+        instance_x' IN { v_instance_x: REAL | TRUE };
+        instance_y' IN { v_instance_y: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_48);
+END

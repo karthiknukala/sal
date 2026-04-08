@@ -1,0 +1,32 @@
+------------------------------------------------------
+-- This case is borrowed from isat3 repository      --
+-- original name: bmc_non_linear_frontier_03.hys    --
+-- where the specification is NOT REACHABLE         --
+-- Problem is polynomial						    --
+------------------------------------------------------
+
+DECL
+
+float [0,60] x;
+float [0,3600] y;
+float [0,10000000] z;
+
+NODES
+S0, S1, S2;
+
+INIT
+--y >= x^2;
+edge(true, {y >= x^2}, {true}, S0);
+
+FLOWS
+edge(S0, {((y >= x^2) impl z = 1) &&
+	      ((y < x^2 and y >= (x-5)^2 ) impl z = 4) &&
+	      ((y < (x-5)^2 and y >= (x-10)^2 ) impl z = 0) &&
+	      ((y < (x-10)^2 and x <= 60 ) impl z = 5)},
+	     {x' = x + z, y' = y}, S1');
+
+edge(S1, {y < 70*x-2100} ,{},S2');
+edge(S1, {y >= 70*x-2100},{},S0');
+
+SPECIFICATION
+S2;

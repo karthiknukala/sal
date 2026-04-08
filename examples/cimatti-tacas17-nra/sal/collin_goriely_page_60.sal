@@ -1,0 +1,81 @@
+% Auto-generated from collin_goriely_page_60.vmt
+% Source suite: benchmarks/vmt/nra/collin_goriely_page_60.vmt
+collin_goriely_page_60: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    instance_jump: BOOLEAN
+
+  OUTPUT
+    instance_x: REAL,
+    instance_y: REAL
+
+  LOCAL
+    def_19: REAL,
+    def_20: REAL,
+    def_16: REAL,
+    def_17: REAL,
+    def_21: REAL,
+    def_22: BOOLEAN,
+    def_42: REAL,
+    def_25: REAL,
+    def_41: REAL,
+    def_43: REAL,
+    def_38: REAL,
+    def_40: REAL,
+    def_44: REAL,
+    def_27: REAL,
+    def_26: REAL,
+    def_28: REAL,
+    def_23: BOOLEAN,
+    def_55: BOOLEAN
+
+  DEFINITION
+    def_19 = (instance_x + 2);
+    def_20 = (def_19 * def_19);
+    def_16 = (instance_y + (-(1)));
+    def_17 = (def_16 * def_16);
+    def_21 = (def_17 + def_20);
+    def_22 = (def_21 <= (1 / 4));
+    def_42 = (instance_x * instance_x);
+    def_25 = (2 * instance_x);
+    def_41 = (instance_y * def_25);
+    def_43 = (def_41 + def_42);
+    def_38 = (instance_y * instance_y);
+    def_40 = (3 * def_38);
+    def_44 = (def_40 + def_43);
+    def_27 = (2 * instance_y);
+    def_26 = (instance_y + def_25);
+    def_28 = (def_26 * def_27);
+    def_23 = (NOT instance_jump);
+    def_55 = (instance_x <= 0);
+
+  INITIALIZATION
+  [
+      def_22 -->
+        instance_x IN { v_instance_x: REAL | TRUE };
+        instance_y IN { v_instance_y: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_48: REAL = ((-(2)) * instance_x') IN
+        LET def_49: REAL = (def_48 + def_44) IN
+        LET def_50: REAL = (def_25 + def_49) IN
+        LET def_51: BOOLEAN = (def_50 = 0) IN
+        LET def_34: REAL = ((-(2)) * instance_y') IN
+        LET def_35: REAL = (def_34 + def_28) IN
+        LET def_36: REAL = (def_27 + def_35) IN
+        LET def_37: BOOLEAN = (def_36 = 0) IN
+        LET def_52: BOOLEAN = (def_37 AND def_51) IN
+        LET def_53: BOOLEAN = (instance_jump OR def_52) IN
+        LET def_54: BOOLEAN = (def_23 AND def_53) IN
+        def_54 -->
+        instance_x' IN { v_instance_x: REAL | TRUE };
+        instance_y' IN { v_instance_y: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_55);
+END

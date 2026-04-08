@@ -1,0 +1,53 @@
+% Auto-generated from cfa_test0018.vmt
+% Source suite: benchmarks/vmt/nra/cfa_test0018.vmt
+cfa_test0018: CONTEXT =
+BEGIN
+  square(v: REAL): REAL = (v * v);
+
+  system: MODULE =
+  BEGIN
+  OUTPUT
+    a: REAL,
+    b: REAL,
+    x: REAL,
+    y: REAL,
+    s: REAL
+
+  LOCAL
+    r1: REAL,
+    r1_jitter: REAL,
+    r2: REAL,
+    init: BOOLEAN,
+    prop: BOOLEAN
+
+  DEFINITION
+    r1 = 100;
+    r1_jitter = 8000;
+    r2 = 10000;
+    init = ((s = 0) AND (a = 1) AND ((a * b) = r1_jitter) AND ((square((x + 0.5)) + square((y + 0.5))) <= square((r1 + b))) AND ((-(1000000)) <= x) AND (x <= 1000000) AND ((-(1000000)) <= y) AND (y <= 1000000));
+    prop = (NOT (s = 5));
+
+  INITIALIZATION
+  [
+      init -->
+        a IN { v_a: REAL | TRUE };
+        b IN { v_b: REAL | TRUE };
+        x IN { v_x: REAL | TRUE };
+        y IN { v_y: REAL | TRUE };
+        s IN { v_s: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET trans: BOOLEAN = (((-(1000000)) <= a) AND (a <= 1000000) AND ((-(1000000)) <= b) AND (b <= 1000000) AND ((-(1000000)) <= x) AND (x <= 1000000) AND ((-(1000000)) <= y) AND (y <= 1000000) AND ((-(1000000)) <= a') AND (a' <= 1000000) AND ((-(1000000)) <= b') AND (b' <= 1000000) AND ((-(1000000)) <= x') AND (x' <= 1000000) AND ((-(1000000)) <= y') AND (y' <= 1000000) AND (((s = 0) AND ((square((x + 0.5)) + square((y + 0.5))) <= square((r1 + b))) AND (s' = 1) AND (a' = (a + 1)) AND (b' = b) AND (x' = x) AND (y' = y)) OR ((s = 1) AND ((square((x + 0.5)) + square((y + 0.5))) <= square((r1 + b))) AND (s' = 2) AND (a' = a) AND (b' = b) AND (x' = x) AND (y' = y)) OR ((s = 2) AND ((square((x + 0.5)) + square((y + 0.5))) <= square((r1 + b))) AND (s' = 3) AND (a' = a) AND (b' = b) AND (x' = x) AND (y' = y)) OR ((s = 3) AND (((a * b) = r1_jitter) AND ((square((x + 0.5)) + square((y + 0.5))) <= square((r1 + b)))) AND (s' = 4) AND (a' = a) AND (b' = b) AND (x' = x) AND (y' = y)) OR ((s = 4) AND ((square((x + 1)) + square((y + 1))) >= square(r2)) AND (s' = 5) AND (a' = a) AND (b' = b) AND (x' = x) AND (y' = y)) OR ((s = 4) AND ((square((x + 1)) + square((y + 1))) < square(r2)) AND (s' = 0) AND (a' = a) AND (b' = b) AND (x' = x) AND (y' = y)))) IN
+        trans -->
+        a' IN { v_a: REAL | TRUE };
+        b' IN { v_b: REAL | TRUE };
+        x' IN { v_x: REAL | TRUE };
+        y' IN { v_y: REAL | TRUE };
+        s' IN { v_s: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(prop);
+END
