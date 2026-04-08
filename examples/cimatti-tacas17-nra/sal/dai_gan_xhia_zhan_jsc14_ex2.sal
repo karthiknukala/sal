@@ -1,0 +1,75 @@
+% Auto-generated from dai_gan_xhia_zhan_jsc14_ex2.vmt
+% Source suite: benchmarks/vmt/nra/dai_gan_xhia_zhan_jsc14_ex2.vmt
+dai_gan_xhia_zhan_jsc14_ex2: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    instance_jump: BOOLEAN
+
+  OUTPUT
+    instance_x: REAL,
+    instance_y: REAL
+
+  LOCAL
+    def_17: REAL,
+    def_15: REAL,
+    def_16: REAL,
+    def_18: REAL,
+    def_19: BOOLEAN,
+    def_34: REAL,
+    def_36: REAL,
+    def_44: REAL,
+    def_22: REAL,
+    def_20: BOOLEAN,
+    def_54: REAL,
+    def_55: REAL,
+    def_56: REAL,
+    def_57: BOOLEAN,
+    def_58: BOOLEAN
+
+  DEFINITION
+    def_17 = (instance_x * instance_x);
+    def_15 = (instance_y + 2);
+    def_16 = (def_15 * def_15);
+    def_18 = (def_16 + def_17);
+    def_19 = (def_18 <= 1);
+    def_34 = (instance_x * instance_y);
+    def_36 = ((-(1)) * def_34);
+    def_44 = (4 * instance_x);
+    def_22 = (2 * def_17);
+    def_20 = (NOT instance_jump);
+    def_54 = (instance_y + (-(1)));
+    def_55 = (def_54 * def_54);
+    def_56 = (def_17 + def_55);
+    def_57 = (def_56 <= (9 / 100));
+    def_58 = (NOT def_57);
+
+  INITIALIZATION
+  [
+      def_19 -->
+        instance_x IN { v_instance_x: REAL | TRUE };
+        instance_y IN { v_instance_y: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_41: REAL = ((-(2)) * instance_x') IN
+        LET def_42: REAL = (def_41 + def_36) IN
+        LET def_45: REAL = (def_44 + def_42) IN
+        LET def_46: BOOLEAN = (def_45 = 0) IN
+        LET def_30: REAL = ((-(2)) * instance_y') IN
+        LET def_31: REAL = (def_30 + def_22) IN
+        LET def_32: REAL = (instance_y + def_31) IN
+        LET def_33: BOOLEAN = (def_32 = 0) IN
+        LET def_47: BOOLEAN = (def_33 AND def_46) IN
+        LET def_48: BOOLEAN = (instance_jump OR def_47) IN
+        LET def_49: BOOLEAN = (def_20 AND def_48) IN
+        def_49 -->
+        instance_x' IN { v_instance_x: REAL | TRUE };
+        instance_y' IN { v_instance_y: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_58);
+END

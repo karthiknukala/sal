@@ -1,0 +1,70 @@
+% Auto-generated from man_maccallum_goriely_page_57.vmt
+% Source suite: benchmarks/vmt/nra/man_maccallum_goriely_page_57.vmt
+man_maccallum_goriely_page_57: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    instance_jump: BOOLEAN
+
+  OUTPUT
+    instance_x: REAL,
+    instance_y: REAL
+
+  LOCAL
+    def_15: REAL,
+    def_14: REAL,
+    def_16: REAL,
+    def_17: BOOLEAN,
+    def_36: REAL,
+    def_37: REAL,
+    def_26: REAL,
+    def_21: REAL,
+    def_22: REAL,
+    def_33: REAL,
+    def_18: BOOLEAN,
+    def_50: BOOLEAN
+
+  DEFINITION
+    def_15 = (instance_x * instance_x);
+    def_14 = (instance_y * instance_y);
+    def_16 = (def_14 + def_15);
+    def_17 = (def_16 <= (1 / 4));
+    def_36 = (2 * def_15);
+    def_37 = (instance_y * def_36);
+    def_26 = ((-(1)) * instance_y);
+    def_21 = (2 * instance_x);
+    def_22 = (def_14 * def_21);
+    def_33 = (3 * instance_y);
+    def_18 = (NOT instance_jump);
+    def_50 = (instance_x <= 3);
+
+  INITIALIZATION
+  [
+      def_17 -->
+        instance_x IN { v_instance_x: REAL | TRUE };
+        instance_y IN { v_instance_y: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_42: REAL = ((-(2)) * instance_x') IN
+        LET def_43: REAL = (def_42 + def_37) IN
+        LET def_44: REAL = (def_26 + def_43) IN
+        LET def_45: REAL = (def_21 + def_44) IN
+        LET def_46: BOOLEAN = (def_45 = 0) IN
+        LET def_30: REAL = ((-(2)) * instance_y') IN
+        LET def_31: REAL = (def_30 + def_22) IN
+        LET def_34: REAL = (def_33 + def_31) IN
+        LET def_35: BOOLEAN = (def_34 = 0) IN
+        LET def_47: BOOLEAN = (def_35 AND def_46) IN
+        LET def_48: BOOLEAN = (instance_jump OR def_47) IN
+        LET def_49: BOOLEAN = (def_18 AND def_48) IN
+        def_49 -->
+        instance_x' IN { v_instance_x: REAL | TRUE };
+        instance_y' IN { v_instance_y: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_50);
+END

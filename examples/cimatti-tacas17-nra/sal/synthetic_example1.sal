@@ -1,0 +1,65 @@
+% Auto-generated from synthetic_example1.vmt
+% Source suite: benchmarks/vmt/nra/synthetic_example1.vmt
+synthetic_example1: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    instance_jump: BOOLEAN
+
+  OUTPUT
+    instance_x: REAL,
+    instance_y: REAL
+
+  LOCAL
+    def_15: BOOLEAN,
+    def_14: BOOLEAN,
+    def_16: BOOLEAN,
+    def_31: REAL,
+    def_19: REAL,
+    def_38: REAL,
+    def_41: REAL,
+    def_28: REAL,
+    def_17: BOOLEAN,
+    def_47: BOOLEAN
+
+  DEFINITION
+    def_15 = (instance_x = 0);
+    def_14 = (instance_y = 0);
+    def_16 = (def_14 AND def_15);
+    def_31 = (instance_y * instance_y);
+    def_19 = (instance_x * instance_x);
+    def_38 = (def_19 + def_31);
+    def_41 = (2 * instance_x);
+    def_28 = (2 * instance_y);
+    def_17 = (NOT instance_jump);
+    def_47 = (0 <= instance_y);
+
+  INITIALIZATION
+  [
+      def_16 -->
+        instance_x IN { v_instance_x: REAL | TRUE };
+        instance_y IN { v_instance_y: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_39: REAL = ((-(2)) * instance_x') IN
+        LET def_40: REAL = (def_39 + def_38) IN
+        LET def_42: REAL = (def_41 + def_40) IN
+        LET def_43: BOOLEAN = (def_42 = 1) IN
+        LET def_25: REAL = ((-(2)) * instance_y') IN
+        LET def_26: REAL = (def_25 + def_19) IN
+        LET def_29: REAL = (def_28 + def_26) IN
+        LET def_30: BOOLEAN = (def_29 = 0) IN
+        LET def_44: BOOLEAN = (def_30 AND def_43) IN
+        LET def_45: BOOLEAN = (instance_jump OR def_44) IN
+        LET def_46: BOOLEAN = (def_17 AND def_45) IN
+        def_46 -->
+        instance_x' IN { v_instance_x: REAL | TRUE };
+        instance_y' IN { v_instance_y: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_47);
+END

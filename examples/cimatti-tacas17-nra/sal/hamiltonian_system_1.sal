@@ -1,0 +1,70 @@
+% Auto-generated from hamiltonian_system_1.vmt
+% Source suite: benchmarks/vmt/nra/hamiltonian_system_1.vmt
+hamiltonian_system_1: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    instance_jump: BOOLEAN
+
+  OUTPUT
+    instance_x: REAL,
+    instance_y: REAL
+
+  LOCAL
+    def_16: REAL,
+    def_17: REAL,
+    def_14: REAL,
+    def_18: REAL,
+    def_19: BOOLEAN,
+    def_32: REAL,
+    def_22: REAL,
+    def_24: REAL,
+    def_37: REAL,
+    def_39: REAL,
+    def_20: BOOLEAN,
+    def_52: BOOLEAN
+
+  DEFINITION
+    def_16 = (instance_x + (3333333333333333 / 5000000000000000));
+    def_17 = (def_16 * def_16);
+    def_14 = (instance_y * instance_y);
+    def_18 = (def_14 + def_17);
+    def_19 = (def_18 <= (5208333333333333 / 125000000000000000));
+    def_32 = ((-(1)) * instance_y);
+    def_22 = (instance_x * instance_x);
+    def_24 = (3 * def_22);
+    def_37 = ((-(2)) * instance_y);
+    def_39 = (2 * instance_x);
+    def_20 = (NOT instance_jump);
+    def_52 = (instance_x <= 0);
+
+  INITIALIZATION
+  [
+      def_19 -->
+        instance_x IN { v_instance_x: REAL | TRUE };
+        instance_y IN { v_instance_y: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_45: REAL = ((-(1)) * instance_x') IN
+        LET def_46: REAL = (def_32 + def_45) IN
+        LET def_47: REAL = (instance_x + def_46) IN
+        LET def_48: BOOLEAN = (def_47 = 0) IN
+        LET def_35: REAL = (2 * instance_y') IN
+        LET def_36: REAL = (def_35 + def_24) IN
+        LET def_38: REAL = (def_37 + def_36) IN
+        LET def_40: REAL = (def_39 + def_38) IN
+        LET def_41: BOOLEAN = (def_40 = 0) IN
+        LET def_49: BOOLEAN = (def_41 AND def_48) IN
+        LET def_50: BOOLEAN = (instance_jump OR def_49) IN
+        LET def_51: BOOLEAN = (def_20 AND def_50) IN
+        def_51 -->
+        instance_x' IN { v_instance_x: REAL | TRUE };
+        instance_y' IN { v_instance_y: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_52);
+END

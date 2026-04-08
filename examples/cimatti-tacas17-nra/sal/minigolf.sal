@@ -1,0 +1,93 @@
+% Auto-generated from minigolf.vmt
+% Source suite: benchmarks/vmt/nra/minigolf.vmt
+minigolf: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  OUTPUT
+    x: REAL,
+    y: REAL,
+    vx: REAL,
+    vy: REAL,
+    dt: REAL,
+    s1: BOOLEAN,
+    s2: BOOLEAN,
+    s3: BOOLEAN,
+    jump: BOOLEAN
+
+  LOCAL
+    x0: REAL,
+    x1: REAL,
+    x2: REAL,
+    x3: REAL,
+    y0: REAL,
+    y1: REAL,
+    y2: REAL,
+    y3: REAL,
+    xl: REAL,
+    yd: REAL,
+    xr: REAL,
+    yu: REAL,
+    xh: REAL,
+    yh: REAL,
+    flow_min: REAL,
+    fg: REAL,
+    fl: REAL,
+    range: BOOLEAN,
+    init: BOOLEAN,
+    prop: BOOLEAN
+
+  DEFINITION
+    x0 = 0.0;
+    x1 = 1.0;
+    x2 = 3.0;
+    x3 = 4.0;
+    y0 = 0.0;
+    y1 = 4.0;
+    y2 = 5.0;
+    y3 = 9.0;
+    xl = 1.5;
+    yd = 0.75;
+    xr = 2.5;
+    yu = 1.25;
+    xh = 2.0;
+    yh = 8.0;
+    flow_min = 0.01;
+    fg = (-(1.8));
+    fl = 0.6;
+    range = ((x0 <= x) AND (x <= x3) AND (y0 <= y) AND (y <= y3) AND ((-(20)) <= vx) AND (vx <= 20) AND ((-(20)) <= vy) AND (vy <= 20) AND (0.0 <= dt) AND (dt <= 10.0));
+    init = ((xl <= x) AND (x <= xr) AND (yd <= y) AND (y <= yu) AND (NOT jump) AND (NOT s1) AND (NOT s2) AND s3);
+    prop = (NOT ((x = xh) AND (y = yh)));
+
+  INITIALIZATION
+  [
+      init -->
+        x IN { v_x: REAL | TRUE };
+        y IN { v_y: REAL | TRUE };
+        vx IN { v_vx: REAL | TRUE };
+        vy IN { v_vy: REAL | TRUE };
+        dt IN { v_dt: REAL | TRUE };
+        s1 IN { v_s1: BOOLEAN | TRUE };
+        s2 IN { v_s2: BOOLEAN | TRUE };
+        s3 IN { v_s3: BOOLEAN | TRUE };
+        jump IN { v_jump: BOOLEAN | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET trans: BOOLEAN = ((s1' OR s2' OR s3') AND (s1' => ((NOT s2') AND (NOT s3'))) AND (s2' => ((NOT s1') AND (NOT s3'))) AND (s3' => ((NOT s1') AND (NOT s2'))) AND (NOT (vx = 0)) AND (NOT (vy = 0)) AND (NOT (jump = jump')) AND (jump => (dt = 0)) AND ((NOT jump) => (dt > flow_min)) AND ((NOT jump) => ((x' = (x + (dt * vx))) AND (y' = (y + (dt * vy) + (0.5 * (fg * (dt * dt))))) AND (vx' = vx) AND (vy' = (vy + (dt * fg))))) AND ((NOT jump) => ((x0 <= x') AND (x' <= x3))) AND (((NOT jump) AND s1) => ((y2 <= y') AND (y' <= y3))) AND (((NOT jump) AND s2) => ((y1 <= y') AND (y' <= y2))) AND (((NOT jump) AND s3) => ((y0 <= y') AND (y' <= y1))) AND (NOT ((NOT jump) AND s3 AND (y' = y1) AND (vy' < 0))) AND (NOT ((NOT jump) AND s2 AND (y' = y2) AND (vy' < 0))) AND (NOT ((NOT jump) AND s1 AND (y' = y3) AND (vy' < 0))) AND (((NOT jump) AND s1) => s1') AND (((NOT jump) AND s2) => s2') AND (((NOT jump) AND s3) => s3') AND (jump => ((x' = x) AND (y' = y))) AND ((jump AND s1) => ((x = x0) OR (x = x3) OR (y = y3) OR (y = y2))) AND ((jump AND s2) => ((x = x0) OR (x = x3) OR (y = y2) OR (y = y1))) AND ((jump AND s3) => ((x = x0) OR (x = x3) OR (y = y1) OR (y = y0))) AND ((jump AND s1) => (s1' OR s2')) AND ((jump AND s3) => (s3' OR s2')) AND ((jump AND (x = x0) AND (vx < 0)) => (vx' = ((-(fl)) * vx))) AND ((jump AND (x = x3) AND (vx > 0)) => (vx' = ((-(fl)) * vx))) AND ((jump AND (x0 < x) AND (x < x3)) => (vx' = vx)) AND ((jump AND s1 AND (y = y2) AND (vy > 0)) => FALSE) AND ((jump AND s2 AND (y = y1) AND (vy > 0)) => FALSE) AND ((jump AND s3 AND (y = y0) AND (vy > 0)) => FALSE) AND ((jump AND s1 AND (y = y3) AND (vy < 0)) => FALSE) AND ((jump AND s2 AND (y = y2) AND (vy < 0)) => FALSE) AND ((jump AND s3 AND (y = y1) AND (vy < 0)) => FALSE) AND ((jump AND s1 AND (y = y3) AND (vy > 0)) => (s1' AND (vy' = ((-(fl)) * vy)))) AND ((jump AND s1 AND (y = y2) AND (vy < 0) AND (x <= x2)) => (s1' AND (vy' = ((-(fl)) * vy)))) AND ((jump AND s1 AND (y = y2) AND (vy < 0) AND (x > x2)) => (s2' AND (vy' = vy))) AND ((jump AND s1 AND (y2 < y) AND (y < y3)) => (s1' AND (vy' = vy))) AND ((jump AND s2 AND (y = y2) AND (vy > 0) AND (x > x2)) => (s1' AND (vy' = vy))) AND ((jump AND s2 AND (y = y2) AND (vy > 0) AND (x <= x2)) => (s2' AND (vy' = ((-(fl)) * vy)))) AND ((jump AND s2 AND (y = y1) AND (vy < 0) AND (x >= x1)) => (s2' AND (vy' = ((-(fl)) * vy)))) AND ((jump AND s2 AND (y = y1) AND (vy < 0) AND (x < x1)) => (s3' AND (vy' = vy))) AND ((jump AND s2 AND (y1 < y) AND (y < y2)) => (s2' AND (vy' = vy))) AND ((jump AND s3 AND (y = y1) AND (vy > 0) AND (x < x1)) => (s2' AND (vy' = vy))) AND ((jump AND s3 AND (y = y1) AND (vy > 0) AND (x >= x1)) => (s3' AND (vy' = ((-(fl)) * vy)))) AND ((jump AND s3 AND (y = y0) AND (vy < 0)) => (s3' AND (vy' = ((-(fl)) * vy)))) AND ((jump AND s3 AND (y0 < y) AND (y < y1)) => (s3' AND (vy' = vy)))) IN
+        trans -->
+        x' IN { v_x: REAL | TRUE };
+        y' IN { v_y: REAL | TRUE };
+        vx' IN { v_vx: REAL | TRUE };
+        vy' IN { v_vy: REAL | TRUE };
+        dt' IN { v_dt: REAL | TRUE };
+        s1' IN { v_s1: BOOLEAN | TRUE };
+        s2' IN { v_s2: BOOLEAN | TRUE };
+        s3' IN { v_s3: BOOLEAN | TRUE };
+        jump' IN { v_jump: BOOLEAN | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(prop);
+END

@@ -1,0 +1,42 @@
+% Auto-generated from testdiv-manual.vmt
+% Source suite: benchmarks/vmt/nra/testdiv-manual.vmt
+testdiv_manual: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    q: REAL
+
+  OUTPUT
+    a: REAL,
+    b: REAL,
+    loop: BOOLEAN
+
+  LOCAL
+    init: BOOLEAN,
+    prop: BOOLEAN
+
+  DEFINITION
+    init = ((a > 0) AND (b >= a) AND (b >= 1) AND (NOT loop));
+    prop = (loop => (a <= 1));
+
+  INITIALIZATION
+  [
+      init -->
+        a IN { v_a: REAL | TRUE };
+        b IN { v_b: REAL | TRUE };
+        loop IN { v_loop: BOOLEAN | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET trans: BOOLEAN = (loop' AND (a' = q) AND (b' = b) AND ((NOT (b = 0)) => ((b * q) = a))) IN
+        trans -->
+        a' IN { v_a: REAL | TRUE };
+        b' IN { v_b: REAL | TRUE };
+        loop' IN { v_loop: BOOLEAN | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(prop);
+END

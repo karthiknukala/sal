@@ -1,0 +1,69 @@
+(declare-const x Real)
+(declare-const y Real)
+(declare-const offset Real)
+(declare-const S Real)
+
+(declare-const x.next Real)
+(declare-const y.next Real)
+(declare-const offset.next Real)
+(declare-const S.next Real)
+
+(define-fun sv.x () Real (! x :next x.next))
+(define-fun sv.y () Real (! y :next y.next))
+(define-fun sv.offset () Real (! offset :next offset.next))
+(define-fun sv.S () Real (! S :next S.next))
+
+(define-fun range () Bool
+  (and (<= 0 offset) (<= offset 100000)
+       (<= 0 y) (<= y 100000)
+       (<= 0 x) (<= x 100)
+       ))
+(define-fun range.next () Bool
+  (and (<= 0 offset.next) (<= offset.next 100000)
+       (<= 0 y.next) (<= y.next 100000)
+       (<= 0 x.next) (<= x.next 100)
+       ))
+(define-fun fourth ((v Real)) Real (* (* v v) (* v v)))
+
+(define-fun init () Bool
+  (! (and
+      (= S 0)
+      (>= y (fourth x))
+      range)
+     :init true))
+
+(define-fun trans () Bool
+  (!
+   (and
+    range range.next
+    (or
+      (and (= S 0)
+           (and
+            (=> (<= x 4) (= offset 1))
+            (=> (and (> x 4) (<= x 17)) (= offset (fourth (- x 17))))
+            (=> (and (> x 17) (<= x 20.1)) (= offset 0))
+            (=> (and (> x 20.1) (<= x 100)) (= offset 5)))
+           (= S.next 1)
+           (= x.next (+ x offset))
+           (= y.next y)
+           (= offset.next offset)
+           )
+      (and (= S 1)
+           (> y (fourth (- x 40)))
+           (= S.next 2)
+           (= x.next x)
+           (= y.next y)
+           (= offset.next offset)
+           )
+      (and (= S 1)
+           (<= y (fourth (- x 40)))
+           (= S.next 0)
+           (= x.next x)
+           (= y.next y)
+           (= offset.next offset)
+           )
+      )
+    )
+   :trans true))
+
+(define-fun prop () Bool (! (not (= S 2)) :invar-property 0))

@@ -1,0 +1,229 @@
+;; from HySAT
+
+;; Lane.
+(define-fun x0 () Real 0.0)
+(define-fun x1 () Real 1.0)
+(define-fun x2 () Real 3.0)
+(define-fun x3 () Real 4.0)
+(define-fun y0 () Real 0.0)
+(define-fun y1 () Real 4.0)
+(define-fun y2 () Real 5.0)
+(define-fun y3 () Real 9.0)
+
+;; Teeing-off area.
+(define-fun xl () Real 1.5)
+(define-fun yd () Real 0.75)
+(define-fun xr () Real 2.5)
+(define-fun yu () Real 1.25)
+
+;; Position of hole.
+(define-fun xh () Real 2.0)
+(define-fun yh () Real 8.0)
+
+;; Position of ball.
+(declare-const x Real)
+(declare-const x.next Real)
+(define-fun sv.x () Real (! x :next x.next))
+
+(declare-const y Real)
+(declare-const y.next Real)
+(define-fun sv.y () Real (! y :next y.next))
+
+;; Horizontal component of velocity.
+;; Negative values: left. Positive values: right.
+(declare-const vx Real)
+(declare-const vx.next Real)
+(define-fun sv.vx () Real (! vx :next vx.next))
+
+;; Vertical component of velocity.
+;; Negative values: down. Positive values: up.
+(declare-const vy Real)
+(declare-const vy.next Real)
+(define-fun sv.vy () Real (! vy :next vy.next))
+
+;; Duration of a flow.
+(declare-const dt Real)
+(declare-const dt.next Real)
+(define-fun sv.dt () Real (! dt :next dt.next))
+
+;; Locations.
+(declare-const s1 Bool)
+(declare-const s1.next Bool)
+(define-fun sv.s1 () Bool (! s1 :next s1.next))
+
+(declare-const s2 Bool)
+(declare-const s2.next Bool)
+(define-fun sv.s2 () Bool (! s2 :next s2.next))
+
+(declare-const s3 Bool)
+(declare-const s3.next Bool)
+(define-fun sv.s3 () Bool (! s3 :next s3.next))
+
+;; To jump or not to jump?
+(declare-const jump Bool)
+(declare-const jump.next Bool)
+(define-fun sv.jump () Bool (! jump :next jump.next))
+
+;; Minium duration of a flow. To exclude zeno trajectories.
+(define-fun flow_min () Real 0.01)
+
+;; By setting fg to a small negative value it is possible to slightly
+;; tilt the lane such that the hole is on a higher level than the
+;; teeing-off field.
+(define-fun fg () Real (- 1.8))
+
+;; If fl equals 1.0, the ball loses no energy when colliding with
+;; a boundary or an obstacle. Setting it to 0.9, e.g., will cause a
+;; loss of 10 per cent in the respective component of the velocity vector.
+(define-fun fl () Real 0.6)
+
+(define-fun range () Bool
+  (and
+   (<= x0 x) (<= x x3)
+   (<= y0 y) (<= y y3)
+   (<= (- 20) vx) (<= vx 20)
+   (<= (- 20) vy) (<= vy 20)
+   (<= 0.0 dt) (<= dt 10.0)
+   ))
+
+(define-fun range.next () Bool
+  (and
+   (<= x0 x.next) (<= x.next x3)
+   (<= y0 y.next) (<= y.next y3)
+   (<= (- 20) vx.next) (<= vx.next 20)
+   (<= (- 20) vy.next) (<= vy.next 20)
+   (<= 0.0 dt.next) (<= dt.next 10.0)
+   ))
+
+(define-fun init () Bool
+  (!
+   (and ;;range
+        ;; Ball is within the teeing-off area.
+        (<= xl x) (<= x xr)
+        (<= yd y) (<= y yu)
+
+        ;; Motion starts with a flow in location s3.
+        (not jump)
+        (not s1) (not s2) s3
+        )
+   :init true)
+  )
+
+
+(define-fun trans () Bool
+  (!
+   (and ;;range
+        ;;range.next
+        (or s1.next s2.next s3.next)
+        (=> s1.next (and (not s2.next) (not s3.next)))
+        (=> s2.next (and (not s1.next) (not s3.next)))
+        (=> s3.next (and (not s1.next) (not s2.next)))
+
+        ;; The components of the velocity vector are non-zero throughout.
+        (not (= vx 0)) (not (= vy 0))
+
+        ;; Jumps and flows alternate.
+        (not (= jump jump.next))
+        
+        ;; Jumps don't consume time. Flows do.
+        (=> jump (= dt 0))
+        (=> (not jump) (> dt flow_min))
+
+        ;; Evolution of continuous variables during a flow.
+        (=> (not jump)
+            (and
+             (= x.next (+ x (* dt vx)))
+             (= y.next (+ y (* dt vy) (* 0.5 (* fg (* dt dt)))))
+             (= vx.next vx)
+             (= vy.next (+ vy (* dt fg)))))
+        
+        ;; Flows have to preserve the location invariants.
+        (=> (not jump)
+            (and (<= x0 x.next) (<= x.next x3)))
+        
+        (=> (and (not jump) s1)
+            (and (<= y2 y.next) (<= y.next y3)))
+        
+        (=> (and (not jump) s2)
+            (and (<= y1 y.next) (<= y.next y2)))
+        
+        (=> (and (not jump) s3)
+            (and (<= y0 y.next) (<= y.next y1)))
+
+        ;; The transition relation only talks about start- and endpoints
+        ;; of trajectories, not about the states in-between. We have to make
+        ;; sure that a trajectory does not leave the region defined by the
+        ;; location invariants, thereafter returning to it.
+        (not (and (not jump) s3 (= y.next y1) (< vy.next 0)))
+        (not (and (not jump) s2 (= y.next y2) (< vy.next 0)))
+        (not (and (not jump) s1 (= y.next y3) (< vy.next 0)))
+
+        ;; Flows do not change the location.
+        (=> (and (not jump) s1) s1.next)
+        (=> (and (not jump) s2) s2.next)
+        (=> (and (not jump) s3) s3.next)
+
+        ;; Jumps do not change the position of the ball.
+        (=> jump (and (= x.next x) (= y.next y)))
+
+        ;; Jumps only happen on boundaries.
+        (=> (and jump s1) (or (= x x0) (= x x3) (= y y3) (= y y2)))
+        (=> (and jump s2) (or (= x x0) (= x x3) (= y y2) (= y y1)))
+        (=> (and jump s3) (or (= x x0) (= x x3) (= y y1) (= y y0)))
+ 
+        ;; We cannot jump from s1 to s3 or from s3 to s1.
+        (=> (and jump s1) (or s1.next s2.next))
+        (=> (and jump s3) (or s3.next s2.next))
+
+        ;; How do jumps modify the state?
+        ;; Horizontal component.
+        (=> (and jump (= x x0) (< vx 0)) (= vx.next (* (- fl) vx)))
+        (=> (and jump (= x x3) (> vx 0)) (= vx.next (* (- fl) vx))) 
+        (=> (and jump (< x0 x) (< x x3)) (= vx.next vx))
+
+        ;; We never hit a lower boundary while moving upward.
+        (=> (and jump s1 (= y y2) (> vy 0)) false)
+        (=> (and jump s2 (= y y1) (> vy 0)) false)
+        (=> (and jump s3 (= y y0) (> vy 0)) false)
+ 
+        ;; We never hit an upper boundary while moving downward.
+        (=> (and jump s1 (= y y3) (< vy 0)) false)
+        (=> (and jump s2 (= y y2) (< vy 0)) false)
+        (=> (and jump s3 (= y y1) (< vy 0)) false)
+
+        ;; How do jumps modify the state?
+        ;; Vertical component.
+        (=> (and jump s1 (= y y3) (> vy 0))
+            (and s1.next (= vy.next (* (- fl) vy))))
+        (=> (and jump s1 (= y y2) (< vy 0) (<= x x2))
+            (and s1.next (= vy.next (* (- fl) vy))))
+        (=> (and jump s1 (= y y2) (< vy 0) (> x x2))
+            (and s2.next (= vy.next vy)))
+        (=> (and jump s1 (< y2 y) (< y y3))
+            (and s1.next (= vy.next vy)))
+
+        (=> (and jump s2 (= y y2) (> vy 0) (> x x2))
+            (and s1.next (= vy.next vy)))
+        (=> (and jump s2 (= y y2) (> vy 0) (<= x x2))
+            (and s2.next (= vy.next (* (- fl) vy))))
+        (=> (and jump s2 (= y y1) (< vy 0) (>= x x1))
+            (and s2.next (= vy.next (* (- fl) vy))))
+        (=> (and jump s2 (= y y1) (< vy 0) (< x x1))
+            (and s3.next (= vy.next vy)))
+        (=> (and jump s2 (< y1 y) (< y y2))
+            (and s2.next (= vy.next vy)))
+
+        (=> (and jump s3 (= y y1) (> vy 0) (< x x1))
+            (and s2.next (= vy.next vy)))
+        (=> (and jump s3 (= y y1) (> vy 0) (>= x x1))
+            (and s3.next (= vy.next (* (- fl) vy))))
+        (=> (and jump s3 (= y y0) (< vy 0))
+            (and s3.next (= vy.next (* (- fl) vy))))
+        (=> (and jump s3 (< y0 y) (< y y1))
+            (and s3.next (= vy.next vy)))        
+        )
+   :trans true)
+  )
+
+
+(define-fun prop () Bool (! (not (and (= x xh) (= y yh))) :invar-property 0))

@@ -193,6 +193,39 @@ sal-inf-bmc -v 10 gasburner prop3     # Gas burner leakage
 sal-inf-bmc -v 10 pursuit safety      # Pursuit game
 ```
 
+#### Nonlinear Yices2/MCSAT Smoke Tests
+```bash
+sal-inf-bmc -s yices2 -d 2 nonlinear_square nonnegative
+sal-inf-bmc -s yices2 -d 1 nonlinear_square bad_bound
+sal-inf-bmc -s yices2 -d 2 nonlinear_product positive
+sal-inf-bmc -s yices2 -d 1 nonlinear_product bad_bound
+```
+These examples live under `examples/nonlinear/` and require a Yices2
+binary with MCSAT support configured in `.salrc`.
+
+#### TACAS'17 NRA Translation Baseline
+```bash
+./tests/run_cimatti_tacas17_nra_smoke.sh
+YICES2_MCSAT_COMMAND=/path/to/yices ./tests/run_cimatti_tacas17_nra_smoke.sh
+```
+This regenerates the SAL versions of the 114 VMT transition systems from the
+`benchmarks/vmt/nra` Zenodo suite under `examples/cimatti-tacas17-nra/`,
+syntax-checks every translated benchmark, and optionally runs two
+representative `sal-inf-bmc` examples with Yices2/MCSAT enabled.
+
+#### TACAS'17 NRA k-Induction Comparison Harness
+```bash
+python3 ./tests/run_cimatti_tacas17_nra_kind_bench.py \
+  --yices2 /path/to/yices \
+  --known-only \
+  --timeout-s 20 \
+  --max-k 32
+```
+Runs `sal-inf-bmc -i -it` across the TACAS'17 NRA suite metadata in
+`examples/cimatti-tacas17-nra/`, emits a per-benchmark TSV, and prints
+family-level summary tables that line up with the 2018 VMT(NRA) and 2021
+interpolation-paper evaluations.
+
 ---
 
 ### sal-smc - Symbolic Model Checker
@@ -845,4 +878,3 @@ export PATH=/path/to/solvers:$PATH
 *Document Version: 1.0*
 *SAL Version: 3.3*
 *Last Updated: January 2026*
-

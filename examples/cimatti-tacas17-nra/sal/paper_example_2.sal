@@ -1,0 +1,36 @@
+% Auto-generated from paper_example_2.vmt
+% Source suite: benchmarks/vmt/nra/paper_example_2.vmt
+paper_example_2: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  OUTPUT
+    x: REAL,
+    y: REAL
+
+  LOCAL
+    init: BOOLEAN,
+    prop: BOOLEAN
+
+  DEFINITION
+    init = (((-(1)) <= x) AND (x <= 1) AND ((-(1)) <= y) AND (y <= 1));
+    prop = (((x * x) + (y * y)) <= 4);
+
+  INITIALIZATION
+  [
+      init -->
+        x IN { v_x: REAL | TRUE };
+        y IN { v_y: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET trans: BOOLEAN = ((x' = x) AND (y' = y)) IN
+        trans -->
+        x' IN { v_x: REAL | TRUE };
+        y' IN { v_y: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(prop);
+END

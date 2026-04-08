@@ -1,0 +1,81 @@
+% Auto-generated from prajna_phd_thesis_2_4_1_page_31.vmt
+% Source suite: benchmarks/vmt/nra/prajna_phd_thesis_2_4_1_page_31.vmt
+prajna_phd_thesis_2_4_1_page_31: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    instance_jump: BOOLEAN
+
+  OUTPUT
+    instance_x: REAL,
+    instance_y: REAL
+
+  LOCAL
+    def_18: REAL,
+    def_19: REAL,
+    def_14: REAL,
+    def_20: REAL,
+    def_21: BOOLEAN,
+    def_43: REAL,
+    def_26: REAL,
+    def_27: REAL,
+    def_36: REAL,
+    def_41: REAL,
+    def_22: BOOLEAN,
+    def_62: REAL,
+    def_63: REAL,
+    def_60: REAL,
+    def_61: REAL,
+    def_64: REAL,
+    def_65: BOOLEAN,
+    def_66: BOOLEAN
+
+  DEFINITION
+    def_18 = (instance_x + (-((3 / 2))));
+    def_19 = (def_18 * def_18);
+    def_14 = (instance_y * instance_y);
+    def_20 = (def_14 + def_19);
+    def_21 = (def_20 <= (1 / 4));
+    def_43 = (3 * instance_x);
+    def_26 = (instance_x * instance_x);
+    def_27 = (instance_x * def_26);
+    def_36 = ((-(1)) * def_27);
+    def_41 = ((-(3)) * instance_y);
+    def_22 = (NOT instance_jump);
+    def_62 = (instance_x + 1);
+    def_63 = (def_62 * def_62);
+    def_60 = (instance_y + 1);
+    def_61 = (def_60 * def_60);
+    def_64 = (def_61 + def_63);
+    def_65 = (def_64 <= (4 / 25));
+    def_66 = (NOT def_65);
+
+  INITIALIZATION
+  [
+      def_21 -->
+        instance_x IN { v_instance_x: REAL | TRUE };
+        instance_y IN { v_instance_y: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_49: REAL = ((-(2)) * instance_x') IN
+        LET def_50: REAL = (def_43 + def_49) IN
+        LET def_51: BOOLEAN = (def_50 = 0) IN
+        LET def_38: REAL = (6 * instance_y') IN
+        LET def_39: REAL = (def_38 + def_36) IN
+        LET def_42: REAL = (def_41 + def_39) IN
+        LET def_44: REAL = (def_43 + def_42) IN
+        LET def_45: BOOLEAN = (def_44 = 0) IN
+        LET def_52: BOOLEAN = (def_45 AND def_51) IN
+        LET def_53: BOOLEAN = (instance_jump OR def_52) IN
+        LET def_54: BOOLEAN = (def_22 AND def_53) IN
+        def_54 -->
+        instance_x' IN { v_instance_x: REAL | TRUE };
+        instance_y' IN { v_instance_y: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_66);
+END

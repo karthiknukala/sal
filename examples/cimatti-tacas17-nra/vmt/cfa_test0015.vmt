@@ -1,0 +1,71 @@
+(declare-const x Real)
+(declare-const y Real)
+(declare-const z Real)
+(declare-const S Real)
+
+(declare-const x.next Real)
+(declare-const y.next Real)
+(declare-const z.next Real)
+(declare-const S.next Real)
+
+(define-fun sv.x () Real (! x :next x.next))
+(define-fun sv.y () Real (! y :next y.next))
+(define-fun sv.z () Real (! z :next z.next))
+(define-fun sv.S () Real (! S :next S.next))
+
+(define-fun range () Bool
+  (and (<= 0 z) (<= z 10000000)
+       (<= 0 y) (<= y 3600)
+       (<= 0 x) (<= x 60)
+       ))
+(define-fun range.next () Bool
+  (and (<= 0 z.next) (<= z.next 10000000)
+       (<= 0 y.next) (<= y.next 3600)
+       (<= 0 x.next) (<= x.next 60)
+       ))
+(define-fun square ((v Real)) Real (* v v))
+
+(define-fun init () Bool
+  (! (and
+      (= S 0)
+      (>= y (square x))
+      range
+      )
+     :init true))
+
+(define-fun trans () Bool
+  (!
+   (and
+    range
+    range.next
+    (or
+      (and (= S 0)
+           (and
+            (=> (>= y (square x)) (= z 1))
+            (=> (and (< y (square x)) (>= y (square (- x 5)))) (= z 4))
+            (=> (and (< y (square (- x 5))) (>= y (square (- x 10)))) (= z 0))
+            (=> (and (< y (square (- x 10))) (<= x 60)) (= z 5)))
+           (= S.next 1)
+           (= x.next (+ x z))
+           (= y.next y)
+           (= z.next z)
+           )
+      (and (= S 1)
+           (< y (+ (* 70 x) (- 2100)))
+           (= S.next 2)
+           (= x.next x)
+           (= y.next y)
+           (= z.next z)
+           )
+      (and (= S 1)
+           (>= y (+ (* 70 x) (- 2100)))
+           (= S.next 0)
+           (= x.next x)
+           (= y.next y)
+           (= z.next z)
+           )
+      )
+    )
+   :trans true))
+
+(define-fun prop () Bool (! (not (= S 2)) :invar-property 0))

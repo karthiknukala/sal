@@ -1,0 +1,10 @@
+family	total	ic3_solved	ic3_valid	ic3_invalid	ic3_time_s	kind_solved	kind_valid	kind_invalid	kind_time_s	pdkind_solved	pdkind_valid	pdkind_invalid	pdkind_time_s
+handcrafted	14	10	9	1	381	3	2	1	0	14	13	1	4
+hycomp	7	2	2	0	15	4	1	3	796	4	2	2	792
+hyst	65	39	32	7	404	25	13	12	50	38	26	12	42
+isat3	1	0	0	0	0	0	0	0	0	0	0	0	0
+isat3-cfg	10	8	6	2	14	9	6	3	9	10	7	3	8
+nuxmv	2	2	2	0	158	0	0	0	0	1	1	0	1118
+sas13	13	10	5	5	13	5	0	5	0	13	8	5	7
+tcm	2	2	2	0	1	2	2	0	0	2	2	0	0
+total	114	73	58	15	986	48	24	24	855	82	59	23	1971

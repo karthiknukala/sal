@@ -1,0 +1,47 @@
+% Auto-generated from cfa_test0015.vmt
+% Source suite: benchmarks/vmt/nra/cfa_test0015.vmt
+cfa_test0015: CONTEXT =
+BEGIN
+  square(v: REAL): REAL = (v * v);
+
+  system: MODULE =
+  BEGIN
+  OUTPUT
+    x: REAL,
+    y: REAL,
+    z: REAL,
+    s: REAL
+
+  LOCAL
+    range: BOOLEAN,
+    init: BOOLEAN,
+    prop: BOOLEAN
+
+  DEFINITION
+    range = ((0 <= z) AND (z <= 10000000) AND (0 <= y) AND (y <= 3600) AND (0 <= x) AND (x <= 60));
+    init = ((s = 0) AND (y >= square(x)) AND range);
+    prop = (NOT (s = 2));
+
+  INITIALIZATION
+  [
+      init -->
+        x IN { v_x: REAL | TRUE };
+        y IN { v_y: REAL | TRUE };
+        z IN { v_z: REAL | TRUE };
+        s IN { v_s: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET range_2: BOOLEAN = ((0 <= z') AND (z' <= 10000000) AND (0 <= y') AND (y' <= 3600) AND (0 <= x') AND (x' <= 60)) IN
+        LET trans: BOOLEAN = (range AND range_2 AND (((s = 0) AND (((y >= square(x)) => (z = 1)) AND (((y < square(x)) AND (y >= square((x - 5)))) => (z = 4)) AND (((y < square((x - 5))) AND (y >= square((x - 10)))) => (z = 0)) AND (((y < square((x - 10))) AND (x <= 60)) => (z = 5))) AND (s' = 1) AND (x' = (x + z)) AND (y' = y) AND (z' = z)) OR ((s = 1) AND (y < ((70 * x) + (-(2100)))) AND (s' = 2) AND (x' = x) AND (y' = y) AND (z' = z)) OR ((s = 1) AND (y >= ((70 * x) + (-(2100)))) AND (s' = 0) AND (x' = x) AND (y' = y) AND (z' = z)))) IN
+        trans -->
+        x' IN { v_x: REAL | TRUE };
+        y' IN { v_y: REAL | TRUE };
+        z' IN { v_z: REAL | TRUE };
+        s' IN { v_s: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(prop);
+END

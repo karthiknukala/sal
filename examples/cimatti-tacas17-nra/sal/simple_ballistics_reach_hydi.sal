@@ -1,0 +1,336 @@
+% Auto-generated from simple_ballistics_reach.hydi.vmt
+% Source suite: benchmarks/vmt/nra/simple_ballistics_reach.hydi.vmt
+simple_ballistics_reach_hydi: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    m_event_0: BOOLEAN,
+    m_event_1: BOOLEAN
+
+  OUTPUT
+    m_x: REAL,
+    m_y: REAL,
+    m_speed_x: REAL,
+    m_speed_y: REAL,
+    m_time: REAL
+
+  LOCAL
+    def_41: BOOLEAN,
+    def_38: REAL,
+    def_36: REAL,
+    def_37: REAL,
+    def_39: REAL,
+    def_40: BOOLEAN,
+    def_42: BOOLEAN,
+    def_31: BOOLEAN,
+    def_43: BOOLEAN,
+    def_28: BOOLEAN,
+    def_27: BOOLEAN,
+    def_29: BOOLEAN,
+    def_25: BOOLEAN,
+    def_30: BOOLEAN,
+    def_44: BOOLEAN,
+    def_24: BOOLEAN,
+    def_45: BOOLEAN,
+    def_23: BOOLEAN,
+    def_46: BOOLEAN,
+    def_22: BOOLEAN,
+    def_47: BOOLEAN,
+    def_58: BOOLEAN,
+    def_57: BOOLEAN,
+    def_333: BOOLEAN,
+    def_98: REAL,
+    def_101: REAL,
+    def_76: REAL,
+    def_117: REAL,
+    def_235: REAL,
+    def_289: REAL,
+    def_290: REAL,
+    def_291: REAL,
+    def_293: REAL,
+    def_294: REAL,
+    def_295: BOOLEAN,
+    def_131: REAL,
+    def_163: REAL,
+    def_161: REAL,
+    def_146: REAL,
+    def_159: REAL,
+    def_142: REAL,
+    def_274: REAL,
+    def_141: REAL,
+    def_278: REAL,
+    def_281: REAL,
+    def_132: REAL,
+    def_164: REAL,
+    def_162: REAL,
+    def_160: REAL,
+    def_219: REAL,
+    def_221: REAL,
+    def_223: REAL,
+    def_149: REAL,
+    def_150: REAL,
+    def_151: REAL,
+    def_152: REAL,
+    def_153: REAL,
+    def_156: BOOLEAN,
+    def_154: BOOLEAN,
+    def_133: REAL,
+    def_175: REAL,
+    def_177: REAL,
+    def_183: REAL,
+    def_104: BOOLEAN,
+    def_82: BOOLEAN,
+    def_83: BOOLEAN,
+    def_74: BOOLEAN,
+    def_73: BOOLEAN,
+    def_75: BOOLEAN,
+    def_59: BOOLEAN,
+    def_60: BOOLEAN,
+    def_335: BOOLEAN
+
+  DEFINITION
+    def_41 = (m_x = 0);
+    def_38 = (m_y * m_y);
+    def_36 = (m_x + (-(20)));
+    def_37 = (def_36 * def_36);
+    def_39 = (def_37 + def_38);
+    def_40 = (400 <= def_39);
+    def_42 = (def_40 AND def_41);
+    def_31 = (0 <= m_x);
+    def_43 = (def_31 AND def_42);
+    def_28 = (m_y = 0);
+    def_27 = (m_y <= 100);
+    def_29 = (def_27 AND def_28);
+    def_25 = (0 <= m_y);
+    def_30 = (def_25 AND def_29);
+    def_44 = (def_30 AND def_43);
+    def_24 = (0 <= m_speed_x);
+    def_45 = (def_24 AND def_44);
+    def_23 = (0 <= m_speed_y);
+    def_46 = (def_23 AND def_45);
+    def_22 = (m_time = 0);
+    def_47 = (def_22 AND def_46);
+    def_58 = (NOT m_event_1);
+    def_57 = (NOT m_event_0);
+    def_333 = (def_57 OR def_58);
+    def_98 = (49 * m_time);
+    def_101 = (5 * m_speed_y);
+    def_76 = ((-(1)) * m_time);
+    def_117 = (10 * m_y);
+    def_235 = (m_x * m_x);
+    def_289 = ((-(1)) * def_235);
+    def_290 = ((-(1)) * def_38);
+    def_291 = (def_290 + def_289);
+    def_293 = (40 * m_x);
+    def_294 = (def_293 + def_291);
+    def_295 = (def_294 <= 0);
+    def_131 = ((-((49 / 10))) * m_speed_y);
+    def_163 = (m_speed_y * m_speed_y);
+    def_161 = ((-((49 / 10))) * m_y);
+    def_146 = (m_y * m_speed_y);
+    def_159 = (m_speed_x * m_speed_x);
+    def_142 = (m_x * m_speed_x);
+    def_274 = ((-(100)) * def_235);
+    def_141 = ((-(20)) * m_speed_x);
+    def_278 = ((-(100)) * def_38);
+    def_281 = (4000 * m_x);
+    def_132 = (3 * def_131);
+    def_164 = (2 * def_163);
+    def_162 = (2 * def_161);
+    def_160 = (2 * def_159);
+    def_219 = ((-(50)) * def_146);
+    def_221 = ((-(50)) * def_142);
+    def_223 = (1000 * m_speed_x);
+    def_149 = ((-(1)) * def_146);
+    def_150 = ((-(1)) * def_142);
+    def_151 = (def_150 + def_149);
+    def_152 = (20 * m_speed_x);
+    def_153 = (def_152 + def_151);
+    def_156 = (def_153 <= 0);
+    def_154 = (0 <= def_153);
+    def_133 = (2 * def_132);
+    def_175 = ((-(50)) * def_163);
+    def_177 = ((-(50)) * def_159);
+    def_183 = (490 * m_y);
+    def_104 = (m_speed_y <= 0);
+    def_82 = (m_speed_x <= 0);
+    def_83 = (def_24 OR def_82);
+    def_74 = (def_31 AND def_40);
+    def_73 = (def_25 AND def_27);
+    def_75 = (def_73 AND def_74);
+    def_59 = (def_57 AND def_58);
+    def_60 = (NOT def_59);
+    def_335 = (m_x <= 20);
+
+  INITIALIZATION
+  [
+      def_47 -->
+        m_x IN { v_m_x: REAL | TRUE };
+        m_y IN { v_m_y: REAL | TRUE };
+        m_speed_x IN { v_m_speed_x: REAL | TRUE };
+        m_speed_y IN { v_m_speed_y: REAL | TRUE };
+        m_time IN { v_m_time: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_52: BOOLEAN = (m_x = m_x') IN
+        LET def_51: BOOLEAN = (m_y = m_y') IN
+        LET def_53: BOOLEAN = (def_51 AND def_52) IN
+        LET def_50: BOOLEAN = (m_speed_x = m_speed_x') IN
+        LET def_54: BOOLEAN = (def_50 AND def_53) IN
+        LET def_49: BOOLEAN = (m_speed_y = m_speed_y') IN
+        LET def_55: BOOLEAN = (def_49 AND def_54) IN
+        LET def_48: BOOLEAN = (m_time = m_time') IN
+        LET def_56: BOOLEAN = (def_48 AND def_55) IN
+        LET def_327: BOOLEAN = (m_event_1 OR def_56) IN
+        LET def_96: REAL = ((-(49)) * m_time') IN
+        LET def_313: REAL = ((-(5)) * m_speed_y') IN
+        LET def_314: REAL = (def_313 + def_96) IN
+        LET def_315: REAL = (def_98 + def_314) IN
+        LET def_316: REAL = (def_101 + def_315) IN
+        LET def_317: BOOLEAN = (def_316 = 0) IN
+        LET def_318: BOOLEAN = (def_50 AND def_317) IN
+        LET def_77: REAL = (m_time' + def_76) IN
+        LET def_109: REAL = (m_speed_y * def_77) IN
+        LET def_114: REAL = (10 * def_109) IN
+        LET def_85: REAL = (def_77 * def_77) IN
+        LET def_115: REAL = ((-(49)) * def_85) IN
+        LET def_116: REAL = (def_115 + def_114) IN
+        LET def_308: REAL = ((-(10)) * m_y') IN
+        LET def_309: REAL = (def_308 + def_116) IN
+        LET def_310: REAL = (def_117 + def_309) IN
+        LET def_311: BOOLEAN = (def_310 = 0) IN
+        LET def_319: BOOLEAN = (def_311 AND def_318) IN
+        LET def_84: REAL = (m_speed_x * def_77) IN
+        LET def_303: REAL = ((-(1)) * m_x') IN
+        LET def_304: REAL = (def_303 + def_84) IN
+        LET def_305: REAL = (m_x + def_304) IN
+        LET def_306: BOOLEAN = (def_305 = 0) IN
+        LET def_320: BOOLEAN = (def_306 AND def_319) IN
+        LET def_193: REAL = (def_77 * def_85) IN
+        LET def_250: REAL = (def_131 * def_193) IN
+        LET def_261: REAL = ((-(200)) * def_250) IN
+        LET def_249: REAL = (def_85 * def_163) IN
+        LET def_262: REAL = ((-(100)) * def_249) IN
+        LET def_263: REAL = (def_262 + def_261) IN
+        LET def_246: REAL = (def_85 * def_161) IN
+        LET def_264: REAL = ((-(200)) * def_246) IN
+        LET def_265: REAL = (def_264 + def_263) IN
+        LET def_245: REAL = (def_77 * def_146) IN
+        LET def_266: REAL = ((-(200)) * def_245) IN
+        LET def_267: REAL = (def_266 + def_265) IN
+        LET def_242: REAL = (def_77 * def_193) IN
+        LET def_268: REAL = ((-(2401)) * def_242) IN
+        LET def_269: REAL = (def_268 + def_267) IN
+        LET def_239: REAL = (def_85 * def_159) IN
+        LET def_270: REAL = ((-(100)) * def_239) IN
+        LET def_271: REAL = (def_270 + def_269) IN
+        LET def_236: REAL = (def_77 * def_142) IN
+        LET def_272: REAL = ((-(200)) * def_236) IN
+        LET def_273: REAL = (def_272 + def_271) IN
+        LET def_275: REAL = (def_274 + def_273) IN
+        LET def_232: REAL = (def_77 * def_141) IN
+        LET def_276: REAL = ((-(200)) * def_232) IN
+        LET def_277: REAL = (def_276 + def_275) IN
+        LET def_279: REAL = (def_278 + def_277) IN
+        LET def_282: REAL = (def_281 + def_279) IN
+        LET def_283: BOOLEAN = (def_282 <= 0) IN
+        LET def_296: BOOLEAN = (def_283 AND def_295) IN
+        LET def_199: REAL = (def_85 * def_132) IN
+        LET def_208: REAL = ((-(50)) * def_199) IN
+        LET def_198: REAL = (def_77 * def_164) IN
+        LET def_210: REAL = ((-(25)) * def_198) IN
+        LET def_211: REAL = (def_210 + def_208) IN
+        LET def_196: REAL = (def_77 * def_162) IN
+        LET def_212: REAL = ((-(50)) * def_196) IN
+        LET def_213: REAL = (def_212 + def_211) IN
+        LET def_215: REAL = ((-(2401)) * def_193) IN
+        LET def_216: REAL = (def_215 + def_213) IN
+        LET def_190: REAL = (def_77 * def_160) IN
+        LET def_217: REAL = ((-(25)) * def_190) IN
+        LET def_218: REAL = (def_217 + def_216) IN
+        LET def_220: REAL = (def_219 + def_218) IN
+        LET def_222: REAL = (def_221 + def_220) IN
+        LET def_224: REAL = (def_223 + def_222) IN
+        LET def_227: BOOLEAN = (def_224 <= 0) IN
+        LET def_228: BOOLEAN = (def_156 AND def_227) IN
+        LET def_225: BOOLEAN = (0 <= def_224) IN
+        LET def_226: BOOLEAN = (def_154 AND def_225) IN
+        LET def_229: BOOLEAN = (def_226 OR def_228) IN
+        LET def_297: BOOLEAN = (def_229 AND def_296) IN
+        LET def_165: REAL = (def_77 * def_133) IN
+        LET def_174: REAL = ((-(50)) * def_165) IN
+        LET def_176: REAL = (def_175 + def_174) IN
+        LET def_178: REAL = (def_177 + def_176) IN
+        LET def_180: REAL = ((-(7203)) * def_85) IN
+        LET def_181: REAL = (def_180 + def_178) IN
+        LET def_184: REAL = (def_183 + def_181) IN
+        LET def_187: BOOLEAN = (def_184 <= 0) IN
+        LET def_188: BOOLEAN = (def_156 AND def_187) IN
+        LET def_185: BOOLEAN = (0 <= def_184) IN
+        LET def_186: BOOLEAN = (def_154 AND def_185) IN
+        LET def_189: BOOLEAN = (def_186 OR def_188) IN
+        LET def_298: BOOLEAN = (def_189 AND def_297) IN
+        LET def_99: REAL = (def_98 + def_96) IN
+        LET def_102: REAL = (def_101 + def_99) IN
+        LET def_103: BOOLEAN = (def_102 <= 0) IN
+        LET def_157: BOOLEAN = (def_103 AND def_156) IN
+        LET def_106: BOOLEAN = (0 <= def_102) IN
+        LET def_155: BOOLEAN = (def_106 AND def_154) IN
+        LET def_158: BOOLEAN = (def_155 OR def_157) IN
+        LET def_299: BOOLEAN = (def_158 AND def_298) IN
+        LET def_321: BOOLEAN = (def_299 AND def_320) IN
+        LET def_118: REAL = (def_117 + def_116) IN
+        LET def_125: BOOLEAN = (def_118 <= 1000) IN
+        LET def_127: BOOLEAN = (def_27 AND def_125) IN
+        LET def_107: BOOLEAN = (def_23 AND def_106) IN
+        LET def_105: BOOLEAN = (def_103 AND def_104) IN
+        LET def_108: BOOLEAN = (def_105 OR def_107) IN
+        LET def_128: BOOLEAN = (def_108 AND def_127) IN
+        LET def_300: BOOLEAN = (def_128 AND def_299) IN
+        LET def_322: BOOLEAN = (def_300 AND def_321) IN
+        LET def_119: BOOLEAN = (0 <= def_118) IN
+        LET def_120: BOOLEAN = (def_25 AND def_119) IN
+        LET def_121: BOOLEAN = (def_108 AND def_120) IN
+        LET def_301: BOOLEAN = (def_121 AND def_300) IN
+        LET def_323: BOOLEAN = (def_301 AND def_322) IN
+        LET def_86: REAL = (m_x + def_84) IN
+        LET def_87: BOOLEAN = (0 <= def_86) IN
+        LET def_88: BOOLEAN = (def_31 AND def_87) IN
+        LET def_89: BOOLEAN = (def_83 AND def_88) IN
+        LET def_302: BOOLEAN = (def_89 AND def_301) IN
+        LET def_324: BOOLEAN = (def_302 AND def_323) IN
+        LET def_78: BOOLEAN = (m_time <= m_time') IN
+        LET def_325: BOOLEAN = (def_78 AND def_324) IN
+        LET def_326: BOOLEAN = (def_58 OR def_325) IN
+        LET def_328: BOOLEAN = (def_326 AND def_327) IN
+        LET def_329: BOOLEAN = (def_75 AND def_328) IN
+        LET def_68: REAL = (m_y' * m_y') IN
+        LET def_66: REAL = (m_x' + (-(20))) IN
+        LET def_67: REAL = (def_66 * def_66) IN
+        LET def_69: REAL = (def_67 + def_68) IN
+        LET def_70: BOOLEAN = (400 <= def_69) IN
+        LET def_65: BOOLEAN = (0 <= m_x') IN
+        LET def_71: BOOLEAN = (def_65 AND def_70) IN
+        LET def_63: BOOLEAN = (m_y' <= 100) IN
+        LET def_62: BOOLEAN = (0 <= m_y') IN
+        LET def_64: BOOLEAN = (def_62 AND def_63) IN
+        LET def_72: BOOLEAN = (def_64 AND def_71) IN
+        LET def_330: BOOLEAN = (def_72 AND def_329) IN
+        LET def_331: BOOLEAN = (def_59 OR def_330) IN
+        LET def_61: BOOLEAN = (def_56 OR def_60) IN
+        LET def_332: BOOLEAN = (def_61 AND def_331) IN
+        LET def_334: BOOLEAN = (def_332 AND def_333) IN
+        def_334 -->
+        m_x' IN { v_m_x: REAL | TRUE };
+        m_y' IN { v_m_y: REAL | TRUE };
+        m_speed_x' IN { v_m_speed_x: REAL | TRUE };
+        m_speed_y' IN { v_m_speed_y: REAL | TRUE };
+        m_time' IN { v_m_time: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_335);
+END

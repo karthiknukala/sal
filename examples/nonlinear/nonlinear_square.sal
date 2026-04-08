@@ -1,0 +1,20 @@
+nonlinear_square: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+    OUTPUT x: REAL
+
+    INITIALIZATION
+      x = 2
+
+    TRANSITION
+    [
+      TRUE -->
+        x' = x * x
+    ]
+  END;
+
+  nonnegative: THEOREM system |- G(x >= 0);
+
+  bad_bound: THEOREM system |- G(x <= 3);
+END

@@ -1,0 +1,43 @@
+% Auto-generated from cfa_test0017.vmt
+% Source suite: benchmarks/vmt/nra/cfa_test0017.vmt
+cfa_test0017: CONTEXT =
+BEGIN
+  square(v: REAL): REAL = (v * v);
+
+  system: MODULE =
+  BEGIN
+  OUTPUT
+    x: REAL,
+    s: REAL
+
+  LOCAL
+    r: REAL,
+    range: BOOLEAN,
+    init: BOOLEAN,
+    prop: BOOLEAN
+
+  DEFINITION
+    r = 3.2;
+    range = (((-(10)) <= x) AND (x <= 10));
+    init = ((s = 0) AND ((x = 0.8) OR (x = 0.5)));
+    prop = (NOT (s = 2));
+
+  INITIALIZATION
+  [
+      init -->
+        x IN { v_x: REAL | TRUE };
+        s IN { v_s: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET range_2: BOOLEAN = (((-(10)) <= x') AND (x' <= 10)) IN
+        LET trans: BOOLEAN = (range AND range_2 AND (((s = 0) AND TRUE AND (s' = 1) AND (x' = (r * (x * (1 - x))))) OR ((s = 1) AND (NOT (((x >= 0.78) AND (x <= 0.82)) OR ((x >= 0.48) AND (x <= 5.20)))) AND (s' = 2) AND (x' = x)) OR ((s = 1) AND (((x >= 0.78) AND (x <= 0.82)) OR ((x >= 0.48) AND (x <= 5.20))) AND (s' = 0) AND (x' = x)))) IN
+        trans -->
+        x' IN { v_x: REAL | TRUE };
+        s' IN { v_s: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(prop);
+END

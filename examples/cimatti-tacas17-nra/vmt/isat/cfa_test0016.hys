@@ -1,0 +1,35 @@
+------------------------------------------------------
+-- This case is borrowed from isat3 repository      --
+-- original name: bmc_non_linear_henon_map_01.hys   --
+-- where the specification is NOT REACHABLE         --
+-- Problem is polynomial						    --
+------------------------------------------------------
+
+DECL
+-- system variables of henon map
+float[-100,100] x,y;
+
+-- parameters a, b
+define a = 1.25;
+define b = 0.3;
+
+NODES
+S0, S1, S2;
+
+INIT
+edge(true, {x=-1.09 && y = 0.386}, {true}, S0);
+
+FLOWS
+edge(S0, {true}, {x' = y + 1 - a * (x^2)}, S0');
+edge(S1, {true}, {y' = b * x}, S0');
+edge(S0, {!( 
+	((x >=  1.263) and (x <=  1.313)) or 
+	((x >= -1.115) and (x <= -1.065)) or  
+	((x >= -0.124) and (x <= -0.074)) or  
+	((x >=  0.636) and (x <=  0.686)) or  
+	((x >=  0.400) and (x <=  0.450)) or 
+	((x >=  0.948) and (x <=  0.998)) or 
+	((x >= -0.080) and (x <= -0.030)))}, {true}, S2');
+
+SPECIFICATION
+S2;

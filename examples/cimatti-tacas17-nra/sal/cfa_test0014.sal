@@ -1,0 +1,47 @@
+% Auto-generated from cfa_test0014.vmt
+% Source suite: benchmarks/vmt/nra/cfa_test0014.vmt
+cfa_test0014: CONTEXT =
+BEGIN
+  square(v: REAL): REAL = (v * v);
+
+  system: MODULE =
+  BEGIN
+  OUTPUT
+    x: REAL,
+    y: REAL,
+    offset: REAL,
+    s: REAL
+
+  LOCAL
+    range: BOOLEAN,
+    init: BOOLEAN,
+    prop: BOOLEAN
+
+  DEFINITION
+    range = ((0 <= offset) AND (offset <= 10000000) AND (0 <= y) AND (y <= 10000000) AND (0 <= x) AND (x <= 100));
+    init = ((s = 0) AND (y >= square(x)) AND range);
+    prop = (NOT (s = 2));
+
+  INITIALIZATION
+  [
+      init -->
+        x IN { v_x: REAL | TRUE };
+        y IN { v_y: REAL | TRUE };
+        offset IN { v_offset: REAL | TRUE };
+        s IN { v_s: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET range_2: BOOLEAN = ((0 <= offset') AND (offset' <= 10000000) AND (0 <= y') AND (y' <= 10000000) AND (0 <= x') AND (x' <= 100)) IN
+        LET trans: BOOLEAN = (range AND range_2 AND (((s = 0) AND (((y >= square(x)) => (offset = 1)) AND (((y < square(x)) AND (y >= square((x - 1)))) => (offset = (1 / 2))) AND (((y < square((x - 1))) AND (y >= square((x - 2)))) => (offset = 0)) AND (((y < square((x - 2))) AND (x <= 100)) => (offset = 5))) AND (s' = 1) AND (x' = (x + offset)) AND (y' = y) AND (offset' = offset)) OR ((s = 1) AND (y < ((70 * x) + (-(2100)))) AND (s' = 2) AND (x' = x) AND (y' = y) AND (offset' = offset)) OR ((s = 1) AND (y >= ((70 * x) + (-(2100)))) AND (s' = 0) AND (x' = x) AND (y' = y) AND (offset' = offset)))) IN
+        trans -->
+        x' IN { v_x: REAL | TRUE };
+        y' IN { v_y: REAL | TRUE };
+        offset' IN { v_offset: REAL | TRUE };
+        s' IN { v_s: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(prop);
+END

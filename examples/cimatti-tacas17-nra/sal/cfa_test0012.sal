@@ -1,0 +1,69 @@
+% Auto-generated from cfa_test0012.vmt
+% Source suite: benchmarks/vmt/nra/cfa_test0012.vmt
+cfa_test0012: CONTEXT =
+BEGIN
+  square(v: REAL): REAL = (v * v);
+
+  system: MODULE =
+  BEGIN
+  OUTPUT
+    car_velocity: REAL,
+    car_acc_interaction: REAL,
+    res_acc_interaction: REAL,
+    acc: REAL,
+    update_counter: REAL,
+    s: REAL
+
+  LOCAL
+    car_inertia: REAL,
+    car_face: REAL,
+    cw_factor: REAL,
+    air_density: REAL,
+    dt: REAL,
+    velocity_to_hold: REAL,
+    delta_update_interval: REAL,
+    update_interval: REAL,
+    range: BOOLEAN,
+    init: BOOLEAN,
+    prop: BOOLEAN
+
+  DEFINITION
+    car_inertia = 2000;
+    car_face = 2;
+    cw_factor = 1.11;
+    air_density = 1.204;
+    dt = 0.01;
+    velocity_to_hold = 10;
+    delta_update_interval = 1;
+    update_interval = 3;
+    range = (((-(10000)) <= car_velocity) AND (car_velocity <= 10000) AND ((-(10000)) <= car_acc_interaction) AND (car_acc_interaction <= 10000) AND ((-(10000)) <= res_acc_interaction) AND (res_acc_interaction <= 10000) AND ((-(300000)) <= acc) AND (acc <= 300000) AND (0 <= update_counter) AND (update_counter <= 100));
+    init = ((update_counter = 0) AND (car_velocity = velocity_to_hold) AND (car_acc_interaction = 1000) AND (car_acc_interaction = (acc * car_inertia)) AND (res_acc_interaction = car_acc_interaction) AND (s = 0));
+    prop = (NOT (s = 7));
+
+  INITIALIZATION
+  [
+      init -->
+        car_velocity IN { v_car_velocity: REAL | TRUE };
+        car_acc_interaction IN { v_car_acc_interaction: REAL | TRUE };
+        res_acc_interaction IN { v_res_acc_interaction: REAL | TRUE };
+        acc IN { v_acc: REAL | TRUE };
+        update_counter IN { v_update_counter: REAL | TRUE };
+        s IN { v_s: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET range_2: BOOLEAN = (((-(10000)) <= car_velocity') AND (car_velocity' <= 10000) AND ((-(10000)) <= car_acc_interaction') AND (car_acc_interaction' <= 10000) AND ((-(10000)) <= res_acc_interaction') AND (res_acc_interaction' <= 10000) AND ((-(300000)) <= acc') AND (acc' <= 300000) AND (0 <= update_counter') AND (update_counter' <= 100)) IN
+        LET trans: BOOLEAN = (range AND range_2 AND (((s = 0) AND (update_counter >= update_interval) AND (s' = 1) AND (car_acc_interaction' = car_acc_interaction) AND (res_acc_interaction' = (car_acc_interaction - (car_face * (cw_factor * (air_density * (0.5 * square(car_velocity))))))) AND (update_counter' = (update_counter + delta_update_interval)) AND (car_velocity' = (car_velocity + (acc * dt))) AND (acc' = acc)) OR ((s = 1) AND TRUE AND (s' = 2) AND (acc' = (res_acc_interaction / car_inertia)) AND (car_velocity' = car_velocity) AND (car_acc_interaction' = car_acc_interaction) AND (res_acc_interaction' = res_acc_interaction) AND (update_counter' = update_counter)) OR ((s = 0) AND ((update_counter < update_interval) AND (car_velocity > velocity_to_hold)) AND (s' = 3) AND (update_counter' = 0) AND (car_velocity' = 0) AND (res_acc_interaction' = res_acc_interaction) AND (car_acc_interaction' = 0) AND (acc' = acc)) OR ((s = 0) AND ((update_counter < update_interval) AND (car_velocity >= velocity_to_hold)) AND (s' = 4) AND (update_counter' = 0) AND (car_velocity' = car_velocity) AND (res_acc_interaction' = res_acc_interaction) AND (car_acc_interaction' = 1000) AND (acc' = acc)) OR ((s = 0) AND TRUE AND (s' = 5) AND (update_counter' = 0) AND (car_velocity' = car_velocity) AND (res_acc_interaction' = res_acc_interaction) AND (car_acc_interaction' = 0) AND (acc' = acc) AND (car_acc_interaction' = car_acc_interaction) AND (res_acc_interaction' = (car_acc_interaction - (car_face * (cw_factor * (air_density * (0.5 * square(car_velocity))))))) AND (update_counter' = (update_counter + delta_update_interval)) AND (car_velocity' = (car_velocity + (acc * dt)))) OR ((s = 5) AND TRUE AND (s' = 6) AND (acc' = (res_acc_interaction / car_inertia)) AND (car_velocity' = car_velocity) AND (car_acc_interaction' = car_acc_interaction) AND (res_acc_interaction' = res_acc_interaction) AND (update_counter' = update_counter)) OR ((s = 2) AND ((car_velocity < 9.8) OR (car_velocity > 10.2)) AND (s' = 7) AND (acc' = acc) AND (car_velocity' = car_velocity) AND (car_acc_interaction' = car_acc_interaction) AND (res_acc_interaction' = res_acc_interaction) AND (update_counter' = update_counter)) OR ((s = 2) AND ((car_velocity >= 9.8) AND (car_velocity <= 10.2)) AND (s' = 0) AND (acc' = acc) AND (car_velocity' = car_velocity) AND (car_acc_interaction' = car_acc_interaction) AND (res_acc_interaction' = res_acc_interaction) AND (update_counter' = update_counter)) OR ((s = 3) AND ((car_velocity < 9.8) OR (car_velocity > 10.2)) AND (s' = 7) AND (acc' = acc) AND (car_velocity' = car_velocity) AND (car_acc_interaction' = car_acc_interaction) AND (res_acc_interaction' = res_acc_interaction) AND (update_counter' = update_counter)) OR ((s = 3) AND ((car_velocity >= 9.8) AND (car_velocity <= 10.2)) AND (s' = 0) AND (acc' = acc) AND (car_velocity' = car_velocity) AND (car_acc_interaction' = car_acc_interaction) AND (res_acc_interaction' = res_acc_interaction) AND (update_counter' = update_counter)) OR ((s = 4) AND ((car_velocity < 9.8) OR (car_velocity > 10.2)) AND (s' = 7) AND (acc' = acc) AND (car_velocity' = car_velocity) AND (car_acc_interaction' = car_acc_interaction) AND (res_acc_interaction' = res_acc_interaction) AND (update_counter' = update_counter)) OR ((s = 4) AND ((car_velocity >= 9.8) AND (car_velocity <= 10.2)) AND (s' = 0) AND (acc' = acc) AND (car_velocity' = car_velocity) AND (car_acc_interaction' = car_acc_interaction) AND (res_acc_interaction' = res_acc_interaction) AND (update_counter' = update_counter)) OR ((s = 6) AND ((car_velocity < 9.8) OR (car_velocity > 10.2)) AND (s' = 7) AND (acc' = acc) AND (car_velocity' = car_velocity) AND (car_acc_interaction' = car_acc_interaction) AND (res_acc_interaction' = res_acc_interaction) AND (update_counter' = update_counter)) OR ((s = 6) AND ((car_velocity >= 9.8) AND (car_velocity <= 10.2)) AND (s' = 0) AND (acc' = acc) AND (car_velocity' = car_velocity) AND (car_acc_interaction' = car_acc_interaction) AND (res_acc_interaction' = res_acc_interaction) AND (update_counter' = update_counter)))) IN
+        trans -->
+        car_velocity' IN { v_car_velocity: REAL | TRUE };
+        car_acc_interaction' IN { v_car_acc_interaction: REAL | TRUE };
+        res_acc_interaction' IN { v_res_acc_interaction: REAL | TRUE };
+        acc' IN { v_acc: REAL | TRUE };
+        update_counter' IN { v_update_counter: REAL | TRUE };
+        s' IN { v_s: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(prop);
+END

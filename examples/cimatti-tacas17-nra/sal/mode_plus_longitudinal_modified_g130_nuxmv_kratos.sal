@@ -1,0 +1,1592 @@
+% Auto-generated from Mode_plus_Longitudinal_modified_g130_nuxmv_kratos.vmt
+% Source suite: benchmarks/vmt/nra/Mode_plus_Longitudinal_modified_g130_nuxmv_kratos.vmt
+mode_plus_longitudinal_modified_g130_nuxmv_kratos: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    div_33_826: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_11_2: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_13_2: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_15_2: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_17_2: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_19_2: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_1_2: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_2_2: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_3_2: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_4_2: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_5_2: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_7_2: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_9_2: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_add_3: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_switch_f_2: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_switch_f_4: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_switch_f_8: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_10: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_13: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_15: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_2: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_5: REAL,
+    in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_8: REAL,
+    mode_plus_longitudinal_modif_dw_6_2: REAL,
+    mode_plus_longitudinal_modifi_u_0_1: REAL,
+    mode_plus_longitudinal_modifi_u_10_1: REAL,
+    mode_plus_longitudinal_modifi_u_11_1: REAL,
+    mode_plus_longitudinal_modifi_u_12_1: REAL,
+    mode_plus_longitudinal_modifi_u_13_1: REAL,
+    mode_plus_longitudinal_modifi_u_14_1: REAL,
+    mode_plus_longitudinal_modifi_u_15_1: REAL,
+    mode_plus_longitudinal_modifi_u_16_1: REAL,
+    mode_plus_longitudinal_modifi_u_1_1: REAL,
+    mode_plus_longitudinal_modifi_u_2_1: REAL,
+    mode_plus_longitudinal_modifi_u_3_1: REAL,
+    mode_plus_longitudinal_modifi_u_4_1: REAL,
+    mode_plus_longitudinal_modifi_u_5_1: REAL,
+    mode_plus_longitudinal_modifi_u_6_1: REAL,
+    mode_plus_longitudinal_modifi_u_7_1: REAL,
+    mode_plus_longitudinal_modifi_u_8_1: REAL,
+    mode_plus_longitudinal_modifi_u_9_1: REAL,
+    mode_plus_longitudinal_modifi_y_3_2: REAL
+
+  OUTPUT
+    pc_2: BOOLEAN,
+    pc_1: BOOLEAN,
+    pc_0: BOOLEAN,
+    mode_plus_longitudinal_modifi_u_16: REAL,
+    mode_plus_longitudinal_modifi_u_15: REAL,
+    mode_plus_longitudinal_modifi_u_14: REAL,
+    mode_plus_longitudinal_modifi_u_13: REAL,
+    mode_plus_longitudinal_modifi_u_12: REAL,
+    mode_plus_longitudinal_modifi_u_11: REAL,
+    mode_plus_longitudinal_modifi_u_10: REAL,
+    mode_plus_longitudinal_modifi_u_9: REAL,
+    mode_plus_longitudinal_modifi_u_8: REAL,
+    mode_plus_longitudinal_modifi_u_7: REAL,
+    mode_plus_longitudinal_modifi_u_6: REAL,
+    mode_plus_longitudinal_modifi_u_5: REAL,
+    mode_plus_longitudinal_modifi_u_4: REAL,
+    mode_plus_longitudinal_modifi_u_3: REAL,
+    mode_plus_longitudinal_modifi_u_2: REAL,
+    mode_plus_longitudinal_modifi_u_1: REAL,
+    mode_plus_longitudinal_modifi_u_0: REAL,
+    mode_plus_longitudinal_modifi_y_2: REAL,
+    mode_plus_longitudinal_modifi_y_1: INTEGER,
+    mode_plus_longitudinal_modifi_y_0: INTEGER,
+    mode_plus_longitudinal_modifi_y_3: REAL,
+    mode_plus_longitudinal_m_constb_0: REAL,
+    mode_plus_longitudinal_m_constb_1: INTEGER,
+    mode_plus_longitudinal_m_constb_2: INTEGER,
+    mode_plus_longitudinal_modif_dw_0: REAL,
+    mode_plus_longitudinal_modif_dw_1: REAL,
+    mode_plus_longitudinal_modif_dw_2: REAL,
+    mode_plus_longitudinal_modif_dw_3: REAL,
+    mode_plus_longitudinal_modif_dw_4: REAL,
+    mode_plus_longitudinal_modif_dw_5: REAL,
+    mode_plus_longitudinal_modif_dw_6: REAL,
+    mode_plus_longitudinal_modif_dw_7: REAL,
+    mode_plus_longitudinal_modif_dw_8: REAL,
+    mode_plus_longitudinal_modif_dw_9: INTEGER,
+    mode_plus_longitudinal_modif_dw_10: INTEGER,
+    mode_plus_longitudinal_modif_dw_11: INTEGER,
+    mode_plus_longitudinal_modif_dw_12: INTEGER,
+    mode_plus_longitudinal_modif_dw_13: INTEGER,
+    mode_plus_longitudinal_modif_dw_14: INTEGER,
+    mode_plus_longitudinal_modif_dw_15: INTEGER,
+    mode_plus_longitudinal_modif_dw_16: INTEGER,
+    mode_plus_longitudinal_modif_dw_17: INTEGER,
+    mode_plus_longitudinal_modif_dw_18: INTEGER,
+    mode_plus_longitudinal_modif_dw_19: INTEGER
+
+  LOCAL
+    def_143: BOOLEAN,
+    def_141: BOOLEAN,
+    def_140: BOOLEAN,
+    def_142: BOOLEAN,
+    def_144: BOOLEAN,
+    def_2049: BOOLEAN,
+    def_2050: BOOLEAN,
+    def_1850: BOOLEAN,
+    def_1851: BOOLEAN,
+    def_297: BOOLEAN,
+    def_298: INTEGER,
+    def_303: BOOLEAN,
+    def_304: BOOLEAN,
+    def_272: BOOLEAN,
+    def_273: BOOLEAN,
+    def_270: BOOLEAN,
+    def_274: BOOLEAN,
+    def_275: BOOLEAN,
+    def_276: INTEGER,
+    def_301: BOOLEAN,
+    def_302: BOOLEAN,
+    def_305: BOOLEAN,
+    def_306: BOOLEAN,
+    def_265: BOOLEAN,
+    def_266: BOOLEAN,
+    def_263: BOOLEAN,
+    def_267: BOOLEAN,
+    def_268: BOOLEAN,
+    def_269: INTEGER,
+    def_299: BOOLEAN,
+    def_300: BOOLEAN,
+    def_307: BOOLEAN,
+    def_308: INTEGER,
+    def_311: BOOLEAN,
+    def_967: INTEGER,
+    def_1775: REAL,
+    def_1777: REAL,
+    def_1778: REAL,
+    def_1779: REAL,
+    def_1780: REAL,
+    def_1787: BOOLEAN,
+    def_1788: BOOLEAN,
+    def_1785: BOOLEAN,
+    def_1786: BOOLEAN,
+    def_1789: BOOLEAN,
+    def_1781: BOOLEAN,
+    def_1782: BOOLEAN,
+    def_1773: BOOLEAN,
+    def_1774: BOOLEAN,
+    def_1783: BOOLEAN,
+    def_1772: BOOLEAN,
+    def_1784: BOOLEAN,
+    def_1790: BOOLEAN,
+    def_1791: INTEGER,
+    def_318: BOOLEAN,
+    def_319: BOOLEAN,
+    def_313: BOOLEAN,
+    def_312: BOOLEAN,
+    def_315: BOOLEAN,
+    def_309: BOOLEAN,
+    def_310: BOOLEAN,
+    def_316: BOOLEAN,
+    def_317: BOOLEAN,
+    def_320: BOOLEAN,
+    def_321: BOOLEAN,
+    def_322: INTEGER,
+    def_258: BOOLEAN,
+    def_259: BOOLEAN,
+    def_256: BOOLEAN,
+    def_260: BOOLEAN,
+    def_261: BOOLEAN,
+    def_262: INTEGER,
+    def_1827: BOOLEAN,
+    def_1828: BOOLEAN,
+    def_1825: BOOLEAN,
+    def_1826: BOOLEAN,
+    def_1829: BOOLEAN,
+    def_1830: BOOLEAN,
+    def_1831: INTEGER,
+    def_1820: BOOLEAN,
+    def_1821: BOOLEAN,
+    def_1798: BOOLEAN,
+    def_1805: BOOLEAN,
+    def_1004: BOOLEAN,
+    def_1005: BOOLEAN,
+    def_1806: BOOLEAN,
+    def_1807: INTEGER,
+    def_1810: BOOLEAN,
+    def_1822: BOOLEAN,
+    def_1823: BOOLEAN,
+    def_1824: INTEGER,
+    def_1815: BOOLEAN,
+    def_1816: BOOLEAN,
+    def_1817: BOOLEAN,
+    def_1818: BOOLEAN,
+    def_1819: INTEGER,
+    def_1808: BOOLEAN,
+    def_1809: BOOLEAN,
+    def_1812: BOOLEAN,
+    def_1813: BOOLEAN,
+    def_1814: INTEGER,
+    def_323: BOOLEAN,
+    def_324: BOOLEAN,
+    def_325: INTEGER,
+    def_370: BOOLEAN,
+    def_372: INTEGER,
+    def_966: REAL,
+    def_968: REAL,
+    def_977: REAL,
+    def_1965: REAL,
+    def_1966: REAL,
+    def_1967: REAL,
+    def_1969: REAL,
+    def_1970: REAL,
+    def_1971: REAL,
+    def_1972: REAL,
+    def_1975: REAL,
+    def_1956: REAL,
+    def_1961: REAL,
+    def_1802: INTEGER,
+    def_1803: BOOLEAN,
+    def_1804: BOOLEAN,
+    def_1799: INTEGER,
+    def_1800: BOOLEAN,
+    def_1801: BOOLEAN,
+    def_264: BOOLEAN,
+    def_1795: INTEGER,
+    def_1796: BOOLEAN,
+    def_1797: BOOLEAN,
+    def_1792: INTEGER,
+    def_1793: BOOLEAN,
+    def_1794: BOOLEAN,
+    def_1755: BOOLEAN,
+    def_1756: BOOLEAN,
+    def_1723: BOOLEAN,
+    def_371: BOOLEAN,
+    def_1006: BOOLEAN,
+    def_1707: BOOLEAN,
+    def_1724: BOOLEAN,
+    def_1087: BOOLEAN,
+    def_1088: INTEGER,
+    def_1650: REAL,
+    def_1651: REAL,
+    def_1097: REAL,
+    def_995: REAL,
+    def_996: REAL,
+    def_1098: REAL,
+    def_1099: REAL,
+    def_1100: REAL,
+    def_998: REAL,
+    def_999: REAL,
+    def_1000: REAL,
+    def_1096: REAL,
+    def_1101: REAL,
+    def_1652: REAL,
+    def_1671: BOOLEAN,
+    def_1628: BOOLEAN,
+    def_1010: BOOLEAN,
+    def_1630: BOOLEAN,
+    def_1625: REAL,
+    def_1062: REAL,
+    def_1626: REAL,
+    def_1627: BOOLEAN,
+    def_1011: BOOLEAN,
+    def_1629: BOOLEAN,
+    def_1631: BOOLEAN,
+    def_1649: BOOLEAN,
+    def_1008: BOOLEAN,
+    def_1092: BOOLEAN,
+    def_1091: BOOLEAN,
+    def_1103: BOOLEAN,
+    def_1653: BOOLEAN,
+    def_1654: BOOLEAN,
+    def_1672: BOOLEAN,
+    def_1567: REAL,
+    def_1568: REAL,
+    def_1569: REAL,
+    def_1588: BOOLEAN,
+    def_1545: BOOLEAN,
+    def_1547: BOOLEAN,
+    def_1542: REAL,
+    def_1543: REAL,
+    def_1544: BOOLEAN,
+    def_1546: BOOLEAN,
+    def_1548: BOOLEAN,
+    def_1566: BOOLEAN,
+    def_1570: BOOLEAN,
+    def_1571: BOOLEAN,
+    def_1589: BOOLEAN,
+    def_1484: REAL,
+    def_1485: REAL,
+    def_1486: REAL,
+    def_1505: BOOLEAN,
+    def_1462: BOOLEAN,
+    def_1464: BOOLEAN,
+    def_1459: REAL,
+    def_1460: REAL,
+    def_1461: BOOLEAN,
+    def_1463: BOOLEAN,
+    def_1465: BOOLEAN,
+    def_1483: BOOLEAN,
+    def_1487: BOOLEAN,
+    def_1488: BOOLEAN,
+    def_1506: BOOLEAN,
+    def_1401: REAL,
+    def_1402: REAL,
+    def_1403: REAL,
+    def_1422: BOOLEAN,
+    def_1379: BOOLEAN,
+    def_1381: BOOLEAN,
+    def_1376: REAL,
+    def_1377: REAL,
+    def_1378: BOOLEAN,
+    def_1380: BOOLEAN,
+    def_1382: BOOLEAN,
+    def_1400: BOOLEAN,
+    def_1404: BOOLEAN,
+    def_1405: BOOLEAN,
+    def_1423: BOOLEAN,
+    def_1318: REAL,
+    def_1319: REAL,
+    def_1320: REAL,
+    def_1339: BOOLEAN,
+    def_1296: BOOLEAN,
+    def_1298: BOOLEAN,
+    def_1293: REAL,
+    def_1294: REAL,
+    def_1295: BOOLEAN,
+    def_1297: BOOLEAN,
+    def_1299: BOOLEAN,
+    def_1317: BOOLEAN,
+    def_1321: BOOLEAN,
+    def_1322: BOOLEAN,
+    def_1340: BOOLEAN,
+    def_1235: REAL,
+    def_1236: REAL,
+    def_1237: REAL,
+    def_1256: BOOLEAN,
+    def_1213: BOOLEAN,
+    def_1215: BOOLEAN,
+    def_1210: REAL,
+    def_1211: REAL,
+    def_1212: BOOLEAN,
+    def_1214: BOOLEAN,
+    def_1216: BOOLEAN,
+    def_1234: BOOLEAN,
+    def_1238: BOOLEAN,
+    def_1239: BOOLEAN,
+    def_1257: BOOLEAN,
+    def_1148: REAL,
+    def_1149: REAL,
+    def_1150: REAL,
+    def_1172: BOOLEAN,
+    def_1126: BOOLEAN,
+    def_1128: BOOLEAN,
+    def_1123: REAL,
+    def_1124: REAL,
+    def_1125: BOOLEAN,
+    def_1127: BOOLEAN,
+    def_1129: BOOLEAN,
+    def_1147: BOOLEAN,
+    def_1151: BOOLEAN,
+    def_1152: BOOLEAN,
+    def_1174: BOOLEAN,
+    def_1089: REAL,
+    def_1094: REAL,
+    def_1102: REAL,
+    def_1171: BOOLEAN,
+    def_1065: BOOLEAN,
+    def_1067: BOOLEAN,
+    def_1060: REAL,
+    def_1063: REAL,
+    def_1064: BOOLEAN,
+    def_1066: BOOLEAN,
+    def_1068: BOOLEAN,
+    def_1086: BOOLEAN,
+    def_1104: BOOLEAN,
+    def_1105: BOOLEAN,
+    def_1173: BOOLEAN,
+    def_1175: BOOLEAN,
+    def_1192: BOOLEAN,
+    def_1258: BOOLEAN,
+    def_1275: BOOLEAN,
+    def_1341: BOOLEAN,
+    def_1358: BOOLEAN,
+    def_1424: BOOLEAN,
+    def_1441: BOOLEAN,
+    def_1507: BOOLEAN,
+    def_1524: BOOLEAN,
+    def_1590: BOOLEAN,
+    def_1607: BOOLEAN,
+    def_1673: BOOLEAN,
+    def_1690: BOOLEAN,
+    def_1691: BOOLEAN,
+    def_1725: BOOLEAN,
+    def_1726: BOOLEAN,
+    def_1757: BOOLEAN,
+    def_973: BOOLEAN,
+    def_974: BOOLEAN,
+    def_971: BOOLEAN,
+    def_980: BOOLEAN,
+    def_972: BOOLEAN,
+    def_981: BOOLEAN,
+    def_949: REAL,
+    def_866: REAL,
+    def_950: REAL,
+    def_951: BOOLEAN,
+    def_858: REAL,
+    def_860: REAL,
+    def_861: REAL,
+    def_863: REAL,
+    def_864: REAL,
+    def_867: REAL,
+    def_868: BOOLEAN,
+    def_869: BOOLEAN,
+    def_952: BOOLEAN,
+    def_918: REAL,
+    def_919: REAL,
+    def_920: BOOLEAN,
+    def_872: REAL,
+    def_873: REAL,
+    def_874: REAL,
+    def_875: REAL,
+    def_876: REAL,
+    def_877: REAL,
+    def_878: BOOLEAN,
+    def_879: BOOLEAN,
+    def_922: BOOLEAN,
+    def_909: REAL,
+    def_911: REAL,
+    def_912: REAL,
+    def_913: REAL,
+    def_914: REAL,
+    def_915: REAL,
+    def_916: REAL,
+    def_917: BOOLEAN,
+    def_921: BOOLEAN,
+    def_923: BOOLEAN,
+    def_924: BOOLEAN,
+    def_953: BOOLEAN,
+    def_846: BOOLEAN,
+    def_844: REAL,
+    def_845: BOOLEAN,
+    def_847: BOOLEAN,
+    def_828: BOOLEAN,
+    def_801: BOOLEAN,
+    def_830: BOOLEAN,
+    def_827: BOOLEAN,
+    def_802: BOOLEAN,
+    def_829: BOOLEAN,
+    def_831: BOOLEAN,
+    def_848: BOOLEAN,
+    def_782: REAL,
+    def_784: REAL,
+    def_785: REAL,
+    def_786: BOOLEAN,
+    def_756: BOOLEAN,
+    def_757: BOOLEAN,
+    def_788: BOOLEAN,
+    def_780: BOOLEAN,
+    def_787: BOOLEAN,
+    def_789: BOOLEAN,
+    def_631: REAL,
+    def_736: REAL,
+    def_583: REAL,
+    def_737: REAL,
+    def_738: REAL,
+    def_739: REAL,
+    def_740: BOOLEAN,
+    def_707: BOOLEAN,
+    def_539: BOOLEAN,
+    def_540: BOOLEAN,
+    def_709: BOOLEAN,
+    def_352: REAL,
+    def_704: REAL,
+    def_705: REAL,
+    def_706: BOOLEAN,
+    def_708: BOOLEAN,
+    def_710: BOOLEAN,
+    def_721: BOOLEAN,
+    def_537: BOOLEAN,
+    def_538: BOOLEAN,
+    def_726: BOOLEAN,
+    def_741: BOOLEAN,
+    def_687: REAL,
+    def_688: REAL,
+    def_689: REAL,
+    def_690: REAL,
+    def_691: BOOLEAN,
+    def_658: BOOLEAN,
+    def_660: BOOLEAN,
+    def_655: REAL,
+    def_656: REAL,
+    def_657: BOOLEAN,
+    def_659: BOOLEAN,
+    def_661: BOOLEAN,
+    def_672: BOOLEAN,
+    def_677: BOOLEAN,
+    def_692: BOOLEAN,
+    def_637: REAL,
+    def_638: REAL,
+    def_639: REAL,
+    def_640: REAL,
+    def_641: BOOLEAN,
+    def_590: BOOLEAN,
+    def_592: BOOLEAN,
+    def_587: REAL,
+    def_588: REAL,
+    def_589: BOOLEAN,
+    def_591: BOOLEAN,
+    def_593: BOOLEAN,
+    def_604: BOOLEAN,
+    def_619: BOOLEAN,
+    def_643: BOOLEAN,
+    def_632: REAL,
+    def_633: REAL,
+    def_634: REAL,
+    def_635: REAL,
+    def_636: BOOLEAN,
+    def_566: BOOLEAN,
+    def_568: BOOLEAN,
+    def_563: REAL,
+    def_564: REAL,
+    def_565: BOOLEAN,
+    def_567: BOOLEAN,
+    def_569: BOOLEAN,
+    def_580: BOOLEAN,
+    def_609: BOOLEAN,
+    def_642: BOOLEAN,
+    def_644: BOOLEAN,
+    def_693: BOOLEAN,
+    def_742: BOOLEAN,
+    def_525: BOOLEAN,
+    def_504: BOOLEAN,
+    def_527: BOOLEAN,
+    def_524: BOOLEAN,
+    def_505: BOOLEAN,
+    def_526: BOOLEAN,
+    def_528: BOOLEAN,
+    def_467: REAL,
+    def_490: REAL,
+    def_468: REAL,
+    def_491: REAL,
+    def_492: BOOLEAN,
+    def_469: REAL,
+    def_470: REAL,
+    def_471: BOOLEAN,
+    def_472: BOOLEAN,
+    def_494: BOOLEAN,
+    def_489: BOOLEAN,
+    def_493: BOOLEAN,
+    def_495: BOOLEAN,
+    def_451: REAL,
+    def_452: REAL,
+    def_453: BOOLEAN,
+    def_432: REAL,
+    def_433: REAL,
+    def_434: BOOLEAN,
+    def_435: BOOLEAN,
+    def_455: BOOLEAN,
+    def_450: BOOLEAN,
+    def_454: BOOLEAN,
+    def_456: BOOLEAN,
+    def_423: BOOLEAN,
+    def_406: REAL,
+    def_407: BOOLEAN,
+    def_408: BOOLEAN,
+    def_425: BOOLEAN,
+    def_421: REAL,
+    def_422: BOOLEAN,
+    def_424: BOOLEAN,
+    def_426: BOOLEAN,
+    def_395: BOOLEAN,
+    def_397: BOOLEAN,
+    def_387: REAL,
+    def_389: REAL,
+    def_390: REAL,
+    def_392: REAL,
+    def_393: REAL,
+    def_394: BOOLEAN,
+    def_396: BOOLEAN,
+    def_398: BOOLEAN,
+    def_362: REAL,
+    def_363: BOOLEAN,
+    def_350: BOOLEAN,
+    def_365: BOOLEAN,
+    def_361: BOOLEAN,
+    def_351: BOOLEAN,
+    def_364: BOOLEAN,
+    def_366: BOOLEAN,
+    def_344: BOOLEAN,
+    def_345: BOOLEAN,
+    def_342: BOOLEAN,
+    def_343: BOOLEAN,
+    def_346: BOOLEAN,
+    def_347: INTEGER,
+    def_348: BOOLEAN,
+    def_349: BOOLEAN,
+    def_333: REAL,
+    def_334: REAL,
+    def_335: REAL,
+    def_336: BOOLEAN,
+    def_337: INTEGER,
+    def_338: BOOLEAN,
+    def_339: BOOLEAN,
+    def_286: REAL,
+    def_290: REAL,
+    def_291: REAL,
+    def_292: BOOLEAN,
+    def_280: BOOLEAN,
+    def_281: BOOLEAN,
+    def_294: BOOLEAN,
+    def_285: REAL,
+    def_287: REAL,
+    def_288: REAL,
+    def_289: BOOLEAN,
+    def_293: BOOLEAN,
+    def_295: BOOLEAN,
+    def_326: BOOLEAN,
+    def_2117: BOOLEAN
+
+  DEFINITION
+    def_143 = (NOT pc_2);
+    def_141 = (NOT pc_1);
+    def_140 = (NOT pc_0);
+    def_142 = (def_140 AND def_141);
+    def_144 = (def_142 AND def_143);
+    def_2049 = (pc_1 AND def_140);
+    def_2050 = (def_143 AND def_2049);
+    def_1850 = (pc_0 AND def_141);
+    def_1851 = (def_143 AND def_1850);
+    def_297 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_add_3 <= 200);
+    def_298 = (IF def_297 THEN 1 ELSE 0 ENDIF);
+    def_303 = (def_298 = 0);
+    def_304 = (NOT def_303);
+    def_272 = (mode_plus_longitudinal_modif_dw_11 = 0);
+    def_273 = (NOT def_272);
+    def_270 = (mode_plus_longitudinal_modifi_u_3_1 = 0);
+    def_274 = (def_270 AND def_273);
+    def_275 = (NOT def_274);
+    def_276 = (IF def_275 THEN 1 ELSE 0 ENDIF);
+    def_301 = (def_276 = 0);
+    def_302 = (NOT def_301);
+    def_305 = (def_302 AND def_304);
+    def_306 = (NOT def_305);
+    def_265 = (mode_plus_longitudinal_modif_dw_10 = 0);
+    def_266 = (NOT def_265);
+    def_263 = (mode_plus_longitudinal_modifi_u_4_1 = 0);
+    def_267 = (def_263 AND def_266);
+    def_268 = (NOT def_267);
+    def_269 = (IF def_268 THEN 1 ELSE 0 ENDIF);
+    def_299 = (def_269 = 0);
+    def_300 = (NOT def_299);
+    def_307 = (def_300 AND def_306);
+    def_308 = (IF def_307 THEN 1 ELSE 0 ENDIF);
+    def_311 = (def_308 = 0);
+    def_967 = (IF def_311 THEN 1 ELSE 0 ENDIF);
+    def_1775 = (7 * mode_plus_longitudinal_modifi_u_15_1);
+    def_1777 = ((-(5)) * mode_plus_longitudinal_modif_dw_4);
+    def_1778 = (def_1777 + def_1775);
+    def_1779 = (5 * mode_plus_longitudinal_modif_dw_2);
+    def_1780 = (def_1779 + def_1778);
+    def_1787 = (def_1780 <= 0);
+    def_1788 = (NOT def_1787);
+    def_1785 = (div_33_826 <= 0);
+    def_1786 = (NOT def_1785);
+    def_1789 = (def_1786 AND def_1788);
+    def_1781 = (0 <= def_1780);
+    def_1782 = (NOT def_1781);
+    def_1773 = (0 <= div_33_826);
+    def_1774 = (NOT def_1773);
+    def_1783 = (def_1774 AND def_1782);
+    def_1772 = (div_33_826 = 0);
+    def_1784 = (def_1772 OR def_1783);
+    def_1790 = (def_1784 OR def_1789);
+    def_1791 = (IF def_1790 THEN 1 ELSE 0 ENDIF);
+    def_318 = (mode_plus_longitudinal_modif_dw_13 = 0);
+    def_319 = (NOT def_318);
+    def_313 = (mode_plus_longitudinal_modif_dw_12 = 0);
+    def_312 = (NOT def_311);
+    def_315 = (def_312 AND def_313);
+    def_309 = (mode_plus_longitudinal_modifi_u_5_1 = 0);
+    def_310 = (NOT def_309);
+    def_316 = (def_310 OR def_315);
+    def_317 = (NOT def_316);
+    def_320 = (def_317 AND def_319);
+    def_321 = (NOT def_320);
+    def_322 = (IF def_321 THEN 1 ELSE 0 ENDIF);
+    def_258 = (mode_plus_longitudinal_modif_dw_9 = 0);
+    def_259 = (NOT def_258);
+    def_256 = (mode_plus_longitudinal_modifi_u_0_1 = 0);
+    def_260 = (def_256 AND def_259);
+    def_261 = (NOT def_260);
+    def_262 = (IF def_261 THEN 1 ELSE 0 ENDIF);
+    def_1827 = (mode_plus_longitudinal_m_constb_2 = 0);
+    def_1828 = (NOT def_1827);
+    def_1825 = (mode_plus_longitudinal_modif_dw_17 = 0);
+    def_1826 = (NOT def_1825);
+    def_1829 = (def_1826 AND def_1828);
+    def_1830 = (NOT def_1829);
+    def_1831 = (IF def_1830 THEN 1 ELSE 0 ENDIF);
+    def_1820 = (mode_plus_longitudinal_modif_dw_15 = 0);
+    def_1821 = (NOT def_1820);
+    def_1798 = (mode_plus_longitudinal_modifi_u_1_1 = 0);
+    def_1805 = (NOT def_1798);
+    def_1004 = (mode_plus_longitudinal_modifi_u_2_1 = 0);
+    def_1005 = (NOT def_1004);
+    def_1806 = (def_1005 OR def_1805);
+    def_1807 = (IF def_1806 THEN 1 ELSE 0 ENDIF);
+    def_1810 = (def_1807 = 0);
+    def_1822 = (def_1810 AND def_1821);
+    def_1823 = (NOT def_1822);
+    def_1824 = (IF def_1823 THEN 1 ELSE 0 ENDIF);
+    def_1815 = (mode_plus_longitudinal_modif_dw_14 = 0);
+    def_1816 = (NOT def_1815);
+    def_1817 = (def_1810 AND def_1816);
+    def_1818 = (NOT def_1817);
+    def_1819 = (IF def_1818 THEN 1 ELSE 0 ENDIF);
+    def_1808 = (mode_plus_longitudinal_modif_dw_16 = 0);
+    def_1809 = (NOT def_1808);
+    def_1812 = (def_1809 AND def_1810);
+    def_1813 = (NOT def_1812);
+    def_1814 = (IF def_1813 THEN 1 ELSE 0 ENDIF);
+    def_323 = (def_299 OR def_304);
+    def_324 = (def_302 AND def_323);
+    def_325 = (IF def_324 THEN 1 ELSE 0 ENDIF);
+    def_370 = (def_325 = 0);
+    def_372 = (IF def_370 THEN 1 ELSE 0 ENDIF);
+    def_966 = ((7 / 5) * mode_plus_longitudinal_modifi_u_15_1);
+    def_968 = (mode_plus_longitudinal_modifi_u_10_1 + def_966);
+    def_977 = (mode_plus_longitudinal_modif_dw_5 * def_968);
+    def_1965 = ((-(5)) * def_977);
+    def_1966 = ((-(5)) * in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_switch_f_8);
+    def_1967 = (def_1966 + def_1965);
+    def_1969 = ((-(14)) * mode_plus_longitudinal_modifi_u_15_1);
+    def_1970 = (def_1969 + def_1967);
+    def_1971 = ((-(10)) * mode_plus_longitudinal_modifi_u_10_1);
+    def_1972 = (def_1971 + def_1970);
+    def_1975 = (5 * mode_plus_longitudinal_modif_dw_4);
+    def_1956 = (16 * mode_plus_longitudinal_modifi_u_11_1);
+    def_1961 = (799 * mode_plus_longitudinal_modif_dw_3);
+    def_1802 = (IF def_1004 THEN 1 ELSE 0 ENDIF);
+    def_1803 = (def_1802 = 0);
+    def_1804 = (NOT def_1803);
+    def_1799 = (IF def_1798 THEN 1 ELSE 0 ENDIF);
+    def_1800 = (def_1799 = 0);
+    def_1801 = (NOT def_1800);
+    def_264 = (NOT def_263);
+    def_1795 = (IF def_264 THEN 1 ELSE 0 ENDIF);
+    def_1796 = (def_1795 = 0);
+    def_1797 = (NOT def_1796);
+    def_1792 = (IF def_270 THEN 1 ELSE 0 ENDIF);
+    def_1793 = (def_1792 = 0);
+    def_1794 = (NOT def_1793);
+    def_1755 = (mode_plus_longitudinal_modifi_u_2_1 = mode_plus_longitudinal_modifi_y_3_2);
+    def_1756 = (def_1004 AND def_1755);
+    def_1723 = (mode_plus_longitudinal_modifi_y_3_2 = 0);
+    def_371 = (NOT def_370);
+    def_1006 = (def_312 OR def_371);
+    def_1707 = (NOT def_1006);
+    def_1724 = (def_1707 AND def_1723);
+    def_1087 = (0 <= mode_plus_longitudinal_modifi_u_8_1);
+    def_1088 = (IF def_1087 THEN 1 ELSE 0 ENDIF);
+    def_1650 = (def_1088 + in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_19_2);
+    def_1651 = ((3 / 10) + def_1650);
+    def_1097 = ((-(1)) * mode_plus_longitudinal_modifi_u_10_1);
+    def_995 = ((-(1)) * def_966);
+    def_996 = (mode_plus_longitudinal_modif_dw_4 + def_995);
+    def_1098 = (def_996 + def_1097);
+    def_1099 = (2 * def_1098);
+    def_1100 = ((-(1)) * def_1099);
+    def_998 = ((1 / 16) * mode_plus_longitudinal_modif_dw_3);
+    def_999 = ((-(1)) * def_998);
+    def_1000 = (mode_plus_longitudinal_modifi_u_11_1 + def_999);
+    def_1096 = ((1 / 2) * def_1000);
+    def_1101 = (def_1096 + def_1100);
+    def_1652 = (def_1101 * def_1651);
+    def_1671 = (mode_plus_longitudinal_modifi_y_3_2 = def_1652);
+    def_1628 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_19_2 = 0);
+    def_1010 = (mode_plus_longitudinal_modifi_u_8_1 <= 120);
+    def_1630 = (def_1010 AND def_1628);
+    def_1625 = (2300 * in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_19_2);
+    def_1062 = (7 * mode_plus_longitudinal_modifi_u_8_1);
+    def_1626 = (def_1062 + def_1625);
+    def_1627 = (def_1626 = 3140);
+    def_1011 = (NOT def_1010);
+    def_1629 = (def_1011 AND def_1627);
+    def_1631 = (def_1629 OR def_1630);
+    def_1649 = (def_1010 AND def_1631);
+    def_1008 = (mode_plus_longitudinal_modifi_u_8_1 <= 350);
+    def_1092 = (NOT def_1008);
+    def_1091 = (mode_plus_longitudinal_modifi_u_8_1 <= 500);
+    def_1103 = (def_1091 AND def_1092);
+    def_1653 = (def_1103 AND def_1649);
+    def_1654 = (def_1008 AND def_1653);
+    def_1672 = (def_1654 AND def_1671);
+    def_1567 = (def_1088 + in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_17_2);
+    def_1568 = ((3 / 10) + def_1567);
+    def_1569 = (def_1101 * def_1568);
+    def_1588 = (mode_plus_longitudinal_modifi_y_3_2 = def_1569);
+    def_1545 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_17_2 = 0);
+    def_1547 = (def_1010 AND def_1545);
+    def_1542 = (2300 * in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_17_2);
+    def_1543 = (def_1062 + def_1542);
+    def_1544 = (def_1543 = 3140);
+    def_1546 = (def_1011 AND def_1544);
+    def_1548 = (def_1546 OR def_1547);
+    def_1566 = (def_1010 AND def_1548);
+    def_1570 = (def_1103 AND def_1566);
+    def_1571 = (def_1008 AND def_1570);
+    def_1589 = (def_1571 AND def_1588);
+    def_1484 = (def_1088 + in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_15_2);
+    def_1485 = ((3 / 10) + def_1484);
+    def_1486 = (def_1101 * def_1485);
+    def_1505 = (mode_plus_longitudinal_modifi_y_3_2 = def_1486);
+    def_1462 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_15_2 = 0);
+    def_1464 = (def_1010 AND def_1462);
+    def_1459 = (2300 * in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_15_2);
+    def_1460 = (def_1062 + def_1459);
+    def_1461 = (def_1460 = 3140);
+    def_1463 = (def_1011 AND def_1461);
+    def_1465 = (def_1463 OR def_1464);
+    def_1483 = (def_1010 AND def_1465);
+    def_1487 = (def_1103 AND def_1483);
+    def_1488 = (def_1008 AND def_1487);
+    def_1506 = (def_1488 AND def_1505);
+    def_1401 = (def_1088 + in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_13_2);
+    def_1402 = ((3 / 10) + def_1401);
+    def_1403 = (def_1101 * def_1402);
+    def_1422 = (mode_plus_longitudinal_modifi_y_3_2 = def_1403);
+    def_1379 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_13_2 = 0);
+    def_1381 = (def_1010 AND def_1379);
+    def_1376 = (2300 * in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_13_2);
+    def_1377 = (def_1062 + def_1376);
+    def_1378 = (def_1377 = 3140);
+    def_1380 = (def_1011 AND def_1378);
+    def_1382 = (def_1380 OR def_1381);
+    def_1400 = (def_1010 AND def_1382);
+    def_1404 = (def_1103 AND def_1400);
+    def_1405 = (def_1008 AND def_1404);
+    def_1423 = (def_1405 AND def_1422);
+    def_1318 = (def_1088 + in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_11_2);
+    def_1319 = ((3 / 10) + def_1318);
+    def_1320 = (def_1101 * def_1319);
+    def_1339 = (mode_plus_longitudinal_modifi_y_3_2 = def_1320);
+    def_1296 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_11_2 = 0);
+    def_1298 = (def_1010 AND def_1296);
+    def_1293 = (2300 * in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_11_2);
+    def_1294 = (def_1062 + def_1293);
+    def_1295 = (def_1294 = 3140);
+    def_1297 = (def_1011 AND def_1295);
+    def_1299 = (def_1297 OR def_1298);
+    def_1317 = (def_1010 AND def_1299);
+    def_1321 = (def_1103 AND def_1317);
+    def_1322 = (def_1008 AND def_1321);
+    def_1340 = (def_1322 AND def_1339);
+    def_1235 = (def_1088 + in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_9_2);
+    def_1236 = ((3 / 10) + def_1235);
+    def_1237 = (def_1101 * def_1236);
+    def_1256 = (mode_plus_longitudinal_modifi_y_3_2 = def_1237);
+    def_1213 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_9_2 = 0);
+    def_1215 = (def_1010 AND def_1213);
+    def_1210 = (2300 * in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_9_2);
+    def_1211 = (def_1062 + def_1210);
+    def_1212 = (def_1211 = 3140);
+    def_1214 = (def_1011 AND def_1212);
+    def_1216 = (def_1214 OR def_1215);
+    def_1234 = (def_1010 AND def_1216);
+    def_1238 = (def_1103 AND def_1234);
+    def_1239 = (def_1008 AND def_1238);
+    def_1257 = (def_1239 AND def_1256);
+    def_1148 = (def_1088 + in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_7_2);
+    def_1149 = ((3 / 10) + def_1148);
+    def_1150 = (def_1101 * def_1149);
+    def_1172 = (def_1150 = mode_plus_longitudinal_modifi_y_3_2);
+    def_1126 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_7_2 = 0);
+    def_1128 = (def_1010 AND def_1126);
+    def_1123 = (2300 * in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_7_2);
+    def_1124 = (def_1062 + def_1123);
+    def_1125 = (def_1124 = 3140);
+    def_1127 = (def_1011 AND def_1125);
+    def_1129 = (def_1127 OR def_1128);
+    def_1147 = (def_1010 AND def_1129);
+    def_1151 = (def_1103 AND def_1147);
+    def_1152 = (def_1008 AND def_1151);
+    def_1174 = (def_1152 AND def_1172);
+    def_1089 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_5_2 + def_1088);
+    def_1094 = (def_1089 + (3 / 10));
+    def_1102 = (def_1094 * def_1101);
+    def_1171 = (def_1102 = mode_plus_longitudinal_modifi_y_3_2);
+    def_1065 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_5_2 = 0);
+    def_1067 = (def_1010 AND def_1065);
+    def_1060 = (2300 * in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_5_2);
+    def_1063 = (def_1062 + def_1060);
+    def_1064 = (def_1063 = 3140);
+    def_1066 = (def_1011 AND def_1064);
+    def_1068 = (def_1066 OR def_1067);
+    def_1086 = (def_1010 AND def_1068);
+    def_1104 = (def_1086 AND def_1103);
+    def_1105 = (def_1008 AND def_1104);
+    def_1173 = (def_1105 AND def_1171);
+    def_1175 = (def_1173 OR def_1174);
+    def_1192 = (def_1174 OR def_1175);
+    def_1258 = (def_1192 OR def_1257);
+    def_1275 = (def_1257 OR def_1258);
+    def_1341 = (def_1275 OR def_1340);
+    def_1358 = (def_1340 OR def_1341);
+    def_1424 = (def_1358 OR def_1423);
+    def_1441 = (def_1423 OR def_1424);
+    def_1507 = (def_1441 OR def_1506);
+    def_1524 = (def_1506 OR def_1507);
+    def_1590 = (def_1524 OR def_1589);
+    def_1607 = (def_1589 OR def_1590);
+    def_1673 = (def_1607 OR def_1672);
+    def_1690 = (def_1672 OR def_1673);
+    def_1691 = (def_1006 AND def_1690);
+    def_1725 = (def_1691 OR def_1724);
+    def_1726 = (def_1005 AND def_1725);
+    def_1757 = (def_1726 OR def_1756);
+    def_973 = (mode_plus_longitudinal_modif_dw_19 = 0);
+    def_974 = (NOT def_973);
+    def_971 = (def_967 = 0);
+    def_980 = (def_971 AND def_974);
+    def_972 = (NOT def_971);
+    def_981 = (def_972 AND def_980);
+    def_949 = ((-(2500000000)) * in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_switch_f_8);
+    def_866 = (1167699003723 * mode_plus_longitudinal_modifi_u_14_1);
+    def_950 = (def_866 + def_949);
+    def_951 = (def_950 = 0);
+    def_858 = ((-(143239500000)) * div_33_826);
+    def_860 = ((-(2500000000)) * mode_plus_longitudinal_modifi_u_16_1);
+    def_861 = (def_860 + def_858);
+    def_863 = (2500000000 * mode_plus_longitudinal_modifi_u_15_1);
+    def_864 = (def_863 + def_861);
+    def_867 = (def_866 + def_864);
+    def_868 = (0 <= def_867);
+    def_869 = (NOT def_868);
+    def_952 = (def_869 AND def_951);
+    def_918 = (2500000000 * in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_switch_f_8);
+    def_919 = (def_866 + def_918);
+    def_920 = (def_919 = 0);
+    def_872 = (143239500000 * div_33_826);
+    def_873 = (2500000000 * mode_plus_longitudinal_modifi_u_16_1);
+    def_874 = (def_873 + def_872);
+    def_875 = ((-(2500000000)) * mode_plus_longitudinal_modifi_u_15_1);
+    def_876 = (def_875 + def_874);
+    def_877 = (def_866 + def_876);
+    def_878 = (0 <= def_877);
+    def_879 = (NOT def_878);
+    def_922 = (def_879 AND def_920);
+    def_909 = (5000 * in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_switch_f_8);
+    def_911 = ((-(286479)) * div_33_826);
+    def_912 = (def_911 + def_909);
+    def_913 = ((-(5000)) * mode_plus_longitudinal_modifi_u_16_1);
+    def_914 = (def_913 + def_912);
+    def_915 = (5000 * mode_plus_longitudinal_modifi_u_15_1);
+    def_916 = (def_915 + def_914);
+    def_917 = (def_916 = 0);
+    def_921 = (def_878 AND def_917);
+    def_923 = (def_921 OR def_922);
+    def_924 = (def_868 AND def_923);
+    def_953 = (def_924 OR def_952);
+    def_846 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_15 = 0);
+    def_844 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_15 * div_33_826);
+    def_845 = (mode_plus_longitudinal_modif_dw_6 = def_844);
+    def_847 = (def_845 OR def_846);
+    def_828 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_13 = in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_15);
+    def_801 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_13 <= 1000);
+    def_830 = (def_801 AND def_828);
+    def_827 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_15 = 1000);
+    def_802 = (NOT def_801);
+    def_829 = (def_802 AND def_827);
+    def_831 = (def_829 OR def_830);
+    def_848 = (def_831 AND def_847);
+    def_782 = ((-(5000)) * in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_13);
+    def_784 = (8439 * mode_plus_longitudinal_modifi_u_12_1);
+    def_785 = (def_784 + def_782);
+    def_786 = (def_785 = 0);
+    def_756 = (mode_plus_longitudinal_modifi_u_12_1 <= (1 / 16878));
+    def_757 = (NOT def_756);
+    def_788 = (def_757 AND def_786);
+    def_780 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_13 = (1 / 10000));
+    def_787 = (def_756 AND def_780);
+    def_789 = (def_787 OR def_788);
+    def_631 = ((-(1)) * mode_plus_longitudinal_modif_dw_6_2);
+    def_736 = (def_631 + in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_4_2);
+    def_583 = (mode_plus_longitudinal_modif_dw_8 * mode_plus_longitudinal_modifi_u_13_1);
+    def_737 = (def_583 + def_736);
+    def_738 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_10 + def_737);
+    def_739 = (mode_plus_longitudinal_modifi_u_13_1 + def_738);
+    def_740 = (def_739 = 0);
+    def_707 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_4_2 = 0);
+    def_539 = (def_372 = 0);
+    def_540 = (NOT def_539);
+    def_709 = (def_540 AND def_707);
+    def_352 = ((-(1)) * mode_plus_longitudinal_modifi_u_13_1);
+    def_704 = (def_352 + in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_4_2);
+    def_705 = (mode_plus_longitudinal_modif_dw_6 + def_704);
+    def_706 = (def_705 = 0);
+    def_708 = (def_539 AND def_706);
+    def_710 = (def_708 OR def_709);
+    def_721 = (def_370 AND def_710);
+    def_537 = (mode_plus_longitudinal_modif_dw_7 = 0);
+    def_538 = (NOT def_537);
+    def_726 = (def_538 AND def_721);
+    def_741 = (def_726 AND def_740);
+    def_687 = (def_631 + in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_3_2);
+    def_688 = (def_583 + def_687);
+    def_689 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_10 + def_688);
+    def_690 = (mode_plus_longitudinal_modifi_u_13_1 + def_689);
+    def_691 = (def_690 = 0);
+    def_658 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_3_2 = 0);
+    def_660 = (def_540 AND def_658);
+    def_655 = (def_352 + in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_3_2);
+    def_656 = (mode_plus_longitudinal_modif_dw_6 + def_655);
+    def_657 = (def_656 = 0);
+    def_659 = (def_539 AND def_657);
+    def_661 = (def_659 OR def_660);
+    def_672 = (def_370 AND def_661);
+    def_677 = (def_538 AND def_672);
+    def_692 = (def_677 AND def_691);
+    def_637 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_2_2 + def_631);
+    def_638 = (def_583 + def_637);
+    def_639 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_10 + def_638);
+    def_640 = (mode_plus_longitudinal_modifi_u_13_1 + def_639);
+    def_641 = (def_640 = 0);
+    def_590 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_2_2 = 0);
+    def_592 = (def_540 AND def_590);
+    def_587 = (def_352 + in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_2_2);
+    def_588 = (mode_plus_longitudinal_modif_dw_6 + def_587);
+    def_589 = (def_588 = 0);
+    def_591 = (def_539 AND def_589);
+    def_593 = (def_591 OR def_592);
+    def_604 = (def_370 AND def_593);
+    def_619 = (def_538 AND def_604);
+    def_643 = (def_619 AND def_641);
+    def_632 = (def_583 + def_631);
+    def_633 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_1_2 + def_632);
+    def_634 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_10 + def_633);
+    def_635 = (mode_plus_longitudinal_modifi_u_13_1 + def_634);
+    def_636 = (def_635 = 0);
+    def_566 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_1_2 = 0);
+    def_568 = (def_540 AND def_566);
+    def_563 = (def_352 + in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rse_mode_plus_longitudinal_modified_g130_nuxmv_step_1_2);
+    def_564 = (mode_plus_longitudinal_modif_dw_6 + def_563);
+    def_565 = (def_564 = 0);
+    def_567 = (def_539 AND def_565);
+    def_569 = (def_567 OR def_568);
+    def_580 = (def_370 AND def_569);
+    def_609 = (def_538 AND def_580);
+    def_642 = (def_609 AND def_636);
+    def_644 = (def_642 OR def_643);
+    def_693 = (def_644 OR def_692);
+    def_742 = (def_693 OR def_741);
+    def_525 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_8 = in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_10);
+    def_504 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_8 <= (16 / 5));
+    def_527 = (def_504 AND def_525);
+    def_524 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_10 = (16 / 5));
+    def_505 = (NOT def_504);
+    def_526 = (def_505 AND def_524);
+    def_528 = (def_526 OR def_527);
+    def_467 = ((-(20)) * in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_5);
+    def_490 = (def_467 + in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_8);
+    def_468 = (20 * mode_plus_longitudinal_modif_dw_6);
+    def_491 = (def_468 + def_490);
+    def_492 = (def_491 = 0);
+    def_469 = (def_468 + def_467);
+    def_470 = (mode_plus_longitudinal_m_constb_0 + def_469);
+    def_471 = (0 <= def_470);
+    def_472 = (NOT def_471);
+    def_494 = (def_472 AND def_492);
+    def_489 = (mode_plus_longitudinal_m_constb_0 = in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_8);
+    def_493 = (def_471 AND def_489);
+    def_495 = (def_493 OR def_494);
+    def_451 = ((-(1)) * in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_5);
+    def_452 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_2 + def_451);
+    def_453 = (def_452 = (-(10)));
+    def_432 = ((-(1)) * in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_switch_f_4);
+    def_433 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_2 + def_432);
+    def_434 = ((-(10)) <= def_433);
+    def_435 = (NOT def_434);
+    def_455 = (def_435 AND def_453);
+    def_450 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_switch_f_4 = in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_5);
+    def_454 = (def_434 AND def_450);
+    def_456 = (def_454 OR def_455);
+    def_423 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_switch_f_2 = in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_switch_f_4);
+    def_406 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_2 + in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_switch_f_2);
+    def_407 = (def_406 <= (-(10)));
+    def_408 = (NOT def_407);
+    def_425 = (def_408 AND def_423);
+    def_421 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_2 + in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_switch_f_4);
+    def_422 = (def_421 = (-(10)));
+    def_424 = (def_407 AND def_422);
+    def_426 = (def_424 OR def_425);
+    def_395 = (in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_switch_f_2 = 0);
+    def_397 = (def_370 AND def_395);
+    def_387 = ((-(25)) * in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_switch_f_2);
+    def_389 = ((-(2)) * mode_plus_longitudinal_modifi_u_7_1);
+    def_390 = (def_389 + def_387);
+    def_392 = (2 * mode_plus_longitudinal_modifi_u_6_1);
+    def_393 = (def_392 + def_390);
+    def_394 = (def_393 = 0);
+    def_396 = (def_371 AND def_394);
+    def_398 = (def_396 OR def_397);
+    def_362 = (mode_plus_longitudinal_modifi_u_13_1 + in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_2);
+    def_363 = (def_362 = 0);
+    def_350 = (mode_plus_longitudinal_modifi_u_13_1 <= 0);
+    def_365 = (def_350 AND def_363);
+    def_361 = (mode_plus_longitudinal_modifi_u_13_1 = in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_y_e_2);
+    def_351 = (NOT def_350);
+    def_364 = (def_351 AND def_361);
+    def_366 = (def_364 OR def_365);
+    def_344 = (mode_plus_longitudinal_modifi_u_16_1 <= (-(1)));
+    def_345 = (NOT def_344);
+    def_342 = ((-(10)) <= mode_plus_longitudinal_modifi_u_16_1);
+    def_343 = (NOT def_342);
+    def_346 = (def_343 AND def_345);
+    def_347 = (IF def_346 THEN 1 ELSE 0 ENDIF);
+    def_348 = (def_347 = 0);
+    def_349 = (NOT def_348);
+    def_333 = ((-(7)) * mode_plus_longitudinal_modifi_u_15_1);
+    def_334 = (5 * mode_plus_longitudinal_modif_dw_1);
+    def_335 = (def_334 + def_333);
+    def_336 = (def_335 = 0);
+    def_337 = (IF def_336 THEN 1 ELSE 0 ENDIF);
+    def_338 = (def_337 = 0);
+    def_339 = (NOT def_338);
+    def_286 = ((-(1)) * mode_plus_longitudinal_modifi_u_7_1);
+    def_290 = (def_286 + in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_add_3);
+    def_291 = (mode_plus_longitudinal_modifi_u_6_1 + def_290);
+    def_292 = (def_291 = 0);
+    def_280 = (mode_plus_longitudinal_modifi_u_7_1 <= mode_plus_longitudinal_modifi_u_6_1);
+    def_281 = (NOT def_280);
+    def_294 = (def_281 AND def_292);
+    def_285 = ((-(1)) * in_mode_plus_longitudinal_modified_g130_nuxmv_step_1_rtb_add_3);
+    def_287 = (def_286 + def_285);
+    def_288 = (mode_plus_longitudinal_modifi_u_6_1 + def_287);
+    def_289 = (def_288 = 0);
+    def_293 = (def_280 AND def_289);
+    def_295 = (def_293 OR def_294);
+    def_326 = (mode_plus_longitudinal_modif_dw_18 = 0);
+    def_2117 = (NOT def_2050);
+
+  INITIALIZATION
+  [
+      def_144 -->
+        pc_2 IN { v_pc_2: BOOLEAN | TRUE };
+        pc_1 IN { v_pc_1: BOOLEAN | TRUE };
+        pc_0 IN { v_pc_0: BOOLEAN | TRUE };
+        mode_plus_longitudinal_modifi_u_16 IN { v_mode_plus_longitudinal_modifi_u_16: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_15 IN { v_mode_plus_longitudinal_modifi_u_15: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_14 IN { v_mode_plus_longitudinal_modifi_u_14: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_13 IN { v_mode_plus_longitudinal_modifi_u_13: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_12 IN { v_mode_plus_longitudinal_modifi_u_12: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_11 IN { v_mode_plus_longitudinal_modifi_u_11: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_10 IN { v_mode_plus_longitudinal_modifi_u_10: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_9 IN { v_mode_plus_longitudinal_modifi_u_9: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_8 IN { v_mode_plus_longitudinal_modifi_u_8: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_7 IN { v_mode_plus_longitudinal_modifi_u_7: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_6 IN { v_mode_plus_longitudinal_modifi_u_6: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_5 IN { v_mode_plus_longitudinal_modifi_u_5: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_4 IN { v_mode_plus_longitudinal_modifi_u_4: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_3 IN { v_mode_plus_longitudinal_modifi_u_3: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_2 IN { v_mode_plus_longitudinal_modifi_u_2: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_1 IN { v_mode_plus_longitudinal_modifi_u_1: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_0 IN { v_mode_plus_longitudinal_modifi_u_0: REAL | TRUE };
+        mode_plus_longitudinal_modifi_y_2 IN { v_mode_plus_longitudinal_modifi_y_2: REAL | TRUE };
+        mode_plus_longitudinal_modifi_y_1 IN { v_mode_plus_longitudinal_modifi_y_1: INTEGER | TRUE };
+        mode_plus_longitudinal_modifi_y_0 IN { v_mode_plus_longitudinal_modifi_y_0: INTEGER | TRUE };
+        mode_plus_longitudinal_modifi_y_3 IN { v_mode_plus_longitudinal_modifi_y_3: REAL | TRUE };
+        mode_plus_longitudinal_m_constb_0 IN { v_mode_plus_longitudinal_m_constb_0: REAL | TRUE };
+        mode_plus_longitudinal_m_constb_1 IN { v_mode_plus_longitudinal_m_constb_1: INTEGER | TRUE };
+        mode_plus_longitudinal_m_constb_2 IN { v_mode_plus_longitudinal_m_constb_2: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_0 IN { v_mode_plus_longitudinal_modif_dw_0: REAL | TRUE };
+        mode_plus_longitudinal_modif_dw_1 IN { v_mode_plus_longitudinal_modif_dw_1: REAL | TRUE };
+        mode_plus_longitudinal_modif_dw_2 IN { v_mode_plus_longitudinal_modif_dw_2: REAL | TRUE };
+        mode_plus_longitudinal_modif_dw_3 IN { v_mode_plus_longitudinal_modif_dw_3: REAL | TRUE };
+        mode_plus_longitudinal_modif_dw_4 IN { v_mode_plus_longitudinal_modif_dw_4: REAL | TRUE };
+        mode_plus_longitudinal_modif_dw_5 IN { v_mode_plus_longitudinal_modif_dw_5: REAL | TRUE };
+        mode_plus_longitudinal_modif_dw_6 IN { v_mode_plus_longitudinal_modif_dw_6: REAL | TRUE };
+        mode_plus_longitudinal_modif_dw_7 IN { v_mode_plus_longitudinal_modif_dw_7: REAL | TRUE };
+        mode_plus_longitudinal_modif_dw_8 IN { v_mode_plus_longitudinal_modif_dw_8: REAL | TRUE };
+        mode_plus_longitudinal_modif_dw_9 IN { v_mode_plus_longitudinal_modif_dw_9: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_10 IN { v_mode_plus_longitudinal_modif_dw_10: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_11 IN { v_mode_plus_longitudinal_modif_dw_11: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_12 IN { v_mode_plus_longitudinal_modif_dw_12: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_13 IN { v_mode_plus_longitudinal_modif_dw_13: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_14 IN { v_mode_plus_longitudinal_modif_dw_14: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_15 IN { v_mode_plus_longitudinal_modif_dw_15: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_16 IN { v_mode_plus_longitudinal_modif_dw_16: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_17 IN { v_mode_plus_longitudinal_modif_dw_17: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_18 IN { v_mode_plus_longitudinal_modif_dw_18: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_19 IN { v_mode_plus_longitudinal_modif_dw_19: INTEGER | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_1852: BOOLEAN = (NOT pc_0') IN
+        LET def_1853: BOOLEAN = (pc_1' AND def_1852) IN
+        LET def_147: BOOLEAN = (NOT pc_2') IN
+        LET def_1854: BOOLEAN = (def_147 AND def_1853) IN
+        LET def_2114: BOOLEAN = (def_1854 AND def_2050) IN
+        LET def_2112: BOOLEAN = (mode_plus_longitudinal_modifi_u_16 = mode_plus_longitudinal_modifi_u_16') IN
+        LET def_2110: BOOLEAN = (mode_plus_longitudinal_modifi_u_15 = mode_plus_longitudinal_modifi_u_15') IN
+        LET def_2108: BOOLEAN = (mode_plus_longitudinal_modifi_u_14 = mode_plus_longitudinal_modifi_u_14') IN
+        LET def_2106: BOOLEAN = (mode_plus_longitudinal_modifi_u_13 = mode_plus_longitudinal_modifi_u_13') IN
+        LET def_2104: BOOLEAN = (mode_plus_longitudinal_modifi_u_12 = mode_plus_longitudinal_modifi_u_12') IN
+        LET def_2102: BOOLEAN = (mode_plus_longitudinal_modifi_u_11 = mode_plus_longitudinal_modifi_u_11') IN
+        LET def_2100: BOOLEAN = (mode_plus_longitudinal_modifi_u_10 = mode_plus_longitudinal_modifi_u_10') IN
+        LET def_2098: BOOLEAN = (mode_plus_longitudinal_modifi_u_9 = mode_plus_longitudinal_modifi_u_9') IN
+        LET def_2096: BOOLEAN = (mode_plus_longitudinal_modifi_u_8 = mode_plus_longitudinal_modifi_u_8') IN
+        LET def_2094: BOOLEAN = (mode_plus_longitudinal_modifi_u_7 = mode_plus_longitudinal_modifi_u_7') IN
+        LET def_2092: BOOLEAN = (mode_plus_longitudinal_modifi_u_6 = mode_plus_longitudinal_modifi_u_6') IN
+        LET def_2090: BOOLEAN = (mode_plus_longitudinal_modifi_u_5 = mode_plus_longitudinal_modifi_u_5') IN
+        LET def_2088: BOOLEAN = (mode_plus_longitudinal_modifi_u_4 = mode_plus_longitudinal_modifi_u_4') IN
+        LET def_2086: BOOLEAN = (mode_plus_longitudinal_modifi_u_3 = mode_plus_longitudinal_modifi_u_3') IN
+        LET def_2084: BOOLEAN = (mode_plus_longitudinal_modifi_u_2 = mode_plus_longitudinal_modifi_u_2') IN
+        LET def_2082: BOOLEAN = (mode_plus_longitudinal_modifi_u_1 = mode_plus_longitudinal_modifi_u_1') IN
+        LET def_2080: BOOLEAN = (mode_plus_longitudinal_modifi_u_0 = mode_plus_longitudinal_modifi_u_0') IN
+        LET def_2054: BOOLEAN = (mode_plus_longitudinal_modifi_y_2 = mode_plus_longitudinal_modifi_y_2') IN
+        LET def_2052: BOOLEAN = (mode_plus_longitudinal_modifi_y_1 = mode_plus_longitudinal_modifi_y_1') IN
+        LET def_2051: BOOLEAN = (mode_plus_longitudinal_modifi_y_0 = mode_plus_longitudinal_modifi_y_0') IN
+        LET def_2053: BOOLEAN = (def_2051 AND def_2052) IN
+        LET def_2055: BOOLEAN = (def_2053 AND def_2054) IN
+        LET def_1860: BOOLEAN = (mode_plus_longitudinal_modifi_y_3 = mode_plus_longitudinal_modifi_y_3') IN
+        LET def_2056: BOOLEAN = (def_1860 AND def_2055) IN
+        LET def_156: BOOLEAN = (mode_plus_longitudinal_m_constb_0 = mode_plus_longitudinal_m_constb_0') IN
+        LET def_2057: BOOLEAN = (def_156 AND def_2056) IN
+        LET def_158: BOOLEAN = (mode_plus_longitudinal_m_constb_1 = mode_plus_longitudinal_m_constb_1') IN
+        LET def_2058: BOOLEAN = (def_158 AND def_2057) IN
+        LET def_160: BOOLEAN = (mode_plus_longitudinal_m_constb_2 = mode_plus_longitudinal_m_constb_2') IN
+        LET def_2059: BOOLEAN = (def_160 AND def_2058) IN
+        LET def_1865: BOOLEAN = (mode_plus_longitudinal_modif_dw_0 = mode_plus_longitudinal_modif_dw_0') IN
+        LET def_2060: BOOLEAN = (def_1865 AND def_2059) IN
+        LET def_1867: BOOLEAN = (mode_plus_longitudinal_modif_dw_1 = mode_plus_longitudinal_modif_dw_1') IN
+        LET def_2061: BOOLEAN = (def_1867 AND def_2060) IN
+        LET def_1869: BOOLEAN = (mode_plus_longitudinal_modif_dw_2 = mode_plus_longitudinal_modif_dw_2') IN
+        LET def_2062: BOOLEAN = (def_1869 AND def_2061) IN
+        LET def_1871: BOOLEAN = (mode_plus_longitudinal_modif_dw_3 = mode_plus_longitudinal_modif_dw_3') IN
+        LET def_2063: BOOLEAN = (def_1871 AND def_2062) IN
+        LET def_1873: BOOLEAN = (mode_plus_longitudinal_modif_dw_4 = mode_plus_longitudinal_modif_dw_4') IN
+        LET def_2064: BOOLEAN = (def_1873 AND def_2063) IN
+        LET def_1875: BOOLEAN = (mode_plus_longitudinal_modif_dw_5 = mode_plus_longitudinal_modif_dw_5') IN
+        LET def_2065: BOOLEAN = (def_1875 AND def_2064) IN
+        LET def_1877: BOOLEAN = (mode_plus_longitudinal_modif_dw_6 = mode_plus_longitudinal_modif_dw_6') IN
+        LET def_2066: BOOLEAN = (def_1877 AND def_2065) IN
+        LET def_1879: BOOLEAN = (mode_plus_longitudinal_modif_dw_7 = mode_plus_longitudinal_modif_dw_7') IN
+        LET def_2067: BOOLEAN = (def_1879 AND def_2066) IN
+        LET def_1881: BOOLEAN = (mode_plus_longitudinal_modif_dw_8 = mode_plus_longitudinal_modif_dw_8') IN
+        LET def_2068: BOOLEAN = (def_1881 AND def_2067) IN
+        LET def_1883: BOOLEAN = (mode_plus_longitudinal_modif_dw_9 = mode_plus_longitudinal_modif_dw_9') IN
+        LET def_2069: BOOLEAN = (def_1883 AND def_2068) IN
+        LET def_1885: BOOLEAN = (mode_plus_longitudinal_modif_dw_10 = mode_plus_longitudinal_modif_dw_10') IN
+        LET def_2070: BOOLEAN = (def_1885 AND def_2069) IN
+        LET def_1887: BOOLEAN = (mode_plus_longitudinal_modif_dw_11 = mode_plus_longitudinal_modif_dw_11') IN
+        LET def_2071: BOOLEAN = (def_1887 AND def_2070) IN
+        LET def_1889: BOOLEAN = (mode_plus_longitudinal_modif_dw_12 = mode_plus_longitudinal_modif_dw_12') IN
+        LET def_2072: BOOLEAN = (def_1889 AND def_2071) IN
+        LET def_1891: BOOLEAN = (mode_plus_longitudinal_modif_dw_13 = mode_plus_longitudinal_modif_dw_13') IN
+        LET def_2073: BOOLEAN = (def_1891 AND def_2072) IN
+        LET def_1893: BOOLEAN = (mode_plus_longitudinal_modif_dw_14 = mode_plus_longitudinal_modif_dw_14') IN
+        LET def_2074: BOOLEAN = (def_1893 AND def_2073) IN
+        LET def_1895: BOOLEAN = (mode_plus_longitudinal_modif_dw_15 = mode_plus_longitudinal_modif_dw_15') IN
+        LET def_2075: BOOLEAN = (def_1895 AND def_2074) IN
+        LET def_1897: BOOLEAN = (mode_plus_longitudinal_modif_dw_16 = mode_plus_longitudinal_modif_dw_16') IN
+        LET def_2076: BOOLEAN = (def_1897 AND def_2075) IN
+        LET def_1899: BOOLEAN = (mode_plus_longitudinal_modif_dw_17 = mode_plus_longitudinal_modif_dw_17') IN
+        LET def_2077: BOOLEAN = (def_1899 AND def_2076) IN
+        LET def_1901: BOOLEAN = (mode_plus_longitudinal_modif_dw_18 = mode_plus_longitudinal_modif_dw_18') IN
+        LET def_2078: BOOLEAN = (def_1901 AND def_2077) IN
+        LET def_1903: BOOLEAN = (mode_plus_longitudinal_modif_dw_19 = mode_plus_longitudinal_modif_dw_19') IN
+        LET def_2079: BOOLEAN = (def_1903 AND def_2078) IN
+        LET def_2081: BOOLEAN = (def_2079 AND def_2080) IN
+        LET def_2083: BOOLEAN = (def_2081 AND def_2082) IN
+        LET def_2085: BOOLEAN = (def_2083 AND def_2084) IN
+        LET def_2087: BOOLEAN = (def_2085 AND def_2086) IN
+        LET def_2089: BOOLEAN = (def_2087 AND def_2088) IN
+        LET def_2091: BOOLEAN = (def_2089 AND def_2090) IN
+        LET def_2093: BOOLEAN = (def_2091 AND def_2092) IN
+        LET def_2095: BOOLEAN = (def_2093 AND def_2094) IN
+        LET def_2097: BOOLEAN = (def_2095 AND def_2096) IN
+        LET def_2099: BOOLEAN = (def_2097 AND def_2098) IN
+        LET def_2101: BOOLEAN = (def_2099 AND def_2100) IN
+        LET def_2103: BOOLEAN = (def_2101 AND def_2102) IN
+        LET def_2105: BOOLEAN = (def_2103 AND def_2104) IN
+        LET def_2107: BOOLEAN = (def_2105 AND def_2106) IN
+        LET def_2109: BOOLEAN = (def_2107 AND def_2108) IN
+        LET def_2111: BOOLEAN = (def_2109 AND def_2110) IN
+        LET def_2113: BOOLEAN = (def_2111 AND def_2112) IN
+        LET def_2115: BOOLEAN = (def_2113 AND def_2114) IN
+        LET def_145: BOOLEAN = (NOT pc_1') IN
+        LET def_146: BOOLEAN = (pc_0' AND def_145) IN
+        LET def_148: BOOLEAN = (def_146 AND def_147) IN
+        LET def_2045: BOOLEAN = (def_148 AND def_1851) IN
+        LET def_2007: BOOLEAN = (mode_plus_longitudinal_modif_dw_19' = def_967) IN
+        LET def_2005: BOOLEAN = (mode_plus_longitudinal_modif_dw_18' = def_1791) IN
+        LET def_2003: BOOLEAN = (mode_plus_longitudinal_modif_dw_17' = def_322) IN
+        LET def_2001: BOOLEAN = (mode_plus_longitudinal_modif_dw_16' = def_262) IN
+        LET def_1999: BOOLEAN = (mode_plus_longitudinal_modif_dw_15' = def_276) IN
+        LET def_1997: BOOLEAN = (mode_plus_longitudinal_modif_dw_14' = def_269) IN
+        LET def_1995: BOOLEAN = (mode_plus_longitudinal_modif_dw_13' = def_1831) IN
+        LET def_1993: BOOLEAN = (mode_plus_longitudinal_modif_dw_12' = def_322) IN
+        LET def_1991: BOOLEAN = (mode_plus_longitudinal_modif_dw_11' = def_1824) IN
+        LET def_1989: BOOLEAN = (mode_plus_longitudinal_modif_dw_10' = def_1819) IN
+        LET def_1987: BOOLEAN = (mode_plus_longitudinal_modif_dw_9' = def_1814) IN
+        LET def_1985: BOOLEAN = (mode_plus_longitudinal_modif_dw_8' = 0) IN
+        LET def_1983: BOOLEAN = (mode_plus_longitudinal_modif_dw_7' = def_372) IN
+        LET def_1981: BOOLEAN = (mode_plus_longitudinal_modif_dw_6' = mode_plus_longitudinal_modif_dw_6_2) IN
+        LET def_1979: BOOLEAN = (mode_plus_longitudinal_modif_dw_5' = 0) IN
+        LET def_1973: REAL = (5 * mode_plus_longitudinal_modif_dw_4') IN
+        LET def_1974: REAL = (def_1973 + def_1972) IN
+        LET def_1976: REAL = (def_1975 + def_1974) IN
+        LET def_1977: BOOLEAN = (def_1976 = 0) IN
+        LET def_1958: REAL = ((-(800)) * mode_plus_longitudinal_modif_dw_3') IN
+        LET def_1959: REAL = (def_1958 + def_1956) IN
+        LET def_1962: REAL = (def_1961 + def_1959) IN
+        LET def_1963: BOOLEAN = (def_1962 = 0) IN
+        LET def_1953: BOOLEAN = (mode_plus_longitudinal_modif_dw_1 = mode_plus_longitudinal_modif_dw_2') IN
+        LET def_1949: REAL = (5 * mode_plus_longitudinal_modif_dw_1') IN
+        LET def_1950: REAL = (def_1949 + def_1778) IN
+        LET def_1951: BOOLEAN = (def_1950 = 0) IN
+        LET def_1943: BOOLEAN = (mode_plus_longitudinal_modifi_y_3' = mode_plus_longitudinal_modifi_y_3_2) IN
+        LET def_1858: BOOLEAN = (mode_plus_longitudinal_modifi_y_2' = mode_plus_longitudinal_modif_dw_0) IN
+        LET def_1856: BOOLEAN = (mode_plus_longitudinal_modifi_y_1' = def_322) IN
+        LET def_1855: BOOLEAN = (mode_plus_longitudinal_modifi_y_0' = def_262) IN
+        LET def_1857: BOOLEAN = (def_1855 AND def_1856) IN
+        LET def_1859: BOOLEAN = (def_1857 AND def_1858) IN
+        LET def_1944: BOOLEAN = (def_1859 AND def_1943) IN
+        LET def_1945: BOOLEAN = (def_156 AND def_1944) IN
+        LET def_1946: BOOLEAN = (def_158 AND def_1945) IN
+        LET def_1947: BOOLEAN = (def_160 AND def_1946) IN
+        LET def_1948: BOOLEAN = (def_1865 AND def_1947) IN
+        LET def_1952: BOOLEAN = (def_1948 AND def_1951) IN
+        LET def_1954: BOOLEAN = (def_1952 AND def_1953) IN
+        LET def_1964: BOOLEAN = (def_1954 AND def_1963) IN
+        LET def_1978: BOOLEAN = (def_1964 AND def_1977) IN
+        LET def_1980: BOOLEAN = (def_1978 AND def_1979) IN
+        LET def_1982: BOOLEAN = (def_1980 AND def_1981) IN
+        LET def_1984: BOOLEAN = (def_1982 AND def_1983) IN
+        LET def_1986: BOOLEAN = (def_1984 AND def_1985) IN
+        LET def_1988: BOOLEAN = (def_1986 AND def_1987) IN
+        LET def_1990: BOOLEAN = (def_1988 AND def_1989) IN
+        LET def_1992: BOOLEAN = (def_1990 AND def_1991) IN
+        LET def_1994: BOOLEAN = (def_1992 AND def_1993) IN
+        LET def_1996: BOOLEAN = (def_1994 AND def_1995) IN
+        LET def_1998: BOOLEAN = (def_1996 AND def_1997) IN
+        LET def_2000: BOOLEAN = (def_1998 AND def_1999) IN
+        LET def_2002: BOOLEAN = (def_2000 AND def_2001) IN
+        LET def_2004: BOOLEAN = (def_2002 AND def_2003) IN
+        LET def_2006: BOOLEAN = (def_2004 AND def_2005) IN
+        LET def_2008: BOOLEAN = (def_2006 AND def_2007) IN
+        LET def_1905: BOOLEAN = (mode_plus_longitudinal_modifi_u_0' = mode_plus_longitudinal_modifi_u_0_1) IN
+        LET def_2009: BOOLEAN = (def_1905 AND def_2008) IN
+        LET def_1907: BOOLEAN = (mode_plus_longitudinal_modifi_u_1' = mode_plus_longitudinal_modifi_u_1_1) IN
+        LET def_2010: BOOLEAN = (def_1907 AND def_2009) IN
+        LET def_1909: BOOLEAN = (mode_plus_longitudinal_modifi_u_2' = mode_plus_longitudinal_modifi_u_2_1) IN
+        LET def_2011: BOOLEAN = (def_1909 AND def_2010) IN
+        LET def_1911: BOOLEAN = (mode_plus_longitudinal_modifi_u_3' = mode_plus_longitudinal_modifi_u_3_1) IN
+        LET def_2012: BOOLEAN = (def_1911 AND def_2011) IN
+        LET def_1913: BOOLEAN = (mode_plus_longitudinal_modifi_u_4' = mode_plus_longitudinal_modifi_u_4_1) IN
+        LET def_2013: BOOLEAN = (def_1913 AND def_2012) IN
+        LET def_1915: BOOLEAN = (mode_plus_longitudinal_modifi_u_5' = mode_plus_longitudinal_modifi_u_5_1) IN
+        LET def_2014: BOOLEAN = (def_1915 AND def_2013) IN
+        LET def_1917: BOOLEAN = (mode_plus_longitudinal_modifi_u_6' = mode_plus_longitudinal_modifi_u_6_1) IN
+        LET def_2015: BOOLEAN = (def_1917 AND def_2014) IN
+        LET def_1919: BOOLEAN = (mode_plus_longitudinal_modifi_u_7' = mode_plus_longitudinal_modifi_u_7_1) IN
+        LET def_2016: BOOLEAN = (def_1919 AND def_2015) IN
+        LET def_1921: BOOLEAN = (mode_plus_longitudinal_modifi_u_8' = mode_plus_longitudinal_modifi_u_8_1) IN
+        LET def_2017: BOOLEAN = (def_1921 AND def_2016) IN
+        LET def_1923: BOOLEAN = (mode_plus_longitudinal_modifi_u_9' = mode_plus_longitudinal_modifi_u_9_1) IN
+        LET def_2018: BOOLEAN = (def_1923 AND def_2017) IN
+        LET def_1925: BOOLEAN = (mode_plus_longitudinal_modifi_u_10' = mode_plus_longitudinal_modifi_u_10_1) IN
+        LET def_2019: BOOLEAN = (def_1925 AND def_2018) IN
+        LET def_1927: BOOLEAN = (mode_plus_longitudinal_modifi_u_11' = mode_plus_longitudinal_modifi_u_11_1) IN
+        LET def_2020: BOOLEAN = (def_1927 AND def_2019) IN
+        LET def_1929: BOOLEAN = (mode_plus_longitudinal_modifi_u_12' = mode_plus_longitudinal_modifi_u_12_1) IN
+        LET def_2021: BOOLEAN = (def_1929 AND def_2020) IN
+        LET def_1931: BOOLEAN = (mode_plus_longitudinal_modifi_u_13' = mode_plus_longitudinal_modifi_u_13_1) IN
+        LET def_2022: BOOLEAN = (def_1931 AND def_2021) IN
+        LET def_1933: BOOLEAN = (mode_plus_longitudinal_modifi_u_14' = mode_plus_longitudinal_modifi_u_14_1) IN
+        LET def_2023: BOOLEAN = (def_1933 AND def_2022) IN
+        LET def_1935: BOOLEAN = (mode_plus_longitudinal_modifi_u_15' = mode_plus_longitudinal_modifi_u_15_1) IN
+        LET def_2024: BOOLEAN = (def_1935 AND def_2023) IN
+        LET def_1937: BOOLEAN = (mode_plus_longitudinal_modifi_u_16' = mode_plus_longitudinal_modifi_u_16_1) IN
+        LET def_2025: BOOLEAN = (def_1937 AND def_2024) IN
+        LET def_2026: BOOLEAN = (def_1804 AND def_2025) IN
+        LET def_2027: BOOLEAN = (def_1801 AND def_2026) IN
+        LET def_2028: BOOLEAN = (def_1797 AND def_2027) IN
+        LET def_2029: BOOLEAN = (def_1794 AND def_2028) IN
+        LET def_2030: BOOLEAN = (def_1757 AND def_2029) IN
+        LET def_2031: BOOLEAN = (def_981 AND def_2030) IN
+        LET def_2032: BOOLEAN = (def_953 AND def_2031) IN
+        LET def_2033: BOOLEAN = (def_848 AND def_2032) IN
+        LET def_2034: BOOLEAN = (def_789 AND def_2033) IN
+        LET def_2035: BOOLEAN = (def_742 AND def_2034) IN
+        LET def_2036: BOOLEAN = (def_528 AND def_2035) IN
+        LET def_2037: BOOLEAN = (def_495 AND def_2036) IN
+        LET def_2038: BOOLEAN = (def_456 AND def_2037) IN
+        LET def_2039: BOOLEAN = (def_426 AND def_2038) IN
+        LET def_2040: BOOLEAN = (def_398 AND def_2039) IN
+        LET def_2041: BOOLEAN = (def_366 AND def_2040) IN
+        LET def_2042: BOOLEAN = (def_349 AND def_2041) IN
+        LET def_2043: BOOLEAN = (def_339 AND def_2042) IN
+        LET def_2044: BOOLEAN = (def_295 AND def_2043) IN
+        LET def_2046: BOOLEAN = (def_2044 AND def_2045) IN
+        LET def_1941: BOOLEAN = (def_1851 AND def_1854) IN
+        LET def_1861: BOOLEAN = (def_1859 AND def_1860) IN
+        LET def_1862: BOOLEAN = (def_156 AND def_1861) IN
+        LET def_1863: BOOLEAN = (def_158 AND def_1862) IN
+        LET def_1864: BOOLEAN = (def_160 AND def_1863) IN
+        LET def_1866: BOOLEAN = (def_1864 AND def_1865) IN
+        LET def_1868: BOOLEAN = (def_1866 AND def_1867) IN
+        LET def_1870: BOOLEAN = (def_1868 AND def_1869) IN
+        LET def_1872: BOOLEAN = (def_1870 AND def_1871) IN
+        LET def_1874: BOOLEAN = (def_1872 AND def_1873) IN
+        LET def_1876: BOOLEAN = (def_1874 AND def_1875) IN
+        LET def_1878: BOOLEAN = (def_1876 AND def_1877) IN
+        LET def_1880: BOOLEAN = (def_1878 AND def_1879) IN
+        LET def_1882: BOOLEAN = (def_1880 AND def_1881) IN
+        LET def_1884: BOOLEAN = (def_1882 AND def_1883) IN
+        LET def_1886: BOOLEAN = (def_1884 AND def_1885) IN
+        LET def_1888: BOOLEAN = (def_1886 AND def_1887) IN
+        LET def_1890: BOOLEAN = (def_1888 AND def_1889) IN
+        LET def_1892: BOOLEAN = (def_1890 AND def_1891) IN
+        LET def_1894: BOOLEAN = (def_1892 AND def_1893) IN
+        LET def_1896: BOOLEAN = (def_1894 AND def_1895) IN
+        LET def_1898: BOOLEAN = (def_1896 AND def_1897) IN
+        LET def_1900: BOOLEAN = (def_1898 AND def_1899) IN
+        LET def_1902: BOOLEAN = (def_1900 AND def_1901) IN
+        LET def_1904: BOOLEAN = (def_1902 AND def_1903) IN
+        LET def_1906: BOOLEAN = (def_1904 AND def_1905) IN
+        LET def_1908: BOOLEAN = (def_1906 AND def_1907) IN
+        LET def_1910: BOOLEAN = (def_1908 AND def_1909) IN
+        LET def_1912: BOOLEAN = (def_1910 AND def_1911) IN
+        LET def_1914: BOOLEAN = (def_1912 AND def_1913) IN
+        LET def_1916: BOOLEAN = (def_1914 AND def_1915) IN
+        LET def_1918: BOOLEAN = (def_1916 AND def_1917) IN
+        LET def_1920: BOOLEAN = (def_1918 AND def_1919) IN
+        LET def_1922: BOOLEAN = (def_1920 AND def_1921) IN
+        LET def_1924: BOOLEAN = (def_1922 AND def_1923) IN
+        LET def_1926: BOOLEAN = (def_1924 AND def_1925) IN
+        LET def_1928: BOOLEAN = (def_1926 AND def_1927) IN
+        LET def_1930: BOOLEAN = (def_1928 AND def_1929) IN
+        LET def_1932: BOOLEAN = (def_1930 AND def_1931) IN
+        LET def_1934: BOOLEAN = (def_1932 AND def_1933) IN
+        LET def_1936: BOOLEAN = (def_1934 AND def_1935) IN
+        LET def_1938: BOOLEAN = (def_1936 AND def_1937) IN
+        LET def_1939: BOOLEAN = (def_326 AND def_1938) IN
+        LET def_1940: BOOLEAN = (def_295 AND def_1939) IN
+        LET def_1942: BOOLEAN = (def_1940 AND def_1941) IN
+        LET def_2047: BOOLEAN = (def_1942 OR def_2046) IN
+        LET def_236: BOOLEAN = (def_144 AND def_148) IN
+        LET def_234: BOOLEAN = (mode_plus_longitudinal_modifi_u_16' = 0) IN
+        LET def_232: BOOLEAN = (mode_plus_longitudinal_modifi_u_15' = 0) IN
+        LET def_230: BOOLEAN = (mode_plus_longitudinal_modifi_u_14' = 0) IN
+        LET def_228: BOOLEAN = (mode_plus_longitudinal_modifi_u_13' = 0) IN
+        LET def_226: BOOLEAN = (mode_plus_longitudinal_modifi_u_12' = 0) IN
+        LET def_224: BOOLEAN = (mode_plus_longitudinal_modifi_u_11' = 0) IN
+        LET def_222: BOOLEAN = (mode_plus_longitudinal_modifi_u_10' = 0) IN
+        LET def_220: BOOLEAN = (mode_plus_longitudinal_modifi_u_9' = 0) IN
+        LET def_218: BOOLEAN = (mode_plus_longitudinal_modifi_u_8' = 0) IN
+        LET def_216: BOOLEAN = (mode_plus_longitudinal_modifi_u_7' = 0) IN
+        LET def_214: BOOLEAN = (mode_plus_longitudinal_modifi_u_6' = 0) IN
+        LET def_212: BOOLEAN = (mode_plus_longitudinal_modifi_u_5' = 0) IN
+        LET def_210: BOOLEAN = (mode_plus_longitudinal_modifi_u_4' = 0) IN
+        LET def_208: BOOLEAN = (mode_plus_longitudinal_modifi_u_3' = 0) IN
+        LET def_206: BOOLEAN = (mode_plus_longitudinal_modifi_u_2' = 0) IN
+        LET def_204: BOOLEAN = (mode_plus_longitudinal_modifi_u_1' = 0) IN
+        LET def_202: BOOLEAN = (mode_plus_longitudinal_modifi_u_0' = 0) IN
+        LET def_200: BOOLEAN = (mode_plus_longitudinal_modif_dw_19' = 0) IN
+        LET def_198: BOOLEAN = (mode_plus_longitudinal_modif_dw_18' = 1) IN
+        LET def_196: BOOLEAN = (mode_plus_longitudinal_modif_dw_17' = 0) IN
+        LET def_194: BOOLEAN = (mode_plus_longitudinal_modif_dw_16' = 0) IN
+        LET def_192: BOOLEAN = (mode_plus_longitudinal_modif_dw_15' = 0) IN
+        LET def_190: BOOLEAN = (mode_plus_longitudinal_modif_dw_14' = 0) IN
+        LET def_188: BOOLEAN = (mode_plus_longitudinal_modif_dw_13' = 1) IN
+        LET def_186: BOOLEAN = (mode_plus_longitudinal_modif_dw_12' = 0) IN
+        LET def_184: BOOLEAN = (mode_plus_longitudinal_modif_dw_11' = 1) IN
+        LET def_182: BOOLEAN = (mode_plus_longitudinal_modif_dw_10' = 1) IN
+        LET def_180: BOOLEAN = (mode_plus_longitudinal_modif_dw_9' = 1) IN
+        LET def_178: BOOLEAN = (mode_plus_longitudinal_modif_dw_8' = 1) IN
+        LET def_176: BOOLEAN = (mode_plus_longitudinal_modif_dw_7' = 0) IN
+        LET def_174: BOOLEAN = (mode_plus_longitudinal_modif_dw_6' = 0) IN
+        LET def_172: BOOLEAN = (mode_plus_longitudinal_modif_dw_5' = 1) IN
+        LET def_170: BOOLEAN = (mode_plus_longitudinal_modif_dw_4' = 0) IN
+        LET def_168: BOOLEAN = (mode_plus_longitudinal_modif_dw_3' = 0) IN
+        LET def_166: BOOLEAN = (mode_plus_longitudinal_modif_dw_2' = 5) IN
+        LET def_164: BOOLEAN = (mode_plus_longitudinal_modif_dw_1' = 5) IN
+        LET def_162: BOOLEAN = (mode_plus_longitudinal_modif_dw_0' = 0) IN
+        LET def_154: BOOLEAN = (mode_plus_longitudinal_modifi_y_3' = 0) IN
+        LET def_152: BOOLEAN = (mode_plus_longitudinal_modifi_y_2' = 0) IN
+        LET def_150: BOOLEAN = (mode_plus_longitudinal_modifi_y_1' = 0) IN
+        LET def_149: BOOLEAN = (mode_plus_longitudinal_modifi_y_0' = 0) IN
+        LET def_151: BOOLEAN = (def_149 AND def_150) IN
+        LET def_153: BOOLEAN = (def_151 AND def_152) IN
+        LET def_155: BOOLEAN = (def_153 AND def_154) IN
+        LET def_157: BOOLEAN = (def_155 AND def_156) IN
+        LET def_159: BOOLEAN = (def_157 AND def_158) IN
+        LET def_161: BOOLEAN = (def_159 AND def_160) IN
+        LET def_163: BOOLEAN = (def_161 AND def_162) IN
+        LET def_165: BOOLEAN = (def_163 AND def_164) IN
+        LET def_167: BOOLEAN = (def_165 AND def_166) IN
+        LET def_169: BOOLEAN = (def_167 AND def_168) IN
+        LET def_171: BOOLEAN = (def_169 AND def_170) IN
+        LET def_173: BOOLEAN = (def_171 AND def_172) IN
+        LET def_175: BOOLEAN = (def_173 AND def_174) IN
+        LET def_177: BOOLEAN = (def_175 AND def_176) IN
+        LET def_179: BOOLEAN = (def_177 AND def_178) IN
+        LET def_181: BOOLEAN = (def_179 AND def_180) IN
+        LET def_183: BOOLEAN = (def_181 AND def_182) IN
+        LET def_185: BOOLEAN = (def_183 AND def_184) IN
+        LET def_187: BOOLEAN = (def_185 AND def_186) IN
+        LET def_189: BOOLEAN = (def_187 AND def_188) IN
+        LET def_191: BOOLEAN = (def_189 AND def_190) IN
+        LET def_193: BOOLEAN = (def_191 AND def_192) IN
+        LET def_195: BOOLEAN = (def_193 AND def_194) IN
+        LET def_197: BOOLEAN = (def_195 AND def_196) IN
+        LET def_199: BOOLEAN = (def_197 AND def_198) IN
+        LET def_201: BOOLEAN = (def_199 AND def_200) IN
+        LET def_203: BOOLEAN = (def_201 AND def_202) IN
+        LET def_205: BOOLEAN = (def_203 AND def_204) IN
+        LET def_207: BOOLEAN = (def_205 AND def_206) IN
+        LET def_209: BOOLEAN = (def_207 AND def_208) IN
+        LET def_211: BOOLEAN = (def_209 AND def_210) IN
+        LET def_213: BOOLEAN = (def_211 AND def_212) IN
+        LET def_215: BOOLEAN = (def_213 AND def_214) IN
+        LET def_217: BOOLEAN = (def_215 AND def_216) IN
+        LET def_219: BOOLEAN = (def_217 AND def_218) IN
+        LET def_221: BOOLEAN = (def_219 AND def_220) IN
+        LET def_223: BOOLEAN = (def_221 AND def_222) IN
+        LET def_225: BOOLEAN = (def_223 AND def_224) IN
+        LET def_227: BOOLEAN = (def_225 AND def_226) IN
+        LET def_229: BOOLEAN = (def_227 AND def_228) IN
+        LET def_231: BOOLEAN = (def_229 AND def_230) IN
+        LET def_233: BOOLEAN = (def_231 AND def_232) IN
+        LET def_235: BOOLEAN = (def_233 AND def_234) IN
+        LET def_237: BOOLEAN = (def_235 AND def_236) IN
+        LET def_2048: BOOLEAN = (def_237 OR def_2047) IN
+        LET def_2116: BOOLEAN = (def_2048 OR def_2115) IN
+        def_2116 -->
+        pc_2' IN { v_pc_2: BOOLEAN | TRUE };
+        pc_1' IN { v_pc_1: BOOLEAN | TRUE };
+        pc_0' IN { v_pc_0: BOOLEAN | TRUE };
+        mode_plus_longitudinal_modifi_u_16' IN { v_mode_plus_longitudinal_modifi_u_16: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_15' IN { v_mode_plus_longitudinal_modifi_u_15: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_14' IN { v_mode_plus_longitudinal_modifi_u_14: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_13' IN { v_mode_plus_longitudinal_modifi_u_13: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_12' IN { v_mode_plus_longitudinal_modifi_u_12: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_11' IN { v_mode_plus_longitudinal_modifi_u_11: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_10' IN { v_mode_plus_longitudinal_modifi_u_10: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_9' IN { v_mode_plus_longitudinal_modifi_u_9: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_8' IN { v_mode_plus_longitudinal_modifi_u_8: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_7' IN { v_mode_plus_longitudinal_modifi_u_7: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_6' IN { v_mode_plus_longitudinal_modifi_u_6: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_5' IN { v_mode_plus_longitudinal_modifi_u_5: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_4' IN { v_mode_plus_longitudinal_modifi_u_4: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_3' IN { v_mode_plus_longitudinal_modifi_u_3: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_2' IN { v_mode_plus_longitudinal_modifi_u_2: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_1' IN { v_mode_plus_longitudinal_modifi_u_1: REAL | TRUE };
+        mode_plus_longitudinal_modifi_u_0' IN { v_mode_plus_longitudinal_modifi_u_0: REAL | TRUE };
+        mode_plus_longitudinal_modifi_y_2' IN { v_mode_plus_longitudinal_modifi_y_2: REAL | TRUE };
+        mode_plus_longitudinal_modifi_y_1' IN { v_mode_plus_longitudinal_modifi_y_1: INTEGER | TRUE };
+        mode_plus_longitudinal_modifi_y_0' IN { v_mode_plus_longitudinal_modifi_y_0: INTEGER | TRUE };
+        mode_plus_longitudinal_modifi_y_3' IN { v_mode_plus_longitudinal_modifi_y_3: REAL | TRUE };
+        mode_plus_longitudinal_m_constb_0' IN { v_mode_plus_longitudinal_m_constb_0: REAL | TRUE };
+        mode_plus_longitudinal_m_constb_1' IN { v_mode_plus_longitudinal_m_constb_1: INTEGER | TRUE };
+        mode_plus_longitudinal_m_constb_2' IN { v_mode_plus_longitudinal_m_constb_2: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_0' IN { v_mode_plus_longitudinal_modif_dw_0: REAL | TRUE };
+        mode_plus_longitudinal_modif_dw_1' IN { v_mode_plus_longitudinal_modif_dw_1: REAL | TRUE };
+        mode_plus_longitudinal_modif_dw_2' IN { v_mode_plus_longitudinal_modif_dw_2: REAL | TRUE };
+        mode_plus_longitudinal_modif_dw_3' IN { v_mode_plus_longitudinal_modif_dw_3: REAL | TRUE };
+        mode_plus_longitudinal_modif_dw_4' IN { v_mode_plus_longitudinal_modif_dw_4: REAL | TRUE };
+        mode_plus_longitudinal_modif_dw_5' IN { v_mode_plus_longitudinal_modif_dw_5: REAL | TRUE };
+        mode_plus_longitudinal_modif_dw_6' IN { v_mode_plus_longitudinal_modif_dw_6: REAL | TRUE };
+        mode_plus_longitudinal_modif_dw_7' IN { v_mode_plus_longitudinal_modif_dw_7: REAL | TRUE };
+        mode_plus_longitudinal_modif_dw_8' IN { v_mode_plus_longitudinal_modif_dw_8: REAL | TRUE };
+        mode_plus_longitudinal_modif_dw_9' IN { v_mode_plus_longitudinal_modif_dw_9: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_10' IN { v_mode_plus_longitudinal_modif_dw_10: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_11' IN { v_mode_plus_longitudinal_modif_dw_11: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_12' IN { v_mode_plus_longitudinal_modif_dw_12: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_13' IN { v_mode_plus_longitudinal_modif_dw_13: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_14' IN { v_mode_plus_longitudinal_modif_dw_14: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_15' IN { v_mode_plus_longitudinal_modif_dw_15: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_16' IN { v_mode_plus_longitudinal_modif_dw_16: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_17' IN { v_mode_plus_longitudinal_modif_dw_17: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_18' IN { v_mode_plus_longitudinal_modif_dw_18: INTEGER | TRUE };
+        mode_plus_longitudinal_modif_dw_19' IN { v_mode_plus_longitudinal_modif_dw_19: INTEGER | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_2117);
+END

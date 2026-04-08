@@ -1,0 +1,84 @@
+% Auto-generated from lotka_volterra_fourth_quadrant.vmt
+% Source suite: benchmarks/vmt/nra/lotka_volterra_fourth_quadrant.vmt
+lotka_volterra_fourth_quadrant: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    instance_jump: BOOLEAN
+
+  OUTPUT
+    instance_x: REAL,
+    instance_y: REAL
+
+  LOCAL
+    def_19: BOOLEAN,
+    def_18: BOOLEAN,
+    def_20: BOOLEAN,
+    def_15: BOOLEAN,
+    def_14: BOOLEAN,
+    def_16: BOOLEAN,
+    def_21: BOOLEAN,
+    def_30: REAL,
+    def_39: REAL,
+    def_40: REAL,
+    def_45: REAL,
+    def_25: REAL,
+    def_26: REAL,
+    def_27: REAL,
+    def_28: REAL,
+    def_36: REAL,
+    def_22: BOOLEAN
+
+  DEFINITION
+    def_19 = (instance_x = 0);
+    def_18 = (instance_y = 1);
+    def_20 = (def_18 AND def_19);
+    def_15 = (0 <= instance_x);
+    def_14 = (0 <= instance_y);
+    def_16 = (def_14 AND def_15);
+    def_21 = (def_16 AND def_20);
+    def_30 = ((-(1)) * instance_y);
+    def_39 = (1 + def_30);
+    def_40 = (instance_x * def_39);
+    def_45 = (2 * instance_x);
+    def_25 = ((-(1)) * instance_x);
+    def_26 = (1 + def_25);
+    def_27 = (instance_y * def_26);
+    def_28 = ((-(1)) * def_27);
+    def_36 = (2 * instance_y);
+    def_22 = (NOT instance_jump);
+
+  INITIALIZATION
+  [
+      def_21 -->
+        instance_x IN { v_instance_x: REAL | TRUE };
+        instance_y IN { v_instance_y: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_52: BOOLEAN = (0 <= instance_x') IN
+        LET def_51: BOOLEAN = (0 <= instance_y') IN
+        LET def_53: BOOLEAN = (def_51 AND def_52) IN
+        LET def_54: BOOLEAN = (def_16 AND def_53) IN
+        LET def_43: REAL = ((-(2)) * instance_x') IN
+        LET def_44: REAL = (def_43 + def_40) IN
+        LET def_46: REAL = (def_45 + def_44) IN
+        LET def_47: BOOLEAN = (def_46 = 0) IN
+        LET def_33: REAL = ((-(2)) * instance_y') IN
+        LET def_34: REAL = (def_33 + def_28) IN
+        LET def_37: REAL = (def_36 + def_34) IN
+        LET def_38: BOOLEAN = (def_37 = 0) IN
+        LET def_48: BOOLEAN = (def_38 AND def_47) IN
+        LET def_49: BOOLEAN = (instance_jump OR def_48) IN
+        LET def_50: BOOLEAN = (def_22 AND def_49) IN
+        LET def_55: BOOLEAN = (def_50 AND def_54) IN
+        def_55 -->
+        instance_x' IN { v_instance_x: REAL | TRUE };
+        instance_y' IN { v_instance_y: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_14);
+END

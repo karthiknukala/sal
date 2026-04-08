@@ -1,0 +1,115 @@
+source_vmt	sal_file	context_name	family	expected_status	status_source	status_notes
+Circuit_Overshoot_BSP.vmt	circuit_overshoot_bsp.sal	circuit_overshoot_bsp	tcm	valid	TOCL18 benchmark description	The paper states the two TCM benchmarks are safe.
+Mode_plus_Longitudinal_modified_g120_nuxmv_kratos.vmt	mode_plus_longitudinal_modified_g120_nuxmv_kratos.sal	mode_plus_longitudinal_modified_g120_nuxmv_kratos	nuxmv	valid	TOCL18 benchmark description	The paper states the two nuXmv benchmarks are safe.
+Mode_plus_Longitudinal_modified_g130_nuxmv_kratos.vmt	mode_plus_longitudinal_modified_g130_nuxmv_kratos.sal	mode_plus_longitudinal_modified_g130_nuxmv_kratos	nuxmv	valid	TOCL18 benchmark description	The paper states the two nuXmv benchmarks are safe.
+Model_REAL.vmt	model_real.sal	model_real	tcm	valid	TOCL18 benchmark description	The paper states the two TCM benchmarks are safe.
+ahmadi_parrilo_kristic.vmt	ahmadi_parrilo_kristic.sal	ahmadi_parrilo_kristic	hyst	unknown		
+alongi_nelson_ex_4_1_9_page_143.vmt	alongi_nelson_ex_4_1_9_page_143.sal	alongi_nelson_ex_4_1_9_page_143	hyst	unknown		
+arrowsmith_and_place_fig_1_29_page_14.vmt	arrowsmith_and_place_fig_1_29_page_14.sal	arrowsmith_and_place_fig_1_29_page_14	hyst	unknown		
+arrowsmith_and_place_fig_1_30_page_14.vmt	arrowsmith_and_place_fig_1_30_page_14.sal	arrowsmith_and_place_fig_1_30_page_14	hyst	unknown		
+arrowsmith_and_place_fig_1_31_page_14.vmt	arrowsmith_and_place_fig_1_31_page_14.sal	arrowsmith_and_place_fig_1_31_page_14	hyst	unknown		
+arrowsmith_and_place_fig_1_32_page_14.vmt	arrowsmith_and_place_fig_1_32_page_14.sal	arrowsmith_and_place_fig_1_32_page_14	hyst	unknown		
+arrowsmith_and_place_fig_1_35_page_17.vmt	arrowsmith_and_place_fig_1_35_page_17.sal	arrowsmith_and_place_fig_1_35_page_17	hyst	unknown		
+arrowsmith_and_place_fig_3_11_page_83.vmt	arrowsmith_and_place_fig_3_11_page_83.sal	arrowsmith_and_place_fig_3_11_page_83	hyst	unknown		
+arrowsmith_and_place_fig_3_1_page_72.vmt	arrowsmith_and_place_fig_3_1_page_72.sal	arrowsmith_and_place_fig_3_1_page_72	hyst	unknown		
+arrowsmith_and_place_fig_3_5c_page_79.vmt	arrowsmith_and_place_fig_3_5c_page_79.sal	arrowsmith_and_place_fig_3_5c_page_79	hyst	unknown		
+arrowsmith_and_place_fig_3_5e_page_79.vmt	arrowsmith_and_place_fig_3_5e_page_79.sal	arrowsmith_and_place_fig_3_5e_page_79	hyst	unknown		
+arrowsmith_and_place_fig_3_8_page_82.vmt	arrowsmith_and_place_fig_3_8_page_82.sal	arrowsmith_and_place_fig_3_8_page_82	hyst	unknown		
+arrowsmith_and_place_fig_3_9_page_83.vmt	arrowsmith_and_place_fig_3_9_page_83.sal	arrowsmith_and_place_fig_3_9_page_83	hyst	unknown		
+ball_count_1d_plain.hydi.vmt	ball_count_1d_plain_hydi.sal	ball_count_1d_plain_hydi	hycomp	unknown		
+ball_count_2d_hill.hydi.vmt	ball_count_2d_hill_hydi.sal	ball_count_2d_hill_hydi	hycomp	unknown		
+ball_count_2d_plain.hydi.vmt	ball_count_2d_plain_hydi.sal	ball_count_2d_plain_hydi	hycomp	unknown		
+ball_count_2d_slope.hydi.vmt	ball_count_2d_slope_hydi.sal	ball_count_2d_slope_hydi	hycomp	unknown		
+ben_sassi_girard_20104_moore_greitzer_jet.vmt	ben_sassi_girard_20104_moore_greitzer_jet.sal	ben_sassi_girard_20104_moore_greitzer_jet	hyst	unknown		
+ben_sassi_girard_sankaranarayanan_2014_fitzhugh-nagumo.vmt	ben_sassi_girard_sankaranarayanan_2014_fitzhugh_nagumo.sal	ben_sassi_girard_sankaranarayanan_2014_fitzhugh_nagumo	hyst	unknown		
+bhatia_szego_ex_2_4_page_68.vmt	bhatia_szego_ex_2_4_page_68.sal	bhatia_szego_ex_2_4_page_68	hyst	unknown		
+cfa_test0005.vmt	cfa_test0005.sal	cfa_test0005	isat3-cfg	invalid	TOCL18 Table 3 + local SAL BMC sweep	Concrete counterexample reproduced locally with SAL.
+cfa_test0006.vmt	cfa_test0006.sal	cfa_test0006	isat3-cfg	valid	TOCL18 Table 3 + local SAL BMC sweep	No counterexample found up to depth 30; family total is 7 safe / 3 unsafe.
+cfa_test0012.vmt	cfa_test0012.sal	cfa_test0012	isat3-cfg	valid	TOCL18 Table 3 + local SAL BMC sweep	No counterexample found up to depth 30; family total is 7 safe / 3 unsafe.
+cfa_test0013.vmt	cfa_test0013.sal	cfa_test0013	isat3-cfg	invalid	TOCL18 Table 3 + local SAL BMC sweep	Concrete counterexample reproduced locally with SAL.
+cfa_test0014.vmt	cfa_test0014.sal	cfa_test0014	isat3-cfg	valid	TOCL18 Table 3 + local SAL BMC sweep	No counterexample found up to depth 30; family total is 7 safe / 3 unsafe.
+cfa_test0015.vmt	cfa_test0015.sal	cfa_test0015	isat3-cfg	valid	TOCL18 Table 3 + local SAL BMC sweep	No counterexample found up to depth 30; family total is 7 safe / 3 unsafe.
+cfa_test0016.vmt	cfa_test0016.sal	cfa_test0016	isat3-cfg	invalid	TOCL18 Table 3 + local SAL BMC sweep	Concrete counterexample reproduced locally with SAL.
+cfa_test0017.vmt	cfa_test0017.sal	cfa_test0017	isat3-cfg	valid	TOCL18 Table 3 + local SAL BMC sweep	No counterexample found up to depth 30; family total is 7 safe / 3 unsafe.
+cfa_test0018.vmt	cfa_test0018.sal	cfa_test0018	isat3-cfg	valid	TOCL18 Table 3 + local SAL BMC sweep	No counterexample found up to depth 30; family total is 7 safe / 3 unsafe.
+cfa_test0019.vmt	cfa_test0019.sal	cfa_test0019	isat3-cfg	valid	TOCL18 Table 3 + local SAL BMC sweep	No counterexample found up to depth 30; family total is 7 safe / 3 unsafe.
+collin_goriely_page_60.vmt	collin_goriely_page_60.sal	collin_goriely_page_60	hyst	unknown		
+dai_gan_xhia_zhan_jsc14_ex1.vmt	dai_gan_xhia_zhan_jsc14_ex1.sal	dai_gan_xhia_zhan_jsc14_ex1	hyst	unknown		
+dai_gan_xhia_zhan_jsc14_ex2.vmt	dai_gan_xhia_zhan_jsc14_ex2.sal	dai_gan_xhia_zhan_jsc14_ex2	hyst	unknown		
+dai_gan_xhia_zhan_jsc14_ex5.vmt	dai_gan_xhia_zhan_jsc14_ex5.sal	dai_gan_xhia_zhan_jsc14_ex5	hyst	unknown		
+darboux_christoffel_int_goriely_page_58.vmt	darboux_christoffel_int_goriely_page_58.sal	darboux_christoffel_int_goriely_page_58	hyst	unknown		
+djaballah_chaputot_kieffer_boussou_2015_ex1.vmt	djaballah_chaputot_kieffer_boussou_2015_ex1.sal	djaballah_chaputot_kieffer_boussou_2015_ex1	hyst	unknown		
+dumortier_llibre_artes_ex_10_11.vmt	dumortier_llibre_artes_ex_10_11.sal	dumortier_llibre_artes_ex_10_11	hyst	unknown		
+dumortier_llibre_artes_ex_10_11b.vmt	dumortier_llibre_artes_ex_10_11b.sal	dumortier_llibre_artes_ex_10_11b	hyst	unknown		
+dumortier_llibre_artes_ex_10_15_i.vmt	dumortier_llibre_artes_ex_10_15_i.sal	dumortier_llibre_artes_ex_10_15_i	hyst	unknown		
+dumortier_llibre_artes_ex_10_15_ii.vmt	dumortier_llibre_artes_ex_10_15_ii.sal	dumortier_llibre_artes_ex_10_15_ii	hyst	unknown		
+dumortier_llibre_artes_ex_10_9.vmt	dumortier_llibre_artes_ex_10_9.sal	dumortier_llibre_artes_ex_10_9	hyst	unknown		
+dumortier_llibre_artes_ex_1_11a.vmt	dumortier_llibre_artes_ex_1_11a.sal	dumortier_llibre_artes_ex_1_11a	hyst	unknown		
+dumortier_llibre_artes_ex_1_11b.vmt	dumortier_llibre_artes_ex_1_11b.sal	dumortier_llibre_artes_ex_1_11b	hyst	unknown		
+dumortier_llibre_artes_ex_1_9a.vmt	dumortier_llibre_artes_ex_1_9a.sal	dumortier_llibre_artes_ex_1_9a	hyst	unknown		
+dumortier_llibre_artes_ex_1_9b.vmt	dumortier_llibre_artes_ex_1_9b.sal	dumortier_llibre_artes_ex_1_9b	hyst	unknown		
+dumortier_llibre_artes_ex_5_13.vmt	dumortier_llibre_artes_ex_5_13.sal	dumortier_llibre_artes_ex_5_13	hyst	unknown		
+dumortier_llibre_artes_ex_5_1_ii.vmt	dumortier_llibre_artes_ex_5_1_ii.sal	dumortier_llibre_artes_ex_5_1_ii	hyst	unknown		
+dumortier_llibre_artes_ex_5_2.vmt	dumortier_llibre_artes_ex_5_2.sal	dumortier_llibre_artes_ex_5_2	hyst	unknown		
+dumortier_llibre_artes_ex_5_2_ii.vmt	dumortier_llibre_artes_ex_5_2_ii.sal	dumortier_llibre_artes_ex_5_2_ii	hyst	unknown		
+etcs_braking_2.hydi.vmt	etcs_braking_2_hydi.sal	etcs_braking_2_hydi	hycomp	unknown		
+example_4.vmt	example_4.sal	example_4	handcrafted	invalid	TOCL18 family count + direct benchmark semantics	Counterexample benchmark from the paper's nonlinear running example.
+fitzhugh_nagumo_ben_sassi_girard_2.vmt	fitzhugh_nagumo_ben_sassi_girard_2.sal	fitzhugh_nagumo_ben_sassi_girard_2	hyst	unknown		
+forsman_phd_ex_6_14_page_119.vmt	forsman_phd_ex_6_14_page_119.sal	forsman_phd_ex_6_14_page_119	hyst	unknown		
+forsman_phd_ex_6_1_page_99.vmt	forsman_phd_ex_6_1_page_99.sal	forsman_phd_ex_6_1_page_99	hyst	unknown		
+hamiltonian_system_1.vmt	hamiltonian_system_1.sal	hamiltonian_system_1	hyst	unknown		
+heron-sqrt-10-0.01.vmt	heron_sqrt_10_0_01.sal	heron_sqrt_10_0_01	handcrafted	valid	TOCL18 family count + direct benchmark semantics	Handcrafted family reconstructed from the paper/example benchmarks and Heron examples.
+heron-sqrt-10-0.1.vmt	heron_sqrt_10_0_1.sal	heron_sqrt_10_0_1	handcrafted	valid	TOCL18 family count + direct benchmark semantics	Handcrafted family reconstructed from the paper/example benchmarks and Heron examples.
+heron-sqrt-100-0.01.vmt	heron_sqrt_100_0_01.sal	heron_sqrt_100_0_01	handcrafted	valid	TOCL18 family count + direct benchmark semantics	Handcrafted family reconstructed from the paper/example benchmarks and Heron examples.
+heron-sqrt-100-0.1.vmt	heron_sqrt_100_0_1.sal	heron_sqrt_100_0_1	handcrafted	valid	TOCL18 family count + direct benchmark semantics	Handcrafted family reconstructed from the paper/example benchmarks and Heron examples.
+heron-sqrt-2-0.01.vmt	heron_sqrt_2_0_01.sal	heron_sqrt_2_0_01	handcrafted	valid	TOCL18 family count + direct benchmark semantics	Handcrafted family reconstructed from the paper/example benchmarks and Heron examples.
+heron-sqrt-2-0.1.vmt	heron_sqrt_2_0_1.sal	heron_sqrt_2_0_1	handcrafted	valid	TOCL18 family count + direct benchmark semantics	Handcrafted family reconstructed from the paper/example benchmarks and Heron examples.
+heron-sqrt-5-0.01.vmt	heron_sqrt_5_0_01.sal	heron_sqrt_5_0_01	handcrafted	valid	TOCL18 family count + direct benchmark semantics	Handcrafted family reconstructed from the paper/example benchmarks and Heron examples.
+heron-sqrt-5-0.1.vmt	heron_sqrt_5_0_1.sal	heron_sqrt_5_0_1	handcrafted	valid	TOCL18 family count + direct benchmark semantics	Handcrafted family reconstructed from the paper/example benchmarks and Heron examples.
+invariant_3_dim_sphere.vmt	invariant_3_dim_sphere.sal	invariant_3_dim_sphere	hyst	unknown		
+keymaera_nonlinear1.vmt	keymaera_nonlinear1.sal	keymaera_nonlinear1	hyst	unknown		
+keymaera_nonlinear_diffcut.vmt	keymaera_nonlinear_diffcut.sal	keymaera_nonlinear_diffcut	hyst	unknown		
+liu_zhan_zhao_emsoft11_ex_25.vmt	liu_zhan_zhao_emsoft11_ex_25.sal	liu_zhan_zhao_emsoft11_ex_25	hyst	unknown		
+lotka_volterra_fourth_quadrant.vmt	lotka_volterra_fourth_quadrant.sal	lotka_volterra_fourth_quadrant	hyst	unknown		
+man_maccallum_goriely_page_57.vmt	man_maccallum_goriely_page_57.sal	man_maccallum_goriely_page_57	hyst	unknown		
+minigolf.vmt	minigolf.sal	minigolf	isat3	unknown		
+paper_example_1.vmt	paper_example_1.sal	paper_example_1	handcrafted	valid	TOCL18 family count + direct benchmark semantics	Handcrafted family reconstructed from the paper/example benchmarks and Heron examples.
+paper_example_2.vmt	paper_example_2.sal	paper_example_2	handcrafted	valid	TOCL18 family count + direct benchmark semantics	Handcrafted family reconstructed from the paper/example benchmarks and Heron examples.
+paper_example_3.vmt	paper_example_3.sal	paper_example_3	handcrafted	valid	TOCL18 family count + direct benchmark semantics	Handcrafted family reconstructed from the paper/example benchmarks and Heron examples.
+prajna_phd_thesis_2_4_1_page_31.vmt	prajna_phd_thesis_2_4_1_page_31.sal	prajna_phd_thesis_2_4_1_page_31	hyst	unknown		
+sas13-floatitp-dcblock-simple-1.vmt	sas13_floatitp_dcblock_simple_1.sal	sas13_floatitp_dcblock_simple_1	sas13	unknown		
+sas13-floatitp-dcblock-simple-2.vmt	sas13_floatitp_dcblock_simple_2.sal	sas13_floatitp_dcblock_simple_2	sas13	unknown		
+sas13-floatitp-dcblock-simple-3.vmt	sas13_floatitp_dcblock_simple_3.sal	sas13_floatitp_dcblock_simple_3	sas13	unknown		
+sas13-floatitp-dcblock-simple-4.vmt	sas13_floatitp_dcblock_simple_4.sal	sas13_floatitp_dcblock_simple_4	sas13	unknown		
+sas13-floatitp-rangevMain1.vmt	sas13_floatitp_rangevmain1.sal	sas13_floatitp_rangevmain1	sas13	unknown		
+sas13-floatitp-rangevMain10.vmt	sas13_floatitp_rangevmain10.sal	sas13_floatitp_rangevmain10	sas13	unknown		
+sas13-floatitp-rangevMain2.vmt	sas13_floatitp_rangevmain2.sal	sas13_floatitp_rangevmain2	sas13	unknown		
+sas13-floatitp-rangevMain2b.vmt	sas13_floatitp_rangevmain2b.sal	sas13_floatitp_rangevmain2b	sas13	unknown		
+sas13-floatitp-rangevMain5.vmt	sas13_floatitp_rangevmain5.sal	sas13_floatitp_rangevmain5	sas13	unknown		
+sas13-floatitp-test1.vmt	sas13_floatitp_test1.sal	sas13_floatitp_test1	sas13	unknown		
+sas13-floatitp-test2.vmt	sas13_floatitp_test2.sal	sas13_floatitp_test2	sas13	unknown		
+sas13-floatitp-test3.vmt	sas13_floatitp_test3.sal	sas13_floatitp_test3	sas13	unknown		
+sas13-floatitp-test4.vmt	sas13_floatitp_test4.sal	sas13_floatitp_test4	sas13	unknown		
+shimizu_morioka_system.vmt	shimizu_morioka_system.sal	shimizu_morioka_system	hyst	unknown		
+simple_ballistics_invar.hydi.vmt	simple_ballistics_invar_hydi.sal	simple_ballistics_invar_hydi	hycomp	unknown		
+simple_ballistics_reach.hydi.vmt	simple_ballistics_reach_hydi.sal	simple_ballistics_reach_hydi	hycomp	unknown		
+stable_limit_cycle1.vmt	stable_limit_cycle1.sal	stable_limit_cycle1	hyst	unknown		
+stable_limit_cycle2.vmt	stable_limit_cycle2.sal	stable_limit_cycle2	hyst	unknown		
+strogatz_ex_6_1_5.vmt	strogatz_ex_6_1_5.sal	strogatz_ex_6_1_5	hyst	unknown		
+strogatz_ex_6_1_9_dipole.vmt	strogatz_ex_6_1_9_dipole.sal	strogatz_ex_6_1_9_dipole	hyst	unknown		
+strogatz_ex_6_3_2.vmt	strogatz_ex_6_3_2.sal	strogatz_ex_6_3_2	hyst	unknown		
+strogatz_ex_6_6_1_reversible_system.vmt	strogatz_ex_6_6_1_reversible_system.sal	strogatz_ex_6_6_1_reversible_system	hyst	unknown		
+strogatz_ex_6_6_2_limit_cycle.vmt	strogatz_ex_6_6_2_limit_cycle.sal	strogatz_ex_6_6_2_limit_cycle	hyst	unknown		
+strogatz_ex_6_8_3.vmt	strogatz_ex_6_8_3.sal	strogatz_ex_6_8_3	hyst	unknown		
+strogatz_ex_7_3_5.vmt	strogatz_ex_7_3_5.sal	strogatz_ex_7_3_5	hyst	unknown		
+synthetic_example1.vmt	synthetic_example1.sal	synthetic_example1	hyst	unknown		
+testdiv-manual.vmt	testdiv_manual.sal	testdiv_manual	handcrafted	valid	TOCL18 family count + direct benchmark semantics	Handcrafted family reconstructed from the paper/example benchmarks and Heron examples.
+testdiv.vmt	testdiv.sal	testdiv	handcrafted	valid	TOCL18 family count + direct benchmark semantics	Handcrafted family reconstructed from the paper/example benchmarks and Heron examples.
+unstable_unit_circle1.vmt	unstable_unit_circle1.sal	unstable_unit_circle1	hyst	unknown		
+unstable_unit_circle2.vmt	unstable_unit_circle2.sal	unstable_unit_circle2	hyst	unknown		
+unstable_unit_circle3.vmt	unstable_unit_circle3.sal	unstable_unit_circle3	hyst	unknown		
+van_der_pol_fourth_quadrant.vmt	van_der_pol_fourth_quadrant.sal	van_der_pol_fourth_quadrant	hyst	unknown		
+vinograd_system_chicone_1_145_page_80.vmt	vinograd_system_chicone_1_145_page_80.sal	vinograd_system_chicone_1_145_page_80	hyst	unknown		
+wiggins_ex_17_1_2.vmt	wiggins_ex_17_1_2.sal	wiggins_ex_17_1_2	hyst	unknown		
+wiggins_ex_18_1_2.vmt	wiggins_ex_18_1_2.sal	wiggins_ex_18_1_2	hyst	unknown		
+wiggins_ex_18_7_3_n.vmt	wiggins_ex_18_7_3_n.sal	wiggins_ex_18_7_3_n	hyst	unknown		

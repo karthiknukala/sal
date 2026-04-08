@@ -1,0 +1,57 @@
+(define-fun r () Real 3.2)
+
+(declare-const x Real)
+(declare-const S Real)
+
+(declare-const x.next Real)
+(declare-const S.next Real)
+
+(define-fun sv.x () Real (! x :next x.next))
+(define-fun sv.S () Real (! S :next S.next))
+
+(define-fun range () Bool
+  (and (<= (- 10) x) (<= x 10)
+       ))
+(define-fun range.next () Bool
+  (and (<= (- 10) x.next) (<= x.next 10)
+       ))
+(define-fun square ((v Real)) Real (* v v))
+
+(define-fun init () Bool
+  (! (and
+      (= S 0)
+      (or (= x 0.8) (= x 0.5))
+      )
+     :init true))
+
+(define-fun trans () Bool
+  (!
+   (and
+    range
+    range.next
+    (or
+      (and (= S 0)
+           true
+           (= S.next 1)
+           (= x.next (* r (* x (- 1 x))))
+           )
+      (and (= S 1)
+           (not
+            (or
+             (and (>= x 0.78) (<= x 0.82))
+             (and (>= x 0.48) (<= x 5.20))))
+           (= S.next 2)
+           (= x.next x)
+           )
+      (and (= S 1)
+           (or
+            (and (>= x 0.78) (<= x 0.82))
+            (and (>= x 0.48) (<= x 5.20)))
+           (= S.next 0)
+           (= x.next x)
+           )
+      )
+    )
+   :trans true))
+
+(define-fun prop () Bool (! (not (= S 2)) :invar-property 0))

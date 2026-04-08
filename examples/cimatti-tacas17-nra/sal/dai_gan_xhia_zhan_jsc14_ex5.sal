@@ -1,0 +1,86 @@
+% Auto-generated from dai_gan_xhia_zhan_jsc14_ex5.vmt
+% Source suite: benchmarks/vmt/nra/dai_gan_xhia_zhan_jsc14_ex5.vmt
+dai_gan_xhia_zhan_jsc14_ex5: CONTEXT =
+BEGIN
+  system: MODULE =
+  BEGIN
+  INPUT
+    instance_jump: BOOLEAN
+
+  OUTPUT
+    instance_x: REAL,
+    instance_y: REAL
+
+  LOCAL
+    def_20: REAL,
+    def_21: REAL,
+    def_17: REAL,
+    def_18: REAL,
+    def_22: REAL,
+    def_23: BOOLEAN,
+    def_29: REAL,
+    def_26: REAL,
+    def_28: REAL,
+    def_30: REAL,
+    def_27: REAL,
+    def_34: REAL,
+    def_39: REAL,
+    def_24: BOOLEAN,
+    def_58: REAL,
+    def_59: REAL,
+    def_57: REAL,
+    def_60: REAL,
+    def_61: BOOLEAN,
+    def_62: BOOLEAN
+
+  DEFINITION
+    def_20 = (instance_x + 1);
+    def_21 = (def_20 * def_20);
+    def_17 = (instance_y + (-(2)));
+    def_18 = (def_17 * def_17);
+    def_22 = (def_18 + def_21);
+    def_23 = (def_22 <= (4 / 25));
+    def_29 = (2 * instance_x);
+    def_26 = (instance_x * instance_x);
+    def_28 = (instance_x * def_26);
+    def_30 = ((-(1)) * def_28);
+    def_27 = (instance_y * def_26);
+    def_34 = ((-(1)) * def_27);
+    def_39 = (def_34 + def_30);
+    def_24 = (NOT instance_jump);
+    def_58 = (instance_x + (-(1)));
+    def_59 = (def_58 * def_58);
+    def_57 = (instance_y * instance_y);
+    def_60 = (def_57 + def_59);
+    def_61 = (def_60 <= (1 / 25));
+    def_62 = (NOT def_61);
+
+  INITIALIZATION
+  [
+      def_23 -->
+        instance_x IN { v_instance_x: REAL | TRUE };
+        instance_y IN { v_instance_y: REAL | TRUE }
+  ]
+
+  TRANSITION
+  [
+      LET def_48: REAL = ((-(2)) * instance_x') IN
+        LET def_49: REAL = (instance_y + def_48) IN
+        LET def_50: REAL = (def_29 + def_49) IN
+        LET def_51: BOOLEAN = (def_50 = 0) IN
+        LET def_40: REAL = ((-(2)) * instance_y') IN
+        LET def_41: REAL = (def_40 + def_39) IN
+        LET def_42: REAL = (instance_y + def_41) IN
+        LET def_43: REAL = (def_29 + def_42) IN
+        LET def_44: BOOLEAN = (def_43 = 0) IN
+        LET def_52: BOOLEAN = (def_44 AND def_51) IN
+        LET def_53: BOOLEAN = (instance_jump OR def_52) IN
+        LET def_54: BOOLEAN = (def_24 AND def_53) IN
+        def_54 -->
+        instance_x' IN { v_instance_x: REAL | TRUE };
+        instance_y' IN { v_instance_y: REAL | TRUE }
+  ]
+  END;
+
+  property: THEOREM system |- G(def_62);
+END

@@ -1,0 +1,14 @@
+(declare-const x Real)
+(declare-const y Real)
+(declare-const x.next Real)
+(declare-const y.next Real)
+
+(define-fun sv.x () Real (! x :next x.next))
+(define-fun sv.y () Real (! y :next y.next))
+
+(define-fun init () Bool (! (<= (+ (* x x) (* y y)) 2) :init true))
+(define-fun trans () Bool (! (and (= x.next x) (= y.next y)) :trans true))
+(define-fun prop () Bool (! (and
+                             (<= (- 3) x) (<= x 3)
+                             (<= (- 3) y) (<= y 3))
+                            :invar-property 0))
