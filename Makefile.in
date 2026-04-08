@@ -252,6 +252,7 @@ sal-esm-random-simulation sal-esm-guided-simulation                     \
 sal-esmc-bfs sal-esmc-dfs sal-esmc-guided sal-esmc-ndfs                 \
 sal-esmc sal-path-explorer smt-interface                                \
 sat-boolean-smt-context sat-boolean-smt-bmc-context                     \
+sat-smtlib2-context smtlib2-interface sat-smtlib2-bmc-context           \
 sal-module-simplifications yices-interface                              \
 sat-boolean-yices-bmc-context sat-yices-context sat-yices-bmc-context   \
 yices2-interface sat-boolean-yices2-bmc-context sat-yices2-context      \
