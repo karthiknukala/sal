@@ -332,7 +332,8 @@
      (else
       (let ((decl (make-ast-instance <sal-var-decl> *place-provider*
                                      :id (make-sal-identifier *place-provider* (symbol-from-string atom))
-                                     :type type)))
+                                     :type (or type
+                                               (make-sal-builtin-name <sal-any-type> *place-provider*)))))
         (hashtable-put! *model-aux-decls* key decl)
         decl)))))
 
@@ -365,8 +366,9 @@
            (args (map (lambda (decl) (make-sal-name-expr decl *place-provider*)) decls))
            (body (make-sal-application expr
                                        (apply make-application-argument args)
-                                       *place-provider*)))
-      (make-ast-instance <sal-lambda> *place-provider*
+                                       *place-provider*))
+           (class (if (sal-type/array? expected-type) <sal-array-literal> <sal-lambda>)))
+      (make-ast-instance class *place-provider*
                          :local-decls decls
                          :expr body))
     expr))
@@ -489,7 +491,7 @@
          (decl (make-ast-instance <sal-var-decl> *place-provider*
                                   :id (make-sal-identifier *place-provider* 'idx)
                                   :type domain-type)))
-    (make-ast-instance <sal-lambda> *place-provider*
+    (make-ast-instance <sal-array-literal> *place-provider*
                        :local-decls (list decl)
                        :expr default-value)))
 
@@ -526,8 +528,9 @@
                            (cons (symbol->string (sal-decl/name decl))
                                  (make-sal-name-expr decl *place-provider*)))
                          param-decls))
-         (body-expr (smtlib2-term->sal-expr body param-env result-type)))
-    (make-ast-instance <sal-lambda> *place-provider*
+         (body-expr (smtlib2-term->sal-expr body param-env result-type))
+         (class (if (and result-type (sal-type/array? result-type)) <sal-array-literal> <sal-lambda>)))
+    (make-ast-instance class *place-provider*
                        :local-decls param-decls
                        :expr body-expr)))
 

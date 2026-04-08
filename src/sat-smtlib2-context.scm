@@ -178,8 +178,32 @@
 (define-method (sal-ast/display-smtlib2 (ast <sal-mod>) (info <smtlib2-translation-info>))
   (sal-application/display-smtlib2 ast "mod" info))
 
+(define (display-smtlib2-number num)
+  (if (mpq/integer? num)
+    (if (<mpq num *mpq-zero*)
+      (begin
+        (display "(- ")
+        (display (mpq->string (mpq/absolute num)))
+        (display ")"))
+      (display (mpq->string num)))
+    (let* ((numerator (mpq/numerator num))
+           (denominator (mpq/denominator num)))
+      (if (<mpq numerator *mpq-zero*)
+        (begin
+          (display "(- (/ ")
+          (display (mpq->string (mpq/absolute numerator)))
+          (display " ")
+          (display (mpq->string denominator))
+          (display "))"))
+        (begin
+          (display "(/ ")
+          (display (mpq->string numerator))
+          (display " ")
+          (display (mpq->string denominator))
+          (display ")"))))))
+
 (define-method (sal-ast/display-smtlib2 (ast <sal-numeral>) (info <smtlib2-translation-info>))
-  (display (mpq->string (slot-value ast :num))))
+  (display-smtlib2-number (slot-value ast :num)))
 
 (define-method (sal-ast/display-smtlib2 (ast <sal-lt>) (info <smtlib2-translation-info>))
   (sal-application/display-smtlib2 ast "<" info))

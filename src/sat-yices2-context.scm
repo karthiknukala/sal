@@ -79,7 +79,7 @@
   (display "real"))
 
 (define-method (sal-type/display-yices2 (type <sal-subtype>))
-  (sign-unsupported-feature type "Can't be converted to a Yices 2 type."))
+  (sal-type/display-yices2 (sal-subtype/immediate-super-type type)))
 
 (define-method (sal-type/display-yices2 (type <sal-type-name>))
   (cond
