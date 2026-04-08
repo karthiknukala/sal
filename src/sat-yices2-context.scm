@@ -27,67 +27,130 @@
 
 (define-class <sat-yices2-context> (<sat-generic-context>) ())
 
+(define-class <yices2-translation-info> (<dp-translation-info>)
+  (:type->sort-id :sort-id-queue :sort-idx))
+
+(define (yices2-translation-info/init! info)
+  (dp-translation-info/init! info)
+  (set-slot-value! info :type->sort-id (make-eq-hash-table))
+  (set-slot-value! info :sort-id-queue (make-queue))
+  (set-slot-value! info :sort-idx 0)
+  info)
+
+(define (make-yices2-translation-info)
+  (yices2-translation-info/init! (make-instance <yices2-translation-info>)))
+
 (define (make-sat-yices2-context place-provider)
   (sat-generic-context/init! (make-instance <sat-yices2-context>) place-provider))
+
+(define (yices2-translation-info/sort-id info type)
+  (let* ((type-name (sal-type/cast type <sal-type-name>))
+         (decl (slot-value type-name :decl))
+         (type->sort-id (slot-value info :type->sort-id)))
+    (cond
+     ((eq-hash-table/get type->sort-id decl) => cdr)
+     (else
+      (let ((sort-id (symbol-append 'U_ (object->symbol (slot-value info :sort-idx)))))
+        (set-slot-value! info :sort-idx (+ 1 (slot-value info :sort-idx)))
+        (eq-hash-table/put! type->sort-id decl sort-id)
+        (queue/insert! (slot-value info :sort-id-queue) sort-id)
+        sort-id)))))
 
 
 ;;------------------------------------------------------------------
 ;; Display types in the Yices 2 syntax
 ;;------------------------------------------------------------------
 
-(define-generic (sal-type/display-yices2 type))
+(define-generic (sal-type/collect-yices2-sorts! type info))
 
-(define-method (sal-type/display-yices2 (type <sal-type>))
-  (sign-unsupported-feature type "Failed to convert to a Yices 2 type."))
+(define-method (sal-type/collect-yices2-sorts! (type <sal-type>) (info <yices2-translation-info>))
+  #unspecified)
 
-(define-method (sal-type/display-yices2 (type <sal-function-type>))
-  (display "(-> ")
-  (sal-type/display-yices2 (slot-value type :domain))
-  (display " ")
-  (sal-type/display-yices2 (slot-value type :range))
-  (display ")"))
+(define-method (sal-type/collect-yices2-sorts! (type <sal-function-type>) (info <yices2-translation-info>))
+  (sal-type/collect-yices2-sorts! (slot-value type :domain) info)
+  (sal-type/collect-yices2-sorts! (slot-value type :range) info))
 
-(define-method (sal-type/display-yices2 (type <sal-array-type>))
-  (call-next-method))
-
-(define-method (sal-type/display-yices2 (type <sal-domain-tuple-type>))
-  (for-each (lambda (t)
-                (display " ")
-                (sal-type/display-yices2 t))
+(define-method (sal-type/collect-yices2-sorts! (type <sal-domain-tuple-type>) (info <yices2-translation-info>))
+  (for-each (lambda (child-type)
+              (sal-type/collect-yices2-sorts! child-type info))
             (slot-value type :types)))
 
-(define-method (sal-type/display-yices2 (type <sal-tuple-type>))
+(define-method (sal-type/collect-yices2-sorts! (type <sal-tuple-type>) (info <yices2-translation-info>))
+  (for-each (lambda (child-type)
+              (sal-type/collect-yices2-sorts! child-type info))
+            (slot-value type :types)))
+
+(define-method (sal-type/collect-yices2-sorts! (type <sal-record-type>) (info <yices2-translation-info>))
+  (for-each (lambda (field)
+              (sal-type/collect-yices2-sorts! (slot-value field :type) info))
+            (slot-value type :fields)))
+
+(define-method (sal-type/collect-yices2-sorts! (type <sal-subtype>) (info <yices2-translation-info>))
+  (sal-type/collect-yices2-sorts! (sal-subtype/immediate-super-type type) info))
+
+(define-method (sal-type/collect-yices2-sorts! (type <sal-type-name>) (info <yices2-translation-info>))
+  (cond
+   ((sal-type-name/definition type) =>
+    (lambda (def)
+      (sal-type/collect-yices2-sorts! def info)))
+   (else
+    (yices2-translation-info/sort-id info type)
+    #unspecified)))
+
+(define-generic (sal-type/display-yices2 type info))
+
+(define-method (sal-type/display-yices2 (type <sal-type>) (info <yices2-translation-info>))
+  (sign-unsupported-feature type "Failed to convert to a Yices 2 type."))
+
+(define-method (sal-type/display-yices2 (type <sal-function-type>) (info <yices2-translation-info>))
+  (display "(-> ")
+  (sal-type/display-yices2 (slot-value type :domain) info)
+  (display " ")
+  (sal-type/display-yices2 (slot-value type :range) info)
+  (display ")"))
+
+(define-method (sal-type/display-yices2 (type <sal-array-type>) (info <yices2-translation-info>))
+  (call-next-method))
+
+(define-method (sal-type/display-yices2 (type <sal-domain-tuple-type>) (info <yices2-translation-info>))
+  (for-each (lambda (t)
+                (display " ")
+                (sal-type/display-yices2 t info))
+            (slot-value type :types)))
+
+(define-method (sal-type/display-yices2 (type <sal-tuple-type>) (info <yices2-translation-info>))
   (display "(tuple ")
   (for-each (lambda (t)
               (display " ")
-              (sal-type/display-yices2 t))
+              (sal-type/display-yices2 t info))
             (slot-value type :types))
   (display ")"))
 
-(define-method (sal-type/display-yices2 (type <sal-scalar-type>))
+(define-method (sal-type/display-yices2 (type <sal-scalar-type>) (info <yices2-translation-info>))
   (if (sal-type/boolean? type)
     (display "bool")
     (display "int"))) ;; they were converted to numbers...
 
-(define-method (sal-type/display-yices2 (type <sal-bool-type>))
+(define-method (sal-type/display-yices2 (type <sal-bool-type>) (info <yices2-translation-info>))
   (display "bool"))
 
-(define-method (sal-type/display-yices2 (type <sal-int-type>))
+(define-method (sal-type/display-yices2 (type <sal-int-type>) (info <yices2-translation-info>))
   (display "int"))
 
-(define-method (sal-type/display-yices2 (type <sal-number-type>))
+(define-method (sal-type/display-yices2 (type <sal-number-type>) (info <yices2-translation-info>))
   (display "real"))
 
-(define-method (sal-type/display-yices2 (type <sal-subtype>))
-  (sal-type/display-yices2 (sal-subtype/immediate-super-type type)))
+(define-method (sal-type/display-yices2 (type <sal-subtype>) (info <yices2-translation-info>))
+  (sal-type/display-yices2 (sal-subtype/immediate-super-type type) info))
 
-(define-method (sal-type/display-yices2 (type <sal-type-name>))
+(define-method (sal-type/display-yices2 (type <sal-type-name>) (info <yices2-translation-info>))
   (cond
    ((sal-type-name/definition type) =>
-    sal-type/display-yices2)
+    (lambda (def)
+      (sal-type/display-yices2 def info)))
    (else
     ;; uninterpreted type
-    (display "utype"))))
+    (display (yices2-translation-info/sort-id info type)))))
 
 
 
@@ -227,7 +290,7 @@
 
 (define (display-yices2-alias decl expr info)
   (display* "(define " (dp-translation-info/var-id info decl) "::")
-  (sal-type/display-yices2 (slot-value decl :type))
+  (sal-type/display-yices2 (slot-value decl :type) info)
   (display "  ")
   (sal-ast/display-yices2 expr info)
   (print ")"))
@@ -261,18 +324,22 @@
 ;; BD this filtering is no longer necessary, original types are preserved in declarations
 ;; (cf. sat-generic-context.scm)
 ;;  (filter-int-pred! sat-context)
-  (let ((info (make-dp-translation-info))
+  (let ((info (make-yices2-translation-info))
         (def-list '())) 
     ;; If we transform equalities in definitions, we may loose information during the model construction.
     ;; Maybe, yices should output the value of defined variables.
     ;; (def-list (sat-generic-context/collect-definitions! sat-context)))
 
-    ;; declare type utype (uinterpreted type)
-    (print "(define-type utype)")
+    (for-each (lambda (decl)
+                (sal-type/collect-yices2-sorts! (slot-value decl :type) info))
+              (queue->list (slot-value sat-context :declaration-queue)))
+    (for-each (lambda (sort-id)
+                (print "(define-type " sort-id ")"))
+              (queue->list (slot-value info :sort-id-queue)))
     ;; define variables
     (for-each (lambda (decl)
                 (display* "(define " (dp-translation-info/var-id info decl) "::")
-                (sal-type/display-yices2 (slot-value decl :type))
+                (sal-type/display-yices2 (slot-value decl :type) info)
                 (print ")"))
               (queue->list (slot-value sat-context :declaration-queue)))
     ;; define "definitions" :-)

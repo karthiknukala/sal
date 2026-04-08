@@ -189,6 +189,29 @@
                curr-pos
                (cons curr-expr children)))))))
 
+(define (mk-ls-conditional place cond-expr then-expr else-expr elsif?)
+  (template->sxml (CONDITIONAL PLACE: ,place
+                               ELSIF: ,(if elsif? "YES" "NO")
+                               ,cond-expr
+                               ,then-expr
+                               ,else-expr)))
+
+(define (mk-ls-cond-expression alternative-queue else-expr)
+  (let loop ((remaining (reverse (queue->list alternative-queue)))
+             (curr-else else-expr))
+    (if (null? remaining)
+      curr-else
+      (let* ((curr-alternative (car remaining))
+             (children (sxml/children curr-alternative))
+             (curr-cond (car children))
+             (curr-body (cadr children)))
+        (loop (cdr remaining)
+              (mk-ls-conditional (extract-sal-place curr-alternative)
+                                 curr-cond
+                                 curr-body
+                                 curr-else
+                                 (not (null? (cdr remaining)))))))))
+
 (define (mk-numeral numeral-token)
   (template->sxml (NUMERAL PLACE: ,(sal-token/place numeral-token)
                            ,(sal-token/data numeral-token))))
@@ -554,20 +577,7 @@
                                                                        ,@args))
                                          (car args)))))))
     ((LP COND alternative+ else-alternative RP)
-     (let ((alternatives (reverse (queue->list alternative+))))
-       (let loop ((curr-else else-alternative)
-		  (alternatives alternatives))
-         (if (null? alternatives)
-	     curr-else
-           (let ((curr-alternative (car alternatives)))
-             (sxml/match-or-fail curr-alternative
-               ((ALTERNATIVE ?cond ?body)
-                (loop (template->sxml (CONDITIONAL PLACE: ,(extract-sal-place curr-alternative)
-                                                   ELSIF: ,(if (null? (cdr alternatives)) "NO" "YES")
-                                                   ,cond
-                                                   ,body
-                                                   ,curr-else))
-                      (cdr alternatives)))))))))
+     (mk-ls-cond-expression alternative+ else-alternative))
     ((array-ref)
      array-ref)
     ((tuple-ref)

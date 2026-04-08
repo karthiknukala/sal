@@ -4,6 +4,7 @@ import argparse
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import time
@@ -14,6 +15,7 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class Solver:
+    key: str
     label: str
     args: tuple[str, ...]
     env: tuple[tuple[str, str], ...] = ()
@@ -38,7 +40,7 @@ class RunResult:
     detail: str | None = None
 
     def as_cell(self) -> str:
-        if self.elapsed is not None and self.verdict not in ("timeout", "error", "unexpected"):
+        if self.elapsed is not None and self.verdict not in ("timeout", "exception"):
             return f"{self.verdict} ({self.elapsed:.2f}s)"
         if self.detail:
             return f"{self.verdict}: {self.detail}"
@@ -49,13 +51,46 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 EXAMPLES_ROOT = REPO_ROOT / "examples"
 SAL_INF_BMC = REPO_ROOT / "bin" / "sal-inf-bmc"
 COMMAND_RE = re.compile(r"sal-inf-bmc\b.*")
+BENCHMARKABLE_DOCUMENTED_SOLVERS = {"yices", "yices2", "ics", "smtlib2"}
+EXCEPTION_PATTERNS = (
+    "k-induction rule failed, please try to increase the depth.",
+    "feature not supported: non linear problem.",
+    "An incompleteness was detected in the decision procedure",
+    "logic QF_AUFNIRA is not supported since yices was not built with mcsat",
+)
+
+
+def default_smtlib2_yices_command() -> str | None:
+    env_override = os.environ.get("SAL_BENCHMARK_SMTLIB2_YICES_COMMAND")
+    if env_override:
+        return env_override
+    candidate_paths = (
+        Path("/Users/e35480/git/yices2/build/arm-apple-darwin24.6.0-release/bin/yices_smt2"),
+        Path("/Users/e35480/git/yices2/build/arm-apple-darwin24.6.0-release/bin/yices-smt2"),
+    )
+    for path in candidate_paths:
+        if path.exists():
+            return f"{path} --mcsat"
+    for command_name in ("yices_smt2", "yices-smt2"):
+        resolved = shutil.which(command_name)
+        if resolved:
+            return f"{resolved} --mcsat"
+    return None
+
+
+SMTLIB2_YICES_COMMAND = default_smtlib2_yices_command()
 
 SOLVERS = (
-    Solver("Yices2", ("-s", "yices2")),
-    Solver("SMTLIB2/Yices2", ("-s", "smtlib2"), (("SAL_SMTLIB2_PROFILE", "yices2"),)),
-    Solver("SMTLIB2/Z3", ("-s", "smtlib2"), (("SAL_SMTLIB2_PROFILE", "z3"),)),
-    Solver("ICS", ("-s", "ics")),
-    Solver("Yices 1.0", ("-s", "yices")),
+    Solver("yices2", "Yices2", ("-s", "yices2")),
+    Solver(
+        "smtlib2-yices2",
+        "SMTLIB2/Yices2",
+        ("-s", "smtlib2"),
+        ((("SAL_SMTLIB2_COMMAND", SMTLIB2_YICES_COMMAND),) if SMTLIB2_YICES_COMMAND else (("SAL_SMTLIB2_PROFILE", "yices2"),)),
+    ),
+    Solver("smtlib2-z3", "SMTLIB2/Z3", ("-s", "smtlib2"), (("SAL_SMTLIB2_PROFILE", "z3"),)),
+    Solver("ics", "ICS", ("-s", "ics")),
+    Solver("yices", "Yices 1.0", ("-s", "yices")),
 )
 
 
@@ -81,7 +116,21 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Optional file to receive the markdown table.",
     )
+    parser.add_argument(
+        "--solver",
+        action="append",
+        choices=tuple(solver.key for solver in SOLVERS),
+        default=None,
+        help="Restrict execution to one or more solver keys.",
+    )
     return parser.parse_args()
+
+
+def selected_solvers(args: argparse.Namespace) -> tuple[Solver, ...]:
+    if not args.solver:
+        return SOLVERS
+    requested = set(args.solver)
+    return tuple(solver for solver in SOLVERS if solver.key in requested)
 
 
 def strip_known_options(tokens: list[str]) -> tuple[str, ...]:
@@ -106,6 +155,18 @@ def strip_known_options(tokens: list[str]) -> tuple[str, ...]:
     return tuple(result)
 
 
+def documented_solver(tokens: list[str]) -> str | None:
+    idx = 0
+    while idx < len(tokens):
+        token = tokens[idx]
+        if token in ("-s", "--solver") and idx + 1 < len(tokens):
+            return tokens[idx + 1]
+        if token.startswith("--solver="):
+            return token.split("=", 1)[1]
+        idx += 1
+    return None
+
+
 def extract_query(path: Path, lineno: int, line: str) -> tuple[tuple[str, ...], str] | None:
     match = COMMAND_RE.search(line)
     if not match:
@@ -120,6 +181,9 @@ def extract_query(path: Path, lineno: int, line: str) -> tuple[tuple[str, ...], 
     if not tokens or tokens[0] != "sal-inf-bmc":
         return None
     if len(tokens) > 1 and tokens[1] == "with":
+        return None
+    solver = documented_solver(tokens[1:])
+    if solver is not None and solver not in BENCHMARKABLE_DOCUMENTED_SOLVERS:
         return None
     args = strip_known_options(tokens[1:])
     if not args:
@@ -149,16 +213,19 @@ def collect_queries() -> list[Query]:
     return list(queries.values())
 
 
-def normalize_verdict(stdout: str) -> str:
-    if "Counterexample:" in stdout:
+def normalize_verdict(stdout: str, stderr: str) -> str:
+    combined = "\n".join(part for part in (stdout, stderr) if part)
+    if "Counterexample:" in combined:
         return "counterexample"
-    if re.search(r"^proved\.$", stdout, flags=re.MULTILINE):
+    if re.search(r"^proved\.$", combined, flags=re.MULTILINE):
         return "proved"
-    if "no counterexample between depths:" in stdout:
+    if "no counterexample between depths:" in combined:
         return "no counterexample"
-    if re.search(r"^invalid\.$", stdout, flags=re.MULTILINE):
+    if re.search(r"^invalid\.$", combined, flags=re.MULTILINE):
         return "invalid"
-    return "unexpected"
+    if any(pattern in combined for pattern in EXCEPTION_PATTERNS):
+        return "exception"
+    return "exception"
 
 
 def summarize_error(stdout: str, stderr: str) -> str:
@@ -189,36 +256,38 @@ def run_query(query: Query, solver: Solver, timeout_s: float) -> RunResult:
     except subprocess.TimeoutExpired:
         return RunResult("timeout")
     elapsed = time.perf_counter() - started
-    verdict = normalize_verdict(proc.stdout)
-    if proc.returncode == 0 and verdict != "unexpected":
+    verdict = normalize_verdict(proc.stdout, proc.stderr)
+    if verdict in ("counterexample", "proved", "no counterexample", "invalid"):
         return RunResult(verdict, elapsed=elapsed)
-    if proc.returncode == 0:
-        return RunResult("unexpected", elapsed=elapsed, detail=summarize_error(proc.stdout, proc.stderr))
-    return RunResult("error", detail=summarize_error(proc.stdout, proc.stderr))
+    return RunResult("exception", detail=summarize_error(proc.stdout, proc.stderr))
 
 
-def render_table(queries: list[Query], results: dict[tuple[int, int], RunResult]) -> str:
-    headers = ["Query", *[solver.label for solver in SOLVERS]]
+def render_table(
+    queries: list[Query], solvers: tuple[Solver, ...], results: dict[tuple[int, int], RunResult]
+) -> str:
+    headers = ["Query", *[solver.label for solver in solvers]]
     lines = [
         "| " + " | ".join(headers) + " |",
         "| " + " | ".join(["---"] * len(headers)) + " |",
     ]
     for query_idx, query in enumerate(queries):
         row = [query.label]
-        for solver_idx, _solver in enumerate(SOLVERS):
+        for solver_idx, _solver in enumerate(solvers):
             row.append(results[(query_idx, solver_idx)].as_cell())
         lines.append("| " + " | ".join(row) + " |")
     return "\n".join(lines)
 
 
-def print_summary(queries: list[Query], results: dict[tuple[int, int], RunResult]) -> None:
+def print_summary(
+    queries: list[Query], solvers: tuple[Solver, ...], results: dict[tuple[int, int], RunResult]
+) -> None:
     unanimous = 0
     disagreements: list[str] = []
     for query_idx, query in enumerate(queries):
         verdicts = [
             results[(query_idx, solver_idx)].verdict
-            for solver_idx in range(len(SOLVERS))
-            if results[(query_idx, solver_idx)].verdict not in ("timeout", "error", "unexpected")
+            for solver_idx in range(len(solvers))
+            if results[(query_idx, solver_idx)].verdict not in ("timeout", "exception")
         ]
         if verdicts and len(set(verdicts)) == 1:
             unanimous += 1
@@ -237,18 +306,19 @@ def print_summary(queries: list[Query], results: dict[tuple[int, int], RunResult
 
 def main() -> int:
     args = parse_args()
+    solvers = selected_solvers(args)
     queries = collect_queries()
     if args.limit is not None:
         queries = queries[: args.limit]
     results: dict[tuple[int, int], RunResult] = {}
     for query_idx, query in enumerate(queries):
         print(f"# Running {query_idx + 1}/{len(queries)}: {query.label}", file=sys.stderr)
-        for solver_idx, solver in enumerate(SOLVERS):
+        for solver_idx, solver in enumerate(solvers):
             results[(query_idx, solver_idx)] = run_query(query, solver, args.timeout)
-    table = render_table(queries, results)
+    table = render_table(queries, solvers, results)
     if args.output is not None:
         args.output.write_text(table + "\n")
-    print_summary(queries, results)
+    print_summary(queries, solvers, results)
     print(table)
     return 0
 
