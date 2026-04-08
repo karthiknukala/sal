@@ -96,7 +96,7 @@
  "Verification" 
  "-s <name>"
  "--solver=<name>"
- "Set sat solver to be used (default: ics)."
+ "Set backend solver to be used (default: yices)."
  (lambda (arg)
    (set! *solver-id* (string->symbol arg))))
 
