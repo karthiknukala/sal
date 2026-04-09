@@ -1,0 +1,81 @@
+SAL -> SMT-LIB2 interface
+-------------------------
+
+The SMT-LIB2 backend is available to `sal-inf-bmc` as a separate solver
+context. SAL translates the verification condition to SMT-LIB2, runs an
+external SMT solver, and converts the solver model back into a SAL
+counterexample or proof result.
+
+This backend is distinct from the existing Yices2 backend. To use the
+native Yices2 backend, select `-s yices2'. To use the SMT-LIB2 backend,
+select `-s smtlib2'.
+
+The default SMT-LIB2 profile uses the Yices2 SMT-LIB2 front-end
+(`yices-smt2'). Z3 has also been tested with this backend. You can
+either select a built-in profile or provide an explicit solver command.
+
+To use SMT-LIB2 with SAL:
+
+1) Install an SMT solver and make sure the executable is in your PATH.
+
+   For the built-in profiles, SAL expects either:
+
+     yices-smt2
+     z3
+
+
+2) Optionally tell SAL which SMT-LIB2 solver command to use.
+
+   If you want to select one of the built-in profiles, add a command to
+   your `.salrc' file in your home directory:
+
+     (sal/set-smtlib2-profile! 'yices2)
+     (sal/set-smtlib2-profile! 'z3)
+
+   If you want to provide an explicit command line, add:
+
+     (sal/set-smtlib2-command! "/path/to/solver <options>")
+
+   For example:
+
+     (sal/set-smtlib2-command! "/path/to/z3 -smt2 pp.decimal=true pp.decimal_precision=20")
+
+
+3) Invoke `sal-inf-bmc' with the option `-s smtlib2'.
+
+   Examples:
+
+     % sal-inf-bmc -s smtlib2 inf_bakery invalid
+
+     % sal-inf-bmc -s smtlib2 -d 3 -l aux1 -l aux2 -i inf_bakery mutex
+
+     % sal-inf-bmc -s smtlib2 waterlevel prop
+
+
+4) To override the SMT-LIB2 solver for a single run, use environment
+   variables.
+
+   To select a built-in profile:
+
+     % SAL_SMTLIB2_PROFILE=z3 sal-inf-bmc -s smtlib2 inf_bakery invalid
+
+   To specify an explicit command:
+
+     % SAL_SMTLIB2_COMMAND="/path/to/solver <options>" sal-inf-bmc -s smtlib2 inf_bakery invalid
+
+
+Remarks:
+
+ - The default SMT-LIB2 profile is `yices2'.
+
+ - The new invocation for the infinite-state BMC frontend is:
+
+     % sal-inf-bmc -s smtlib2 <context-name> <assertion-name>
+
+ - The existing Yices2 backend remains available as:
+
+     % sal-inf-bmc -s yices2 <context-name> <assertion-name>
+
+ - The SMT-LIB2 backend has been validated locally with the shipped
+   `examples/inf-bakery' and `examples/hybrid' benchmarks using Yices2
+   (`yices-smt2') and Z3.

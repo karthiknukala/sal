@@ -84,6 +84,8 @@
 (define *yices2-id->sal-decl* (lambda (decl) #f))
 (define *place-provider* #unspecified)
 (define *aux-decls* #unspecified)
+(define *typed-aux-decls* '())
+(define *yices2-aux-decl-idx* 0)
 
 
 
@@ -164,6 +166,11 @@
 	 (lambda (escape proc msg obj)
 	   (escape #unspecified)))))
 
+(define (yices2-verbosity-flag)
+  (if (> (verbosity-level) 3)
+    (string-append " --verbosity=" (object->string (verbosity-level)))
+    ""))
+
 
 
 ;;
@@ -181,7 +188,7 @@
 (define (yices2-sat/execute in-file)
   (sal/set-yices2-out-tmp-file!)
   (show-yices2-version *yices2-sat-command*)
-  (let* ((verbose-flag (if (> (verbosity-level) 3) " --verbose" ""))
+  (let* ((verbose-flag (yices2-verbosity-flag))
 	 (cmd (string-append *yices2-sat-command* " --model" verbose-flag 
 			     " \"" in-file "\" > \"" *sal-tmp-out-file-to-yices2* "\""
 			     (if *silent-mode* " 2> /dev/null " "")))
@@ -246,7 +253,7 @@
 (define (yices2/execute-core in-file)
   (sal/set-yices2-out-tmp-file!)
   (show-yices2-version *yices2-command*)
-  (let* ((verbose-flag (if (> (verbosity-level) 3) " --verbose" ""))
+  (let* ((verbose-flag (yices2-verbosity-flag))
 	 (mode-flag " --mode=one-shot")
          (mcsat-flag (if *yices2-mcsat-mode?* " --mcsat" ""))
 ;;	 (mode-flag " --full-model") ;; for testing on yices-smt
@@ -382,10 +389,122 @@
 	  c
 	  'ERROR)))))
 
-(define (yices2-id->sal-name-expr yices-id)
+(define *yices2-missing-term* '(yices2-missing))
+
+(define (yices2-missing-term? term)
+  (equal? term *yices2-missing-term*))
+
+(define (make-yices2-raw-id id)
+  (list 'id id))
+
+(define (yices2-raw-id? term)
+  (and (pair? term) (eq? (car term) 'id)))
+
+(define (yices2-raw-id/value term)
+  (cadr term))
+
+(define (make-yices2-raw-app fun args)
+  (list 'app fun args))
+
+(define (yices2-raw-app? term)
+  (and (pair? term) (eq? (car term) 'app)))
+
+(define (yices2-raw-app/fun term)
+  (cadr term))
+
+(define (yices2-raw-app/args term)
+  (caddr term))
+
+(define (make-yices2-raw-update target idxs val)
+  (list 'update target idxs val))
+
+(define (yices2-raw-update? term)
+  (and (pair? term) (eq? (car term) 'update)))
+
+(define (yices2-raw-update/target term)
+  (cadr term))
+
+(define (yices2-raw-update/idxs term)
+  (caddr term))
+
+(define (yices2-raw-update/val term)
+  (cadddr term))
+
+(define (sal-type/uninterpreted? type)
+  (and (instance-of? type <sal-type-name>)
+       (not (instance-of? type <sal-number-type>))
+       (not (sal-type-name/definition type))))
+
+(define (injection-name utype)
+  (string->symbol (string-append (symbol->string (sal-decl/name (slot-value utype :decl))) "$")))
+
+(define (get-fun-decl ctxt name utype)
+  (let ((decl (symbol-table/lookup (slot-value ctxt :constant-declarations) name)))
+    (if decl
+      decl
+      (let* ((int-type (make-sal-builtin-name <sal-int-type> utype))
+             (ftype (make-ast-instance <sal-function-type> utype
+                                       :domain int-type :range utype :context ctxt))
+             (decl (make-ast-instance <sal-constant-decl> utype
+                                      :id (make-sal-identifier utype name)
+                                      :type ftype
+                                      :context ctxt)))
+        (symbol-table/add! (slot-value ctxt :constant-declarations) name decl)
+        decl))))
+
+(define (coerce-int-to-uninterpreted int-expr utype)
+  (let ((ctxt (slot-value utype :context))
+        (name (injection-name utype)))
+    (make-sal-application
+     (make-sal-name-expr (get-fun-decl ctxt name utype))
+     (make-application-argument int-expr))))
+
+(define (int->scalar idx scalar-type)
+  (let ((i (smpq_to_int (slot-value idx :num)))
+        (elements (slot-value scalar-type :scalar-elements)))
+    (list-ref elements i)))
+
+(define (known-yices2-id->decl yices-id)
   [assert (*yices2-id->sal-decl*) *yices2-id->sal-decl*]
   (cond
-   ((*yices2-id->sal-decl* yices-id) => (lambda (decl) (make-sal-name-expr decl)))
+   ((*yices2-id->sal-decl* yices-id) => (lambda (decl) decl))
+   ((hashtable-get *aux-decls* yices-id) => (lambda (decl) decl))
+   (else #f)))
+
+(define (make-yices2-aux-decl yices-id type)
+  (set! *yices2-aux-decl-idx* (+ 1 *yices2-aux-decl-idx*))
+  (make-ast-instance <sal-var-decl> *place-provider*
+                     :id (make-sal-identifier *place-provider*
+                                              (symbol-append yices-id '$
+                                                             (object->symbol *yices2-aux-decl-idx*)))
+                     :type type))
+
+(define (lookup-typed-aux-decl yices-id expected-type)
+  (let loop ((entries *typed-aux-decls*))
+    (if (null? entries)
+      #f
+      (let ((entry (car entries)))
+        (if (and (eq? yices-id (car entry))
+                 (sal-type/equivalent? expected-type (cadr entry)))
+          (caddr entry)
+          (loop (cdr entries)))))))
+
+(define (get-typed-aux-decl yices-id expected-type)
+  (or (lookup-typed-aux-decl yices-id expected-type)
+      (let ((decl (make-yices2-aux-decl yices-id expected-type)))
+        (set! *typed-aux-decls* (cons (list yices-id expected-type decl) *typed-aux-decls*))
+        decl)))
+
+(define (yices2-id->sal-name-expr/expected yices-id expected-type)
+  (cond
+   ((known-yices2-id->decl yices-id) =>
+    (lambda (decl)
+      (if (and (instance-of? expected-type <sal-type>)
+               (instance-of? (slot-value decl :type) <sal-any-type>))
+        (make-sal-name-expr (get-typed-aux-decl yices-id expected-type))
+        (make-sal-name-expr decl))))
+   ((instance-of? expected-type <sal-type>)
+    (make-sal-name-expr (get-typed-aux-decl yices-id expected-type)))
    (else
     (cond
      ((hashtable-get *aux-decls* yices-id) => (lambda (decl) (make-sal-name-expr decl)))
@@ -395,6 +514,126 @@
                                          :type (make-sal-builtin-name <sal-any-type> *place-provider*))))
         (hashtable-put! *aux-decls* yices-id aux-decl)
         (make-sal-name-expr aux-decl)))))))
+
+(define (yices2-pad-missing raw-args arity)
+  (let loop ((args raw-args)
+             (remaining arity)
+             (result '()))
+    (cond
+     ((null? args)
+      (if (<= remaining 0)
+        (reverse! result)
+        (loop '() (- remaining 1) (cons *yices2-missing-term* result))))
+     ((<= remaining 0)
+      (append (reverse! result) args))
+     (else
+      (loop (cdr args) (- remaining 1) (cons (car args) result))))))
+
+(define (yices2-raw-term/expected-type raw-term)
+  (cond
+   ((yices2-missing-term? raw-term) #f)
+   ((instance-of? raw-term <sal-expr>)
+    (sal-expr/type raw-term))
+   ((yices2-raw-id? raw-term)
+    (cond
+     ((known-yices2-id->decl (yices2-raw-id/value raw-term)) =>
+      (lambda (decl) (slot-value decl :type)))
+     (else #f)))
+   ((yices2-raw-app? raw-term)
+    (let ((fun-type (yices2-raw-term/expected-type (yices2-raw-app/fun raw-term))))
+      (and (instance-of? fun-type <sal-function-type>)
+           (sal-function-type/range fun-type))))
+   ((yices2-raw-update? raw-term)
+    (yices2-raw-term/expected-type (yices2-raw-update/target raw-term)))
+   (else #f)))
+
+(define (yices2-convert-term expr expected-type)
+  (cond
+   ((and (instance-of? expr <sal-numeral>)
+         (instance-of? expected-type <sal-type>)
+         (sal-type/uninterpreted? expected-type))
+    (coerce-int-to-uninterpreted expr expected-type))
+   ((and (instance-of? expr <sal-numeral>)
+         (instance-of? expected-type <sal-type>)
+         (sal-type/scalar? expected-type))
+    (int->scalar expr expected-type))
+   (else
+    expr)))
+
+(define (yices2-missing-value expected-type)
+  (cond
+   ((instance-of? expected-type <sal-type>)
+    (make-sal-name-expr (get-typed-aux-decl 'missing expected-type)))
+   (else
+    (yices2-id->sal-name-expr/expected 'missing #f))))
+
+(define (yices2-raw-term->sal-expr raw-term expected-type)
+  (cond
+   ((yices2-missing-term? raw-term)
+    (yices2-missing-value expected-type))
+   ((instance-of? raw-term <sal-expr>)
+    (yices2-convert-term raw-term expected-type))
+   ((yices2-raw-id? raw-term)
+    (yices2-id->sal-name-expr/expected (yices2-raw-id/value raw-term) expected-type))
+   ((yices2-raw-app? raw-term)
+    (let* ((fun-expr (yices2-raw-term->sal-expr (yices2-raw-app/fun raw-term) #f))
+           (fun-type (sal-expr/type fun-expr))
+           (domain-types (if (instance-of? fun-type <sal-function-type>)
+                           (sal-function-type/domain-types fun-type)
+                           '()))
+           (raw-args (if (instance-of? fun-type <sal-function-type>)
+                       (yices2-pad-missing (yices2-raw-app/args raw-term)
+                                           (length domain-types))
+                       (yices2-raw-app/args raw-term)))
+           (arg-list
+            (let loop ((remaining-args raw-args)
+                       (remaining-types domain-types)
+                       (result '()))
+              (if (null? remaining-args)
+                (reverse! result)
+                (let ((arg-type (if (null? remaining-types) #f (car remaining-types))))
+                  (loop (cdr remaining-args)
+                        (if (null? remaining-types) '() (cdr remaining-types))
+                        (cons (yices2-raw-term->sal-expr (car remaining-args) arg-type) result)))))))
+      (yices2-convert-term
+       (make-sal-application fun-expr
+                             (apply make-application-argument arg-list))
+       expected-type)))
+   ((yices2-raw-update? raw-term)
+    (let* ((target-expr (yices2-raw-term->sal-expr (yices2-raw-update/target raw-term) #f))
+           (target-type (sal-expr/type target-expr))
+           (domain-types (if (instance-of? target-type <sal-function-type>)
+                           (sal-function-type/domain-types target-type)
+                           '()))
+           (idx-list
+            (let loop ((remaining-idxs (yices2-pad-missing (yices2-raw-update/idxs raw-term)
+                                                           (length domain-types)))
+                       (remaining-types domain-types)
+                       (result '()))
+              (if (null? remaining-idxs)
+                (reverse! result)
+                (let ((idx-type (if (null? remaining-types) #f (car remaining-types))))
+                  (loop (cdr remaining-idxs)
+                        (if (null? remaining-types) '() (cdr remaining-types))
+                        (cons (yices2-raw-term->sal-expr (car remaining-idxs) idx-type) result))))))
+           (value-type (and (instance-of? target-type <sal-function-type>)
+                            (sal-function-type/range target-type)))
+           (new-value (yices2-raw-term->sal-expr (yices2-raw-update/val raw-term) value-type)))
+      (yices2-convert-term
+       (make-ast-instance <sal-function-update> target-expr
+                          :target target-expr
+                          :idx (apply make-application-argument idx-list)
+                          :new-value new-value)
+       expected-type)))
+   (else
+    (sign-error "Yices2 produced an unsupported model term: ~a" raw-term))))
+
+(define (yices2-make-sal-eq raw1 raw2)
+  (let* ((type1 (yices2-raw-term/expected-type raw1))
+         (type2 (yices2-raw-term/expected-type raw2))
+         (expr1 (yices2-raw-term->sal-expr raw1 (or type1 type2)))
+         (expr2 (yices2-raw-term->sal-expr raw2 (or type2 type1))))
+    (make-sal-equality expr1 expr2)))
 
 
 ;;
@@ -433,20 +672,20 @@
    ;; Equalities and terms
    (eq
     ((LP = term@t1 term@t2 RP)
-     (make-sal-equality t1 t2)))
+     (yices2-make-sal-eq t1 t2))
+    ((LP = term@t1 RP)
+     (yices2-make-sal-eq t1 *yices2-missing-term*)))
    (term
     ((CONST) (make-sal-numeral CONST *place-provider*))
-    ((ID) (yices2-id->sal-name-expr ID))
+    ((ID) (make-yices2-raw-id ID))
     ((LP term term-list RP)
-     (make-sal-application term (apply make-application-argument (reverse! term-list))))
+     (make-yices2-raw-app term (reverse! term-list)))
     ((LP UPDATE term@target LP term-list@idxs RP term@val RP)
-     (make-ast-instance <sal-function-update> target
-                        :target target
-                        :idx (apply make-application-argument (reverse! idxs))
-                        :new-value val))
+     (make-yices2-raw-update target (reverse! idxs) val))
     ((TRUE) (make-sal-true *place-provider*))
     ((FALSE) (make-sal-false *place-provider*)))
    (term-list
+    (() '())
     ((term) (list term))
     ((term-list term) (cons term term-list)))
 
@@ -456,6 +695,7 @@
    (fun-spec-body
     ((eq fun-spec-body) (cons eq fun-spec-body))
     ((LP DEFAULT term RP) '())
+    ((LP DEFAULT RP) '())
     (() '()))
    (type-spec
     ((LP TYPE type RP) #unspecified))
@@ -515,5 +755,7 @@
   (set! *yices2-id->sal-decl* yices2-id->sal-decl-proc)
   (set! *place-provider* place-provider)
   (set! *aux-decls* (make-hashtable))
+  (set! *typed-aux-decls* '())
+  (set! *yices2-aux-decl-idx* 0)
   (with-input-from-file file-name
     parse))

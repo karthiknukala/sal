@@ -21,7 +21,8 @@
         (import sat-bmc-context 
                 sal-api sal-assertion sal-expression sal-module sal-ast-for-each
                 sat-ics-bmc-context sat-svc-bmc-context sat-cvcl-bmc-context
-                sat-uclid-bmc-context sat-yices-bmc-context sat-yices2-bmc-context)
+                sat-uclid-bmc-context sat-yices-bmc-context sat-yices2-bmc-context
+                sat-smtlib2-bmc-context)
         (export (sal-inf-bmc/add-solver! solver-id  make-bmc-context-proc)
                 (sal-inf-bmc/create-assertion-lemmas lemma-str-list main-assertion-name bool-assertion)
                 (sal-inf-bmc/find-trace module depth solver-id . acyclic?)
@@ -40,7 +41,8 @@
                     (cvcl . ,make-sat-cvcl-bmc-context)
                     (uclid . ,make-sat-uclid-bmc-context)
                     (yices . ,make-sat-yices-bmc-context)
-		    (yices2 . ,make-sat-yices2-bmc-context)))
+		    (yices2 . ,make-sat-yices2-bmc-context)
+                    (smtlib2 . ,make-sat-smtlib2-bmc-context)))
 
 (define (sal-inf-bmc/add-solver! solver-id  make-bmc-context-proc)
   (push! (cons solver-id make-bmc-context-proc) *solvers*))

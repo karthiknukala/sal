@@ -1,0 +1,171 @@
+name: parity-sal
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Nightly parity run (UTC)
+    - cron: '0 4 * * *'
+
+jobs:
+  parity-hosted:
+    name: parity-hosted
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: macos-14
+
+    env:
+      DEPS_PREFIX: ${{ github.workspace }}/.deps
+
+      # Pin CUDD
+      CUDD_REPO: https://github.com/cuddorg/cudd.git
+      CUDD_REF: "3.0.0"
+      CUDD_SHA: "f54f533303640afd5dbe47a05ebeabb3066f2a25"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache deps
+        uses: actions/cache@v4
+        with:
+          path: .deps
+          key: parity-deps-hosted-${{ env.CUDD_REF }}
+
+      - name: Install deps (Homebrew)
+        shell: bash
+        run: |
+          set -euxo pipefail
+          brew update
+          brew install pkg-config gmp bdw-gc bigloo yices2 z3 help2man
+
+      - name: Build CUDD (pinned)
+        shell: bash
+        run: |
+          set -euxo pipefail
+          chmod +x ci/build_cudd_from_git.sh
+          ci/build_cudd_from_git.sh "$DEPS_PREFIX"
+
+      - name: Configure + build SAL
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          HOMEBREW_PREFIX="$(brew --prefix)"
+
+          export CPPFLAGS="-I$DEPS_PREFIX/include -I$HOMEBREW_PREFIX/include"
+          export LDFLAGS="-L$DEPS_PREFIX/lib -L$HOMEBREW_PREFIX/lib"
+          export LIBS="-lcudd -lgmp -lgc -lm"
+
+          ./configure
+          make clean || true
+          make
+
+      - name: Run hosted parity gate
+        shell: bash
+        run: |
+          set -euxo pipefail
+          HOMEBREW_PREFIX="$(brew --prefix)"
+          export SAL_CI_YICES2_COMMAND="$HOMEBREW_PREFIX/bin/yices"
+          export SAL_CI_YICES2_MCSAT_MODE=false
+          export SAL_CI_SMTLIB2_YICES2_COMMAND="$HOMEBREW_PREFIX/bin/yices-smt2"
+          export SAL_CI_SMTLIB2_Z3_COMMAND="$HOMEBREW_PREFIX/bin/z3 -smt2 pp.decimal=true pp.decimal_precision=20"
+
+          python3 ci/run_parity_suite.py \
+            --suite ci-hosted \
+            --timeout 60 \
+            --output-dir "$GITHUB_WORKSPACE/parity-artifacts/ci-hosted" \
+            --sal-inf-bmc "$GITHUB_WORKSPACE/bin/sal-inf-bmc"
+
+      - name: Upload hosted parity artifacts
+        if: always() && hashFiles('parity-artifacts/ci-hosted/**/*') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-ci-hosted
+          path: parity-artifacts/ci-hosted
+          if-no-files-found: error
+
+  parity-full:
+    name: parity-full
+    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && vars.SAL_FULL_PARITY_ENABLED == 'true'
+    runs-on: ${{ fromJSON(vars.SAL_FULL_PARITY_RUNS_ON != '' && vars.SAL_FULL_PARITY_RUNS_ON || '["self-hosted","macOS"]') }}
+
+    env:
+      DEPS_PREFIX: ${{ github.workspace }}/.deps
+
+      # Pin CUDD
+      CUDD_REPO: https://github.com/cuddorg/cudd.git
+      CUDD_REF: "3.0.0"
+      CUDD_SHA: "f54f533303640afd5dbe47a05ebeabb3066f2a25"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache deps
+        uses: actions/cache@v4
+        with:
+          path: .deps
+          key: parity-deps-full-${{ env.CUDD_REF }}
+
+      - name: Install hosted build deps when Homebrew is available
+        shell: bash
+        run: |
+          set -euxo pipefail
+          if command -v brew >/dev/null 2>&1; then
+            brew update
+            brew install pkg-config gmp bdw-gc bigloo z3 help2man
+          else
+            echo "Homebrew not found; assuming build dependencies are preinstalled on the full parity runner."
+          fi
+
+      - name: Build CUDD (pinned)
+        shell: bash
+        run: |
+          set -euxo pipefail
+          chmod +x ci/build_cudd_from_git.sh
+          ci/build_cudd_from_git.sh "$DEPS_PREFIX"
+
+      - name: Configure + build SAL
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          if command -v brew >/dev/null 2>&1; then
+            HOMEBREW_PREFIX="$(brew --prefix)"
+            export CPPFLAGS="-I$DEPS_PREFIX/include -I$HOMEBREW_PREFIX/include"
+            export LDFLAGS="-L$DEPS_PREFIX/lib -L$HOMEBREW_PREFIX/lib"
+          else
+            export CPPFLAGS="-I$DEPS_PREFIX/include"
+            export LDFLAGS="-L$DEPS_PREFIX/lib"
+          fi
+          export LIBS="-lcudd -lgmp -lgc -lm"
+
+          ./configure
+          make clean || true
+          make
+
+      - name: Run full parity matrix
+        shell: bash
+        env:
+          SAL_CI_YICES2_COMMAND: ${{ vars.SAL_CI_YICES2_COMMAND }}
+          SAL_CI_YICES2_MCSAT_MODE: ${{ vars.SAL_CI_YICES2_MCSAT_MODE }}
+          SAL_CI_SMTLIB2_YICES2_COMMAND: ${{ vars.SAL_CI_SMTLIB2_YICES2_COMMAND }}
+          SAL_CI_SMTLIB2_Z3_COMMAND: ${{ vars.SAL_CI_SMTLIB2_Z3_COMMAND }}
+          SAL_CI_ICS_COMMAND: ${{ vars.SAL_CI_ICS_COMMAND }}
+          SAL_CI_YICES1_COMMAND: ${{ vars.SAL_CI_YICES1_COMMAND }}
+        run: |
+          set -euxo pipefail
+          python3 ci/run_parity_suite.py \
+            --suite full-matrix \
+            --timeout 60 \
+            --output-dir "$GITHUB_WORKSPACE/parity-artifacts/full-matrix" \
+            --sal-inf-bmc "$GITHUB_WORKSPACE/bin/sal-inf-bmc"
+
+      - name: Upload full parity artifacts
+        if: always() && hashFiles('parity-artifacts/full-matrix/**/*') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-full
+          path: parity-artifacts/full-matrix
+          if-no-files-found: error

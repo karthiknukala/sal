@@ -1,0 +1,108 @@
+{
+  "queries": {
+    "pipeline_equivalent": {
+      "workdir": "examples/pipeline",
+      "args": ["--enable-ate", "-d", "4", "pipeline", "equivalent"],
+      "tags": ["model-parse", "arrays", "ate", "counterexample"]
+    },
+    "queue_ate_th1": {
+      "workdir": "examples/queue",
+      "args": ["-d", "6", "--enable-ate", "queue", "th1"],
+      "tags": ["subtypes", "arrays", "ate", "no-counterexample"]
+    },
+    "queue_ate_invalid": {
+      "workdir": "examples/queue",
+      "args": ["-d", "6", "--enable-ate", "queue", "invalid"],
+      "tags": ["subtypes", "arrays", "ate", "counterexample"]
+    },
+    "stack_ate_th1": {
+      "workdir": "examples/stack",
+      "args": ["-d", "6", "--enable-ate", "stack", "th1"],
+      "tags": ["subtypes", "arrays", "ate", "no-counterexample"]
+    },
+    "stack_ate_invalid": {
+      "workdir": "examples/stack",
+      "args": ["-d", "6", "--enable-ate", "stack", "invalid"],
+      "tags": ["subtypes", "arrays", "ate", "counterexample"]
+    },
+    "lsal_queue_ate_th1": {
+      "workdir": "examples/lsal/queue",
+      "args": ["-d", "6", "--enable-ate", "queue", "th1"],
+      "tags": ["lsal", "cond", "ate", "no-counterexample"]
+    },
+    "lsal_queue_ate_invalid": {
+      "workdir": "examples/lsal/queue",
+      "args": ["-d", "6", "--enable-ate", "queue", "invalid"],
+      "tags": ["lsal", "cond", "ate", "counterexample"]
+    },
+    "lsal_stack_ate_th1": {
+      "workdir": "examples/lsal/stack",
+      "args": ["-d", "6", "--enable-ate", "stack", "th1"],
+      "tags": ["lsal", "cond", "ate", "no-counterexample"]
+    },
+    "lsal_stack_ate_invalid": {
+      "workdir": "examples/lsal/stack",
+      "args": ["-d", "6", "--enable-ate", "stack", "invalid"],
+      "tags": ["lsal", "cond", "ate", "counterexample"]
+    },
+    "nonlinear_square_nonnegative": {
+      "workdir": "examples/nonlinear",
+      "args": ["-d", "2", "nonlinear_square", "nonnegative"],
+      "tags": ["nonlinear", "numerics", "no-counterexample"]
+    },
+    "nonlinear_product_bad_bound": {
+      "workdir": "examples/nonlinear",
+      "args": ["-d", "1", "nonlinear_product", "bad_bound"],
+      "tags": ["nonlinear", "numerics", "counterexample"]
+    },
+    "fischer_time_aux1": {
+      "workdir": "examples/fischer",
+      "args": ["-i", "-d", "1", "fischer", "time_aux1"],
+      "tags": ["induction", "proved"]
+    },
+    "fischer_logical_aux1_k_induction": {
+      "workdir": "examples/fischer",
+      "args": ["-i", "-d", "3", "-l", "time_aux2", "fischer", "logical_aux1"],
+      "tags": ["induction", "exception"]
+    },
+    "inf_bakery_lemma_mutex": {
+      "workdir": "examples/inf-bakery",
+      "args": ["-d", "3", "-l", "aux1", "-l", "aux2", "-i", "inf_bakery", "mutex"],
+      "tags": ["lemmas", "induction", "proved"]
+    },
+    "inf_bakery_k_induction": {
+      "workdir": "examples/inf-bakery",
+      "args": ["-d", "7", "-i", "inf_bakery", "mutex"],
+      "tags": ["induction", "exception"]
+    }
+  },
+  "suites": {
+    "ci-hosted": {
+      "description": "Fast parity gate for GitHub-hosted macOS runners.",
+      "solver_keys": ["yices2", "smtlib2-yices2", "smtlib2-z3"],
+      "query_source": "manifest",
+      "query_ids": [
+        "pipeline_equivalent",
+        "queue_ate_th1",
+        "queue_ate_invalid",
+        "stack_ate_th1",
+        "stack_ate_invalid",
+        "lsal_queue_ate_th1",
+        "lsal_queue_ate_invalid",
+        "lsal_stack_ate_th1",
+        "lsal_stack_ate_invalid",
+        "nonlinear_square_nonnegative",
+        "nonlinear_product_bad_bound",
+        "fischer_time_aux1",
+        "fischer_logical_aux1_k_induction",
+        "inf_bakery_lemma_mutex",
+        "inf_bakery_k_induction"
+      ]
+    },
+    "full-matrix": {
+      "description": "Full normalized examples/ parity matrix.",
+      "solver_keys": ["yices2", "smtlib2-yices2", "smtlib2-z3", "ics", "yices"],
+      "query_source": "documented_examples"
+    }
+  }
+}

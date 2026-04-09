@@ -1,0 +1,1382 @@
+{
+  "suites": {
+    "ci-hosted": {
+      "queries": {
+        "fischer_logical_aux1_k_induction": {
+          "label": "examples/fischer :: -i -d 3 -l time_aux2 fischer logical_aux1",
+          "solvers": {
+            "smtlib2-yices2": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "smtlib2-z3": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "yices2": {
+              "detail_contains": "The context is unsat. No model.",
+              "phase": "ce-reconstruction",
+              "verdict": "exception"
+            }
+          }
+        },
+        "fischer_time_aux1": {
+          "label": "examples/fischer :: -i -d 1 fischer time_aux1",
+          "solvers": {
+            "smtlib2-yices2": {
+              "verdict": "proved"
+            },
+            "smtlib2-z3": {
+              "verdict": "proved"
+            },
+            "yices2": {
+              "verdict": "proved"
+            }
+          }
+        },
+        "inf_bakery_k_induction": {
+          "label": "examples/inf-bakery :: -d 7 -i inf_bakery mutex",
+          "solvers": {
+            "smtlib2-yices2": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "smtlib2-z3": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "yices2": {
+              "detail_contains": "The context is unsat. No model.",
+              "phase": "ce-reconstruction",
+              "verdict": "exception"
+            }
+          }
+        },
+        "inf_bakery_lemma_mutex": {
+          "label": "examples/inf-bakery :: -d 3 -l aux1 -l aux2 -i inf_bakery mutex",
+          "solvers": {
+            "smtlib2-yices2": {
+              "verdict": "proved"
+            },
+            "smtlib2-z3": {
+              "verdict": "proved"
+            },
+            "yices2": {
+              "verdict": "proved"
+            }
+          }
+        },
+        "lsal_queue_ate_invalid": {
+          "label": "examples/lsal/queue :: -d 6 --enable-ate queue invalid",
+          "solvers": {
+            "smtlib2-yices2": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "counterexample"
+            },
+            "yices2": {
+              "verdict": "counterexample"
+            }
+          }
+        },
+        "lsal_queue_ate_th1": {
+          "label": "examples/lsal/queue :: -d 6 --enable-ate queue th1",
+          "solvers": {
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "lsal_stack_ate_invalid": {
+          "label": "examples/lsal/stack :: -d 6 --enable-ate stack invalid",
+          "solvers": {
+            "smtlib2-yices2": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "counterexample"
+            },
+            "yices2": {
+              "verdict": "counterexample"
+            }
+          }
+        },
+        "lsal_stack_ate_th1": {
+          "label": "examples/lsal/stack :: -d 6 --enable-ate stack th1",
+          "solvers": {
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "nonlinear_product_bad_bound": {
+          "label": "examples/nonlinear :: -d 1 nonlinear_product bad_bound",
+          "solvers": {
+            "smtlib2-yices2": {
+              "detail_contains": "Error: Unexpected SMT-LIB2 solver output: ((error logic QF_AUFNIRA is not supported since yices was not built with mcsat support) (error no logic set) (error at line 4, column 21: undefined sort: Real",
+              "phase": "solver-output",
+              "verdict": "exception"
+            },
+            "smtlib2-z3": {
+              "verdict": "counterexample"
+            },
+            "yices2": {
+              "detail_contains": "Error: Unexpected output from Yices 2: parse error (unexpected token `*eoi*'). Please contact support.",
+              "phase": "model-parse",
+              "verdict": "exception"
+            }
+          }
+        },
+        "nonlinear_square_nonnegative": {
+          "label": "examples/nonlinear :: -d 2 nonlinear_square nonnegative",
+          "solvers": {
+            "smtlib2-yices2": {
+              "detail_contains": "Error: Unexpected SMT-LIB2 solver output: ((error logic QF_AUFNIRA is not supported since yices was not built with mcsat support) (error no logic set) (error at line 4, column 21: undefined sort: Real",
+              "phase": "solver-output",
+              "verdict": "exception"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "detail_contains": "Error: Unexpected output from Yices 2: parse error (unexpected token `*eoi*'). Please contact support.",
+              "phase": "model-parse",
+              "verdict": "exception"
+            }
+          }
+        },
+        "pipeline_equivalent": {
+          "label": "examples/pipeline :: --enable-ate -d 4 pipeline equivalent",
+          "solvers": {
+            "smtlib2-yices2": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "counterexample"
+            },
+            "yices2": {
+              "verdict": "counterexample"
+            }
+          }
+        },
+        "queue_ate_invalid": {
+          "label": "examples/queue :: -d 6 --enable-ate queue invalid",
+          "solvers": {
+            "smtlib2-yices2": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "counterexample"
+            },
+            "yices2": {
+              "verdict": "counterexample"
+            }
+          }
+        },
+        "queue_ate_th1": {
+          "label": "examples/queue :: -d 6 --enable-ate queue th1",
+          "solvers": {
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "stack_ate_invalid": {
+          "label": "examples/stack :: -d 6 --enable-ate stack invalid",
+          "solvers": {
+            "smtlib2-yices2": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "counterexample"
+            },
+            "yices2": {
+              "verdict": "counterexample"
+            }
+          }
+        },
+        "stack_ate_th1": {
+          "label": "examples/stack :: -d 6 --enable-ate stack th1",
+          "solvers": {
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        }
+      }
+    },
+    "full-matrix": {
+      "queries": {
+        "examples :: -d 0 activeSuspension3 reachable": {
+          "label": "examples :: -d 0 activeSuspension3 reachable",
+          "solvers": {
+            "ics": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples :: -d 0 activeSuspension3 reachable1": {
+          "label": "examples :: -d 0 activeSuspension3 reachable1",
+          "solvers": {
+            "ics": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples :: -d 0 activeSuspension3 reachable2": {
+          "label": "examples :: -d 0 activeSuspension3 reachable2",
+          "solvers": {
+            "ics": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples :: -d 1 activeSuspension3 reachable": {
+          "label": "examples :: -d 1 activeSuspension3 reachable",
+          "solvers": {
+            "ics": {
+              "verdict": "timeout"
+            },
+            "smtlib2-yices2": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "counterexample"
+            },
+            "yices": {
+              "verdict": "counterexample"
+            },
+            "yices2": {
+              "verdict": "counterexample"
+            }
+          }
+        },
+        "examples :: -d 1 activeSuspension3 reachable1": {
+          "label": "examples :: -d 1 activeSuspension3 reachable1",
+          "solvers": {
+            "ics": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples :: -d 1 activeSuspension3 reachable2": {
+          "label": "examples :: -d 1 activeSuspension3 reachable2",
+          "solvers": {
+            "ics": {
+              "verdict": "timeout"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples :: -d 2 activeSuspension3 reachable1": {
+          "label": "examples :: -d 2 activeSuspension3 reachable1",
+          "solvers": {
+            "ics": {
+              "verdict": "timeout"
+            },
+            "smtlib2-yices2": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "counterexample"
+            },
+            "yices": {
+              "verdict": "timeout"
+            },
+            "yices2": {
+              "verdict": "counterexample"
+            }
+          }
+        },
+        "examples :: -d 2 activeSuspension3 reachable2": {
+          "label": "examples :: -d 2 activeSuspension3 reachable2",
+          "solvers": {
+            "ics": {
+              "verdict": "timeout"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples :: -d 3 activeSuspension3 reachable2": {
+          "label": "examples :: -d 3 activeSuspension3 reachable2",
+          "solvers": {
+            "ics": {
+              "verdict": "timeout"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples/fischer :: -i -d 0 -l logical_aux1 fischer mutual_exclusion": {
+          "label": "examples/fischer :: -i -d 0 -l logical_aux1 fischer mutual_exclusion",
+          "solvers": {
+            "ics": {
+              "verdict": "proved"
+            },
+            "smtlib2-yices2": {
+              "verdict": "proved"
+            },
+            "smtlib2-z3": {
+              "verdict": "proved"
+            },
+            "yices": {
+              "verdict": "proved"
+            },
+            "yices2": {
+              "verdict": "proved"
+            }
+          }
+        },
+        "examples/fischer :: -i -d 0 -l mutex fischer mutual_exclusion": {
+          "label": "examples/fischer :: -i -d 0 -l mutex fischer mutual_exclusion",
+          "solvers": {
+            "ics": {
+              "verdict": "proved"
+            },
+            "smtlib2-yices2": {
+              "verdict": "proved"
+            },
+            "smtlib2-z3": {
+              "verdict": "proved"
+            },
+            "yices": {
+              "verdict": "proved"
+            },
+            "yices2": {
+              "verdict": "proved"
+            }
+          }
+        },
+        "examples/fischer :: -i -d 1 -l time_aux2 fischer time_aux3": {
+          "label": "examples/fischer :: -i -d 1 -l time_aux2 fischer time_aux3",
+          "solvers": {
+            "ics": {
+              "verdict": "proved"
+            },
+            "smtlib2-yices2": {
+              "verdict": "proved"
+            },
+            "smtlib2-z3": {
+              "verdict": "proved"
+            },
+            "yices": {
+              "verdict": "proved"
+            },
+            "yices2": {
+              "verdict": "proved"
+            }
+          }
+        },
+        "examples/fischer :: -i -d 1 -l time_aux3 -l time_aux1 fischer logical_aux1": {
+          "label": "examples/fischer :: -i -d 1 -l time_aux3 -l time_aux1 fischer logical_aux1",
+          "solvers": {
+            "ics": {
+              "verdict": "proved"
+            },
+            "smtlib2-yices2": {
+              "verdict": "proved"
+            },
+            "smtlib2-z3": {
+              "verdict": "proved"
+            },
+            "yices": {
+              "verdict": "proved"
+            },
+            "yices2": {
+              "verdict": "proved"
+            }
+          }
+        },
+        "examples/fischer :: -i -d 1 fischer time_aux1": {
+          "label": "examples/fischer :: -i -d 1 fischer time_aux1",
+          "solvers": {
+            "ics": {
+              "verdict": "proved"
+            },
+            "smtlib2-yices2": {
+              "verdict": "proved"
+            },
+            "smtlib2-z3": {
+              "verdict": "proved"
+            },
+            "yices": {
+              "verdict": "proved"
+            },
+            "yices2": {
+              "verdict": "proved"
+            }
+          }
+        },
+        "examples/fischer :: -i -d 1 fischer time_aux2": {
+          "label": "examples/fischer :: -i -d 1 fischer time_aux2",
+          "solvers": {
+            "ics": {
+              "verdict": "proved"
+            },
+            "smtlib2-yices2": {
+              "verdict": "proved"
+            },
+            "smtlib2-z3": {
+              "verdict": "proved"
+            },
+            "yices": {
+              "verdict": "proved"
+            },
+            "yices2": {
+              "verdict": "proved"
+            }
+          }
+        },
+        "examples/fischer :: -i -d 3 -l time_aux2 fischer logical_aux1": {
+          "label": "examples/fischer :: -i -d 3 -l time_aux2 fischer logical_aux1",
+          "solvers": {
+            "ics": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "smtlib2-yices2": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "smtlib2-z3": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "yices": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "yices2": {
+              "detail_contains": "The context is unsat. No model.",
+              "phase": "ce-reconstruction",
+              "verdict": "exception"
+            }
+          }
+        },
+        "examples/fischer :: -i -d 5 -l time_aux2 fischer mutex": {
+          "label": "examples/fischer :: -i -d 5 -l time_aux2 fischer mutex",
+          "solvers": {
+            "ics": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "smtlib2-yices2": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "smtlib2-z3": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "yices": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "yices2": {
+              "detail_contains": "The context is unsat. No model.",
+              "phase": "ce-reconstruction",
+              "verdict": "exception"
+            }
+          }
+        },
+        "examples/fischer :: -i -d 9 -l time_aux2 fischer mutual_exclusion": {
+          "label": "examples/fischer :: -i -d 9 -l time_aux2 fischer mutual_exclusion",
+          "solvers": {
+            "ics": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "smtlib2-yices2": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "smtlib2-z3": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "yices": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "yices2": {
+              "detail_contains": "The context is unsat. No model.",
+              "phase": "ce-reconstruction",
+              "verdict": "exception"
+            }
+          }
+        },
+        "examples/fischer :: fischer mutual_exclusion": {
+          "label": "examples/fischer :: fischer mutual_exclusion",
+          "solvers": {
+            "ics": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples/hybrid :: gasburner prop3": {
+          "label": "examples/hybrid :: gasburner prop3",
+          "solvers": {
+            "ics": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples/hybrid :: pursuit safety": {
+          "label": "examples/hybrid :: pursuit safety",
+          "solvers": {
+            "ics": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples/hybrid :: waterlevel prop": {
+          "label": "examples/hybrid :: waterlevel prop",
+          "solvers": {
+            "ics": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples/inf-bakery :: -d 1 -i inf_bakery aux1": {
+          "label": "examples/inf-bakery :: -d 1 -i inf_bakery aux1",
+          "solvers": {
+            "ics": {
+              "verdict": "proved"
+            },
+            "smtlib2-yices2": {
+              "verdict": "proved"
+            },
+            "smtlib2-z3": {
+              "verdict": "proved"
+            },
+            "yices": {
+              "verdict": "proved"
+            },
+            "yices2": {
+              "verdict": "proved"
+            }
+          }
+        },
+        "examples/inf-bakery :: -d 1 -i inf_bakery aux2": {
+          "label": "examples/inf-bakery :: -d 1 -i inf_bakery aux2",
+          "solvers": {
+            "ics": {
+              "verdict": "proved"
+            },
+            "smtlib2-yices2": {
+              "verdict": "proved"
+            },
+            "smtlib2-z3": {
+              "verdict": "proved"
+            },
+            "yices": {
+              "verdict": "proved"
+            },
+            "yices2": {
+              "verdict": "proved"
+            }
+          }
+        },
+        "examples/inf-bakery :: -d 3 -l aux1 -l aux2 -i inf_bakery mutex": {
+          "label": "examples/inf-bakery :: -d 3 -l aux1 -l aux2 -i inf_bakery mutex",
+          "solvers": {
+            "ics": {
+              "verdict": "proved"
+            },
+            "smtlib2-yices2": {
+              "verdict": "proved"
+            },
+            "smtlib2-z3": {
+              "verdict": "proved"
+            },
+            "yices": {
+              "verdict": "proved"
+            },
+            "yices2": {
+              "verdict": "proved"
+            }
+          }
+        },
+        "examples/inf-bakery :: -d 7 -i inf_bakery mutex": {
+          "label": "examples/inf-bakery :: -d 7 -i inf_bakery mutex",
+          "solvers": {
+            "ics": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "smtlib2-yices2": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "smtlib2-z3": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "yices": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "yices2": {
+              "detail_contains": "The context is unsat. No model.",
+              "phase": "ce-reconstruction",
+              "verdict": "exception"
+            }
+          }
+        },
+        "examples/inf-bakery :: inf_bakery invalid": {
+          "label": "examples/inf-bakery :: inf_bakery invalid",
+          "solvers": {
+            "ics": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "counterexample"
+            },
+            "yices": {
+              "verdict": "counterexample"
+            },
+            "yices2": {
+              "verdict": "counterexample"
+            }
+          }
+        },
+        "examples/inf-bakery :: inf_bakery mutex": {
+          "label": "examples/inf-bakery :: inf_bakery mutex",
+          "solvers": {
+            "ics": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples/lsal/inf-bakery :: -d 1 -i inf-bakery aux1": {
+          "label": "examples/lsal/inf-bakery :: -d 1 -i inf-bakery aux1",
+          "solvers": {
+            "ics": {
+              "verdict": "proved"
+            },
+            "smtlib2-yices2": {
+              "verdict": "proved"
+            },
+            "smtlib2-z3": {
+              "verdict": "proved"
+            },
+            "yices": {
+              "verdict": "proved"
+            },
+            "yices2": {
+              "verdict": "proved"
+            }
+          }
+        },
+        "examples/lsal/inf-bakery :: -d 1 -i inf-bakery aux2": {
+          "label": "examples/lsal/inf-bakery :: -d 1 -i inf-bakery aux2",
+          "solvers": {
+            "ics": {
+              "verdict": "proved"
+            },
+            "smtlib2-yices2": {
+              "verdict": "proved"
+            },
+            "smtlib2-z3": {
+              "verdict": "proved"
+            },
+            "yices": {
+              "verdict": "proved"
+            },
+            "yices2": {
+              "verdict": "proved"
+            }
+          }
+        },
+        "examples/lsal/inf-bakery :: -d 3 -l aux1 -l aux2 -i inf-bakery mutex": {
+          "label": "examples/lsal/inf-bakery :: -d 3 -l aux1 -l aux2 -i inf-bakery mutex",
+          "solvers": {
+            "ics": {
+              "verdict": "proved"
+            },
+            "smtlib2-yices2": {
+              "verdict": "proved"
+            },
+            "smtlib2-z3": {
+              "verdict": "proved"
+            },
+            "yices": {
+              "verdict": "proved"
+            },
+            "yices2": {
+              "verdict": "proved"
+            }
+          }
+        },
+        "examples/lsal/inf-bakery :: -d 7 -i inf-bakery mutex": {
+          "label": "examples/lsal/inf-bakery :: -d 7 -i inf-bakery mutex",
+          "solvers": {
+            "ics": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "smtlib2-yices2": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "smtlib2-z3": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "yices": {
+              "detail_contains": "k-induction rule failed, please try to increase the depth.",
+              "phase": "frontend",
+              "verdict": "exception"
+            },
+            "yices2": {
+              "detail_contains": "The context is unsat. No model.",
+              "phase": "ce-reconstruction",
+              "verdict": "exception"
+            }
+          }
+        },
+        "examples/lsal/inf-bakery :: inf-bakery invalid": {
+          "label": "examples/lsal/inf-bakery :: inf-bakery invalid",
+          "solvers": {
+            "ics": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "counterexample"
+            },
+            "yices": {
+              "verdict": "counterexample"
+            },
+            "yices2": {
+              "verdict": "counterexample"
+            }
+          }
+        },
+        "examples/lsal/inf-bakery :: inf-bakery mutex": {
+          "label": "examples/lsal/inf-bakery :: inf-bakery mutex",
+          "solvers": {
+            "ics": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples/lsal/queue :: -d 6 --enable-ate queue invalid": {
+          "label": "examples/lsal/queue :: -d 6 --enable-ate queue invalid",
+          "solvers": {
+            "ics": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "counterexample"
+            },
+            "yices": {
+              "verdict": "counterexample"
+            },
+            "yices2": {
+              "verdict": "counterexample"
+            }
+          }
+        },
+        "examples/lsal/queue :: -d 6 --enable-ate queue th1": {
+          "label": "examples/lsal/queue :: -d 6 --enable-ate queue th1",
+          "solvers": {
+            "ics": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples/lsal/queue :: -d 6 --enable-ate queue th2": {
+          "label": "examples/lsal/queue :: -d 6 --enable-ate queue th2",
+          "solvers": {
+            "ics": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples/lsal/stack :: -d 6 --enable-ate stack invalid": {
+          "label": "examples/lsal/stack :: -d 6 --enable-ate stack invalid",
+          "solvers": {
+            "ics": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "counterexample"
+            },
+            "yices": {
+              "verdict": "counterexample"
+            },
+            "yices2": {
+              "verdict": "counterexample"
+            }
+          }
+        },
+        "examples/lsal/stack :: -d 6 --enable-ate stack th1": {
+          "label": "examples/lsal/stack :: -d 6 --enable-ate stack th1",
+          "solvers": {
+            "ics": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples/lsal/stack :: -d 6 --enable-ate stack th2": {
+          "label": "examples/lsal/stack :: -d 6 --enable-ate stack th2",
+          "solvers": {
+            "ics": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples/nonlinear :: -d 1 nonlinear_product bad_bound": {
+          "label": "examples/nonlinear :: -d 1 nonlinear_product bad_bound",
+          "solvers": {
+            "ics": {
+              "verdict": "timeout"
+            },
+            "smtlib2-yices2": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "counterexample"
+            },
+            "yices": {
+              "detail_contains": "This statement should be included in your `.salrc' file in your home directory.",
+              "phase": "solver-launch",
+              "verdict": "exception"
+            },
+            "yices2": {
+              "verdict": "counterexample"
+            }
+          }
+        },
+        "examples/nonlinear :: -d 1 nonlinear_square bad_bound": {
+          "label": "examples/nonlinear :: -d 1 nonlinear_square bad_bound",
+          "solvers": {
+            "ics": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "counterexample"
+            },
+            "yices": {
+              "detail_contains": "This statement should be included in your `.salrc' file in your home directory.",
+              "phase": "solver-launch",
+              "verdict": "exception"
+            },
+            "yices2": {
+              "verdict": "counterexample"
+            }
+          }
+        },
+        "examples/nonlinear :: -d 2 nonlinear_product positive": {
+          "label": "examples/nonlinear :: -d 2 nonlinear_product positive",
+          "solvers": {
+            "ics": {
+              "verdict": "timeout"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "detail_contains": "This statement should be included in your `.salrc' file in your home directory.",
+              "phase": "solver-launch",
+              "verdict": "exception"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples/nonlinear :: -d 2 nonlinear_square nonnegative": {
+          "label": "examples/nonlinear :: -d 2 nonlinear_square nonnegative",
+          "solvers": {
+            "ics": {
+              "detail_contains": "Error: An incompleteness was detected in the decision procedure (or a bug in the translator). The counterexample produced by the decision procedure is not valid.",
+              "phase": "solver-output",
+              "verdict": "exception"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "detail_contains": "This statement should be included in your `.salrc' file in your home directory.",
+              "phase": "solver-launch",
+              "verdict": "exception"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples/pipeline :: --enable-ate -d 4 pipeline equivalent": {
+          "label": "examples/pipeline :: --enable-ate -d 4 pipeline equivalent",
+          "solvers": {
+            "ics": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "counterexample"
+            },
+            "yices": {
+              "verdict": "counterexample"
+            },
+            "yices2": {
+              "verdict": "counterexample"
+            }
+          }
+        },
+        "examples/queue :: -d 6 --enable-ate queue invalid": {
+          "label": "examples/queue :: -d 6 --enable-ate queue invalid",
+          "solvers": {
+            "ics": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "counterexample"
+            },
+            "yices": {
+              "verdict": "counterexample"
+            },
+            "yices2": {
+              "verdict": "counterexample"
+            }
+          }
+        },
+        "examples/queue :: -d 6 --enable-ate queue th1": {
+          "label": "examples/queue :: -d 6 --enable-ate queue th1",
+          "solvers": {
+            "ics": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples/queue :: -d 6 --enable-ate queue th2": {
+          "label": "examples/queue :: -d 6 --enable-ate queue th2",
+          "solvers": {
+            "ics": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples/skdmxa :: -i -ice -d 1 --assertion=inf_skdmxa{2,2}!lemma1": {
+          "label": "examples/skdmxa :: -i -ice -d 1 --assertion=inf_skdmxa{2,2}!lemma1",
+          "solvers": {
+            "ics": {
+              "verdict": "proved"
+            },
+            "smtlib2-yices2": {
+              "verdict": "proved"
+            },
+            "smtlib2-z3": {
+              "verdict": "proved"
+            },
+            "yices": {
+              "verdict": "proved"
+            },
+            "yices2": {
+              "verdict": "proved"
+            }
+          }
+        },
+        "examples/skdmxa :: -i -ice -d 1 -l lemma1 --assertion=inf_skdmxa{2,2}!lemma2": {
+          "label": "examples/skdmxa :: -i -ice -d 1 -l lemma1 --assertion=inf_skdmxa{2,2}!lemma2",
+          "solvers": {
+            "ics": {
+              "verdict": "proved"
+            },
+            "smtlib2-yices2": {
+              "verdict": "proved"
+            },
+            "smtlib2-z3": {
+              "verdict": "proved"
+            },
+            "yices": {
+              "verdict": "proved"
+            },
+            "yices2": {
+              "verdict": "proved"
+            }
+          }
+        },
+        "examples/skdmxa :: -i -ice -d 1 -l lemma1 -l lemma2 --assertion=inf_skdmxa{2,2}!mutex": {
+          "label": "examples/skdmxa :: -i -ice -d 1 -l lemma1 -l lemma2 --assertion=inf_skdmxa{2,2}!mutex",
+          "solvers": {
+            "ics": {
+              "verdict": "proved"
+            },
+            "smtlib2-yices2": {
+              "verdict": "proved"
+            },
+            "smtlib2-z3": {
+              "verdict": "proved"
+            },
+            "yices": {
+              "verdict": "proved"
+            },
+            "yices2": {
+              "verdict": "proved"
+            }
+          }
+        },
+        "examples/stack :: -d 6 --enable-ate stack invalid": {
+          "label": "examples/stack :: -d 6 --enable-ate stack invalid",
+          "solvers": {
+            "ics": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "counterexample"
+            },
+            "yices": {
+              "verdict": "counterexample"
+            },
+            "yices2": {
+              "verdict": "counterexample"
+            }
+          }
+        },
+        "examples/stack :: -d 6 --enable-ate stack th1": {
+          "label": "examples/stack :: -d 6 --enable-ate stack th1",
+          "solvers": {
+            "ics": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        },
+        "examples/stack :: -d 6 --enable-ate stack th2": {
+          "label": "examples/stack :: -d 6 --enable-ate stack th2",
+          "solvers": {
+            "ics": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-yices2": {
+              "verdict": "no counterexample"
+            },
+            "smtlib2-z3": {
+              "verdict": "no counterexample"
+            },
+            "yices": {
+              "verdict": "no counterexample"
+            },
+            "yices2": {
+              "verdict": "no counterexample"
+            }
+          }
+        }
+      }
+    }
+  }
+}

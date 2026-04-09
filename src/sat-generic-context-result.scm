@@ -73,7 +73,29 @@
            (instance-of? (slot-value rhs :decl) <sat-aux-decl>))
       (values rhs lhs))
      (else
-      (values lhs rhs)))))
+     (values lhs rhs)))))
+
+(define (sal-type/uninterpreted-model-type? type)
+  (and (instance-of? type <sal-type-name>)
+       (not (instance-of? type <sal-number-type>))
+       (not (sal-type-name/definition type))))
+
+(define (sal-ast/assignment-compatible? lhs rhs)
+  (try
+   (let ((lhs-type (sal-expr/type lhs))
+         (rhs-type (sal-expr/type rhs)))
+     (or (instance-of? lhs-type <sal-any-type>)
+         (instance-of? rhs-type <sal-any-type>)
+         (sal-type/equivalent? lhs-type rhs-type)
+         (sal-type/subtype-of? rhs-type lhs-type)
+         (sal-type/subtype-of? lhs-type rhs-type)
+         (and (instance-of? rhs <sal-numeral>)
+              (or (sal-type/scalar? lhs-type)
+                  (sal-type/integer? lhs-type)
+                  (sal-type/number? lhs-type)
+                  (sal-type/uninterpreted-model-type? lhs-type)))))
+   (lambda (_escape _proc _msg _obj)
+     #f)))
 
 (define (populate-assignment-table! constraint-list assignment-table)
   (let ((new-constraint-queue (make-queue)))
@@ -91,6 +113,7 @@
 ;                                                             expr))
 ;                                   #t)
                            (sal-ast/sat-ground? rhs *empty-env*)
+                           (sal-ast/assignment-compatible? lhs rhs)
                            (not (eq-hash-table/get assignment-table (slot-value lhs :decl))) ;; it is not already in the table...
                            (not (sal-ast/contains-reference? rhs (slot-value lhs :decl))))
                       (eq-hash-table/put! assignment-table (slot-value lhs :decl) rhs))
@@ -181,6 +204,7 @@
                     (cond
                      ((and (instance-of? lhs <sal-name-expr>)
                            (instance-of? (slot-value lhs :decl) <sat-aux-decl>)
+                           (sal-ast/assignment-compatible? lhs rhs)
                            (not (eq-hash-table/get subst-table (slot-value lhs :decl))) ;; it is not already in the table
                            (not (sal-ast/contains-reference? rhs (slot-value lhs :decl))))
                       (eq-hash-table/put! subst-table (slot-value lhs :decl) rhs))
@@ -262,9 +286,10 @@
         (list-ref elements idx)
         (sign-error "A bug was found when decoding the counterexample. Please contact support.")))
     ast))
-;; (define-method (sal-ast/recover-scalars-from-integers (ast <sal-lambda>) (expected-type <primitive>))
-  ;; the scalars in the body of the lambdas were not converted to integers...
-;;  ast)
+(define-method (sal-ast/recover-scalars-from-integers (ast <sal-lambda>) (expected-type <primitive>))
+  ;; Array/function values in models may already be reconstructed as lambdas.
+  ;; Their local binders should stay in the solver's numeric domain here.
+  ast)
 
 (define (sal-builtin-app/recover-scalars-from-interger-core ast)
   ;; some builtin applications can handle arbitrary number of arguments...
@@ -279,7 +304,12 @@
   (let* ((fun (slot-value ast :fun))
          (new-fun (sal-ast/recover-scalars-from-integers fun #f))
          (argument-list (sal-application/argument-list ast))
-         (domain-types (sal-function-type/domain-types (sal-expr/type new-fun)))
+         (fun-type (sal-expr/type new-fun))
+         (_ (unless (sal-type/function? fun-type)
+              (sign-error "Unexpected non-function term while decoding a counterexample: ~a has type ~a"
+                          (sal-ast->list new-fun)
+                          fun-type)))
+         (domain-types (sal-function-type/domain-types fun-type))
          (_ [sal-assert "recover-scalars-from-integers" (ast expected-type argument-list domain-types fun) (= (length argument-list)
                                                                                                               (length domain-types))])
          (new-argument-list (map (lambda (arg expected-arg-type)
@@ -293,10 +323,15 @@
   (let* ((target (slot-value ast :target))
          (new-target (sal-ast/recover-scalars-from-integers target #f))
          (idx (slot-value ast :idx))
-         (domain-type (car (sal-function-type/domain-types (sal-expr/type new-target))))
+         (target-type (sal-expr/type new-target))
+         (_ (unless (sal-type/function? target-type)
+              (sign-error "Unexpected non-function update target while decoding a counterexample: ~a has type ~a"
+                          (sal-ast->list new-target)
+                          target-type)))
+         (domain-type (car (sal-function-type/domain-types target-type)))
          (new-idx (sal-ast/recover-scalars-from-integers idx domain-type))
          (val (slot-value ast :new-value))
-         (new-val (sal-ast/recover-scalars-from-integers val (sal-function-type/range (sal-expr/type new-target)))))
+         (new-val (sal-ast/recover-scalars-from-integers val (sal-function-type/range target-type))))
     (copy-ast ast
               :target new-target
               :idx new-idx
@@ -305,6 +340,10 @@
   (let* ((target (slot-value ast :target))
          (new-target (sal-ast/recover-scalars-from-integers target #f))
          (new-target-type (sal-expr/type new-target))
+         (_ (unless (sal-type/function? new-target-type)
+              (sign-error "Unexpected non-array update target while decoding a counterexample: ~a has type ~a"
+                          (sal-ast->list new-target)
+                          new-target-type)))
          (domain (sal-function-type/domain new-target-type))
          (range (sal-function-type/range new-target-type)))
     (copy-ast ast 
@@ -338,16 +377,19 @@
                               (set-slot-value! decl :type type))
                             scalar->int-trace-info)
     (let ((new-constraint-queue (make-queue)))
-      (for-each (lambda (expr)
-                  ;; counterexample may contain inequality constrains associated with
-                  ;; scalars... so I must remove them
-                  (unless (and (instance-of? expr <sal-inequality>) ;; is an inequality
-                               ;; and contain a reference to a scalar->int var
-                               (sal-ast/find (lambda (n) (and (instance-of? n <sal-name-expr>)
-                                                              (eq-hash-table/get scalar->int-trace-info (slot-value n :decl))))
-                                             expr))
-                    (queue/insert! new-constraint-queue (sal-ast/recover-scalars-from-integers expr #f))))
-                constraint-list)
+      (let loop ((remaining constraint-list)
+                 (idx 0))
+        (unless (null? remaining)
+          (let ((expr (car remaining)))
+            ;; counterexample may contain inequality constrains associated with
+            ;; scalars... so I must remove them
+            (unless (and (instance-of? expr <sal-inequality>) ;; is an inequality
+                         ;; and contain a reference to a scalar->int var
+                         (sal-ast/find (lambda (n) (and (instance-of? n <sal-name-expr>)
+                                                        (eq-hash-table/get scalar->int-trace-info (slot-value n :decl))))
+                                       expr))
+              (queue/insert! new-constraint-queue (sal-ast/recover-scalars-from-integers expr #f))))
+          (loop (cdr remaining) (+ idx 1))))
       (queue->list new-constraint-queue))))
 
 
@@ -428,4 +470,3 @@
            (constraint-list-without-aux (constraint-list/perform-aux-substitutions! complete-constraint-list)))
       ;; (display-constraint-list constraint-list-without-aux)
       (constraint-list/collect-and-apply-assignments constraint-list-without-aux))))
-
