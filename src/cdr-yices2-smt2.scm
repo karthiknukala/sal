@@ -17,7 +17,7 @@
                 sat-generic-context sat-generic-context-result
                 sat-smtlib2-bmc-context sat-smtlib2-context smtlib2-interface
                 sat-yices2-context
-                yices2-interface tmp-files
+                yices2-interface yices2-api tmp-files
                 cdr-solver)
         (export (make-cdr-yices2-solver assertion pdkind?)))
 
@@ -215,46 +215,6 @@
 (define (sal-expr/from-disjuncts exprs place-provider)
   (sal-ast/simplify (make-sal-or* exprs place-provider)))
 
-(define (cdr-yices-generalizer-command)
-  (let* ((configured (getenv "SAL_CDR_YICES_GENERALIZER"))
-         (configured (and (string? configured)
-                          (not (equal? configured ""))
-                          configured))
-         (salenv-dir (getenv "SALENV_DIR"))
-         (bigloolib (getenv "BIGLOOLIB"))
-         (bigloolib (and (string? bigloolib)
-                         (not (equal? bigloolib ""))
-                         bigloolib))
-         (lib-root (and bigloolib
-                        (let ((split (sal-string-index bigloolib #\:)))
-                          (if split
-                            (substring bigloolib 0 split)
-                            bigloolib))))
-         (lib-prefix (and (string? salenv-dir)
-                          (not (equal? salenv-dir ""))
-                          (string-append salenv-dir "/lib/")))
-         (arch-dir (and lib-root
-                        lib-prefix
-                        (string-prefix? lib-prefix lib-root)
-                        (substring lib-root
-                                   (string-length lib-prefix)
-                                   (string-length lib-root))))
-         (bundled (and arch-dir
-                       (> (string-length arch-dir) 0)
-                       (string-append salenv-dir "/bin/" arch-dir "/cdr-yices-generalize")))
-         (legacy-bundled (and (string? salenv-dir)
-                              (not (equal? salenv-dir ""))
-                              (string-append salenv-dir "/bin/cdr-yices-generalize"))))
-    (cond
-     ((and configured (file-exists? configured))
-      configured)
-     ((and bundled (file-exists? bundled))
-      bundled)
-     ((and legacy-bundled (file-exists? legacy-bundled))
-      legacy-bundled)
-     (else
-      "cdr-yices-generalize"))))
-
 (define (make-yices-id->decl-proc info)
   (let ((id->decl-mapping (slot-value info :id->decl-mapping)))
     (lambda (id)
@@ -317,87 +277,66 @@
                         #t
                         #f))))))))))
 
-(define (write-yices-generalization-input! file-name solver info decls keep-decls formulas)
-  (with-output-to-file file-name
-    (lambda ()
-      (display "logic\t")
-      (display (sat-smtlib2-context/logic (slot-value solver :ctx)))
-      (newline)
-      (for-each
-       (lambda (sort-id)
-         (display "sort\t")
-         (display (symbol->string sort-id))
-         (newline))
-       (queue->list (slot-value info :sort-id-queue)))
-      (for-each
-       (lambda (decl)
-         (display "decl\t")
-         (display (dp-translation-info/var-id info decl))
-         (display #\tab)
-         (display (render-yices2-type-string (slot-value decl :type) info))
-         (newline))
-       decls)
-      (for-each
-       (lambda (expr)
-         (for-each
-          (lambda (conjunct)
-            (display "formula\t")
-            (display (render-yices2-expr-string conjunct info))
-            (newline))
-          (let ((conjuncts (sal-expr/conjuncts expr)))
-            (if (null? conjuncts)
-              (list (make-sal-true (slot-value solver :flat-module)))
-              conjuncts))))
-       formulas)
-      (for-each
-       (lambda (decl)
-         (display "keep\t")
-         (display (dp-translation-info/var-id info decl))
-         (newline))
-       keep-decls))))
+(define (decl->generalization-spec decl info)
+  (cons (generalization-id->string (dp-translation-info/var-id info decl))
+        (render-yices2-type-string (slot-value decl :type) info)))
+
+(define (generalization-id->string id)
+  (cond
+   ((string? id) id)
+   ((symbol? id) (symbol->string id))
+   (else
+    (object->string id))))
+
+(define (expr->generalization-conjunct-strings expr info place-provider)
+  (let ((conjuncts (sal-expr/conjuncts expr)))
+    (map (lambda (conjunct)
+           (render-yices2-expr-string conjunct info))
+         (if (null? conjuncts)
+           (list (make-sal-true place-provider))
+           conjuncts))))
 
 (define (helper-generalize-formulas solver keep-decls formulas)
   (let* ((decls (collect-formula-decls formulas keep-decls))
-         (info (make-yices2-translation-info))
-         (input-file (sal/setup-tmp-file! "cdr-yices-generalize.in"))
-         (output-file (sal/setup-tmp-file! "cdr-yices-generalize.out"))
-         (command (cdr-yices-generalizer-command)))
+         (info (make-yices2-translation-info)))
     (for-each (lambda (decl)
                 (sal-type/collect-yices2-sorts! (slot-value decl :type) info))
               decls)
-    (write-yices-generalization-input! input-file solver info decls keep-decls formulas)
-    (let ((result (system (string-append "\"" command "\" \"" input-file "\" > \"" output-file "\" 2>&1"))))
-      (unless (normal-exit? result)
-        (let ((lines (and (file-exists? output-file)
-                          (read-file-lines output-file))))
-          (sal/delete-tmp-file! input-file)
-          (sal/delete-tmp-file! output-file)
-          (sign-error "sal-cdr failed to generalize a Yices model with ~a.\nOutput:\n~a"
-                      command
-                      (if (and lines (pair? lines))
-                        (make-string-from-lines lines)
-                        ""))))
-      (let* ((lines (remove-if (lambda (line) (equal? line ""))
-                               (read-file-lines output-file)))
-             (id->decl-proc (make-yices-id->decl-proc info))
-             (exprs (map (lambda (line)
-                           (multiple-value-bind
-                               (state-constraint _max-step)
-                               (build-state-constraint
-                                (yices2/string->sal-expr line
-                                                         id->decl-proc
-                                                         (slot-value solver :flat-module))
-                                (slot-value (slot-value solver :ctx) :inv-step-decls)
-                                (slot-value (slot-value solver :ctx) :inv-global-decls))
-                             state-constraint))
-                         lines))
-             (result-expr (sal-expr/from-conjuncts (if (null? exprs)
-                                                     (list (make-sal-true (slot-value solver :flat-module)))
-                                                     exprs)
-                                                 (slot-value solver :flat-module))))
-        (sal/delete-tmp-file! input-file)
-        (sal/delete-tmp-file! output-file)
-        result-expr))))
+    (let* ((lines
+            (yices2-api/generalize-formulas
+             (sat-smtlib2-context/logic (slot-value solver :ctx))
+             (map symbol->string
+                  (queue->list (slot-value info :sort-id-queue)))
+             (map (lambda (decl)
+                    (decl->generalization-spec decl info))
+                  decls)
+             (map (lambda (decl)
+                    (generalization-id->string
+                     (dp-translation-info/var-id info decl)))
+                  keep-decls)
+             (apply append
+                    (map (lambda (expr)
+                           (expr->generalization-conjunct-strings expr
+                                                                  info
+                                                                  (slot-value solver :flat-module)))
+                         formulas))))
+           (id->decl-proc (make-yices-id->decl-proc info))
+           (exprs
+            (map (lambda (line)
+                   (multiple-value-bind
+                       (state-constraint _max-step)
+                       (build-state-constraint
+                        (yices2/string->sal-expr (normalize-yices-inline line)
+                                                 id->decl-proc
+                                                 (slot-value solver :flat-module))
+                        (slot-value (slot-value solver :ctx) :inv-step-decls)
+                        (slot-value (slot-value solver :ctx) :inv-global-decls))
+                     state-constraint))
+                 lines)))
+      (sal-expr/from-conjuncts (if (null? exprs)
+                                (list (make-sal-true (slot-value solver :flat-module)))
+                                exprs)
+                              (slot-value solver :flat-module)))))
 
 (define (check-yices2-base-command! command)
   (let ((version-line (capture-command-first-line (string-append "exec " command " --version 2>&1"))))

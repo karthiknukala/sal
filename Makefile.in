@@ -47,6 +47,11 @@ BDEPEND = @BDEPEND@
 CPPFLAGS += @CPPFLAGS@ -I$(BIGLOOLIBDIR) -DOS_$(posixos)
 LDFLAGS  += @LDFLAGS@
 LIBS     += @LIBS@
+LIBS     += -lyices
+
+ifneq ($(wildcard /usr/local/lib/libyices.dylib),)
+LDFLAGS += -L/usr/local/lib -Wl,-rpath,/usr/local/lib
+endif
 
 # If configure didn't provide LIBS at all, provide a sensible baseline.
 ifeq ($(strip $(LIBS)),)
@@ -255,7 +260,7 @@ sat-boolean-smt-context sat-boolean-smt-bmc-context                     \
 sat-smtlib2-context smtlib2-interface sat-smtlib2-bmc-context           \
 sal-module-simplifications yices-interface                              \
 sat-boolean-yices-bmc-context sat-yices-context sat-yices-bmc-context   \
-yices2-interface sat-boolean-yices2-bmc-context sat-yices2-context      \
+yices2-interface yices2-api sat-boolean-yices2-bmc-context sat-yices2-context      \
 sat-yices2-bmc-context cdr-solver cdr-frames cdr-obligations            \
 cdr-pdkind cdr-yices2-smt2 sal-cdr
 
@@ -274,7 +279,7 @@ runtime-support.c
 
 SAL_C_FILE = $(SAL_C_CORE_FILE) state_entry.c state_entry_channel.c \
 state_cache.c jenkins_hash.c bit_array.c random-support.c           \
-cudd_c_utils.c state_to_do_list.c
+cudd_c_utils.c state_to_do_list.c yices2_api_support.c
 
 SALENV_SAFE= $(SALENV)-safe
 SALENV_SCM_FILE = $(SAL_SCM_FILE) $(SALENV_SPECIFIC_SCM_FILE)
@@ -307,17 +312,12 @@ SAL_PARSER_SCM_OBJ=$(SAL_PARSER_SCM_FILE:%=$(OBJ_DIR)/%.o)
 SAL_PARSER_C_OBJ=$(SAL_C_CORE_FILE:%.c=$(OBJ_DIR)/%.o)
 SAL_PARSER_OBJ=$(SAL_PARSER_SCM_OBJ) $(SAL_PARSER_C_OBJ)
 
-CDR_YICES_GENERALIZER=cdr-yices-generalize
-CDR_YICES_GENERALIZER_BIN=$(BIN_DIR)/$(CDR_YICES_GENERALIZER)
-YICES_HELPER_CPPFLAGS=-I/usr/local/include $(CPPFLAGS)
-YICES_HELPER_LDFLAGS=-L/usr/local/lib -Wl,-rpath,/usr/local/lib $(LDFLAGS) -lyices
-
 .PHONY: all install-local
 
 ifeq ($(SALENV_BUILD_MODE),release)
-TARGETS = $(SALENV_SAFE) $(SALENV) $(SALHEAP) $(SAL_PARSER) $(SALRUNTIME_SAFE) $(SALRUNTIME) $(CDR_YICES_GENERALIZER)
+TARGETS = $(SALENV_SAFE) $(SALENV) $(SALHEAP) $(SAL_PARSER) $(SALRUNTIME_SAFE) $(SALRUNTIME)
 else
-TARGETS = $(SALENV) $(SALENV_SAFE) $(SALHEAP) $(SAL_PARSER) $(SALRUNTIME) $(CDR_YICES_GENERALIZER)
+TARGETS = $(SALENV) $(SALENV_SAFE) $(SALHEAP) $(SAL_PARSER) $(SALRUNTIME)
 endif
 
 all: $(TARGETS) local-install
@@ -436,20 +436,6 @@ $(SAL_PARSER_BIN) : $(SAL_PARSER_OBJ)
 else
 $(SAL_PARSER) : 
 	make -C src -f ../Makefile $(SAL_PARSER) MAKELEVEL=1
-endif
-
-#
-# cdr-yices-generalize helper
-#
-ifeq ($(MAKELEVEL),1)
-$(CDR_YICES_GENERALIZER) : $(CDR_YICES_GENERALIZER_BIN)
-
-$(CDR_YICES_GENERALIZER_BIN) : $(SRC_DIR)/cdr_yices_generalize.c
-	@mkdir -p $(BIN_DIR)
-	$(CC) -O2 $(YICES_HELPER_CPPFLAGS) -o $(CDR_YICES_GENERALIZER_BIN) $(SRC_DIR)/cdr_yices_generalize.c $(YICES_HELPER_LDFLAGS)
-else
-$(CDR_YICES_GENERALIZER) :
-	make -C src -f ../Makefile $(CDR_YICES_GENERALIZER) MAKELEVEL=1
 endif
 
 #*---------------------------------------------------------------------*/
