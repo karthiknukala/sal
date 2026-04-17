@@ -307,12 +307,17 @@ SAL_PARSER_SCM_OBJ=$(SAL_PARSER_SCM_FILE:%=$(OBJ_DIR)/%.o)
 SAL_PARSER_C_OBJ=$(SAL_C_CORE_FILE:%.c=$(OBJ_DIR)/%.o)
 SAL_PARSER_OBJ=$(SAL_PARSER_SCM_OBJ) $(SAL_PARSER_C_OBJ)
 
+CDR_YICES_GENERALIZER=cdr-yices-generalize
+CDR_YICES_GENERALIZER_BIN=$(BIN_DIR)/$(CDR_YICES_GENERALIZER)
+YICES_HELPER_CPPFLAGS=-I/usr/local/include $(CPPFLAGS)
+YICES_HELPER_LDFLAGS=-L/usr/local/lib -Wl,-rpath,/usr/local/lib $(LDFLAGS) -lyices
+
 .PHONY: all install-local
 
 ifeq ($(SALENV_BUILD_MODE),release)
-TARGETS = $(SALENV_SAFE) $(SALENV) $(SALHEAP) $(SAL_PARSER) $(SALRUNTIME_SAFE) $(SALRUNTIME)
+TARGETS = $(SALENV_SAFE) $(SALENV) $(SALHEAP) $(SAL_PARSER) $(SALRUNTIME_SAFE) $(SALRUNTIME) $(CDR_YICES_GENERALIZER)
 else
-TARGETS = $(SALENV) $(SALENV_SAFE) $(SALHEAP) $(SAL_PARSER) $(SALRUNTIME)
+TARGETS = $(SALENV) $(SALENV_SAFE) $(SALHEAP) $(SAL_PARSER) $(SALRUNTIME) $(CDR_YICES_GENERALIZER)
 endif
 
 all: $(TARGETS) local-install
@@ -431,6 +436,20 @@ $(SAL_PARSER_BIN) : $(SAL_PARSER_OBJ)
 else
 $(SAL_PARSER) : 
 	make -C src -f ../Makefile $(SAL_PARSER) MAKELEVEL=1
+endif
+
+#
+# cdr-yices-generalize helper
+#
+ifeq ($(MAKELEVEL),1)
+$(CDR_YICES_GENERALIZER) : $(CDR_YICES_GENERALIZER_BIN)
+
+$(CDR_YICES_GENERALIZER_BIN) : $(SRC_DIR)/cdr_yices_generalize.c
+	@mkdir -p $(BIN_DIR)
+	$(CC) -O2 $(YICES_HELPER_CPPFLAGS) -o $(CDR_YICES_GENERALIZER_BIN) $(SRC_DIR)/cdr_yices_generalize.c $(YICES_HELPER_LDFLAGS)
+else
+$(CDR_YICES_GENERALIZER) :
+	make -C src -f ../Makefile $(CDR_YICES_GENERALIZER) MAKELEVEL=1
 endif
 
 #*---------------------------------------------------------------------*/

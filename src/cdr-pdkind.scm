@@ -90,6 +90,12 @@
                                      (cdr target-binding)))))
        (cdr-cube/bindings target))))
 
+(define (cube-satisfies-expr? solver cube expr)
+  (cdr-solver/state-formulas-imply?
+   solver
+   (list (cdr-cube->expr cube (cdr-solver/flat-module solver)))
+   expr))
+
 (define (pdkind/obligation-equivalent? obligation1 obligation2)
   (and (sal-ast/equivalent? (cdr-pdkind-obligation/f-fwd obligation1)
                             (cdr-pdkind-obligation/f-fwd obligation2))
@@ -185,6 +191,25 @@
   (when (>= (verbosity-level) 4)
     (verbose-message 4 "    ~a" (sal-expr->string lemma))))
 
+(define (pdkind/forward-lemma-valid-at-level? solver level lemma)
+  (let ((negated (sal-ast/simplify (make-sal-not lemma))))
+    (and (equal? (cdr-solver/check-initial-expr solver negated) "unsat")
+         (if (= level 0)
+           #t
+           (multiple-value-bind
+               (status _cube)
+               (cdr-solver/check-predecessor-expr solver (- level 1) negated)
+             (equal? status "unsat"))))))
+
+(define (pdkind/backward-strengthening-start-level solver level lemma)
+  (let loop ((candidate level)
+             (best level))
+    (if (<= candidate 0)
+      best
+      (if (pdkind/forward-lemma-valid-at-level? solver candidate lemma)
+        (loop (- candidate 1) candidate)
+        best))))
+
 (define (pdkind/select-forward-lemma solver level cube)
   (let* ((fallback (cdr-cube->lemma cube (cdr-solver/flat-module solver)))
          (candidate (cdr-solver/learn-forward-cube solver level cube))
@@ -202,10 +227,20 @@
 (define (pdkind/add-reachability-lemma! frame-store solver level cube)
   (let ((lemma (pdkind/select-forward-lemma solver level cube)))
     (when (and (> level 0)
-               (not (sal-expr/true? lemma))
-               (cdr-frame-store/add-lemma! frame-store level lemma))
-      (cdr-solver/add-lemma! solver level lemma)
-      (pdkind/report-lemma "learned reachability lemma" level lemma))
+               (not (sal-expr/true? lemma)))
+      (let ((start-level (pdkind/backward-strengthening-start-level solver level lemma))
+            (changed? #f))
+        (let loop ((i start-level))
+          (when (<= i level)
+            (when (cdr-frame-store/add-lemma-at-level! frame-store i lemma)
+              (cdr-solver/add-lemma-at-level! solver i lemma)
+              (set! changed? #t))
+            (loop (+ i 1))))
+        (when changed?
+          (pdkind/report-lemma "learned reachability lemma" start-level lemma)
+          (when (and (< start-level level)
+                     (>= (verbosity-level) 3))
+            (verbose-message 3 "    backward strengthened through F~a." level)))))
     lemma))
 
 (define (pdkind/generalize-induction-cube solver cube target-expr)
@@ -219,12 +254,32 @@
           (loop idx candidate)
           (loop (+ idx 1) current))))))
 
-(define (pdkind/check-reachable-at frame-store solver level cube)
+(define (pdkind/frame-implies? solver obligations obligation)
+  (cdr-solver/state-formulas-imply?
+   solver
+   (map cdr-pdkind-obligation/f-fwd obligations)
+   (cdr-pdkind-obligation/f-fwd obligation)))
+
+(define (pdkind/minimize-frame solver obligations)
+  (let loop ((remaining obligations)
+             (kept obligations))
+    (if (null? remaining)
+      kept
+      (let* ((obligation (car remaining))
+             (reduced (pdkind/remove-obligation kept obligation)))
+        (if (or (= (cdr-pdkind-obligation/distance obligation) 0)
+                (not (pdkind/frame-implies? solver reduced obligation)))
+          (loop (cdr remaining) kept)
+          (loop (cdr remaining) reduced))))))
+
+(define (pdkind/check-reachable-at frame-store solver level target)
   (cond
    ((< level 0)
     (values 'unreachable #f))
    ((= level 0)
-    (let ((status (cdr-solver/check-initial-cube solver cube)))
+    (let ((status (if (instance-of? target <cdr-cube>)
+                    (cdr-solver/check-initial-cube solver target)
+                    (cdr-solver/check-initial-expr solver target))))
       (cond
        ((equal? status "sat")
         (values 'reachable 0))
@@ -233,8 +288,8 @@
        (else
         (values 'unknown #f)))))
    (else
-    (pdkind/ensure-reachability-level! frame-store solver level)
-    (let loop ((stack (list (cons level cube))))
+   (pdkind/ensure-reachability-level! frame-store solver level)
+    (let loop ((stack (list (cons level target))))
       (if (null? stack)
         (values 'unreachable #f)
         (let* ((entry (car stack))
@@ -246,17 +301,20 @@
            (else
             (multiple-value-bind
                 (status predecessor)
-                (cdr-solver/check-predecessor solver (- k 1) current)
+                (if (instance-of? current <cdr-cube>)
+                  (cdr-solver/check-predecessor solver (- k 1) current)
+                  (cdr-solver/check-predecessor-expr solver (- k 1) current))
               (cond
                ((equal? status "sat")
                 (loop (cons (cons (- k 1) predecessor) stack)))
                ((equal? status "unsat")
-                (pdkind/add-reachability-lemma! frame-store solver k current)
+                (when (instance-of? current <cdr-cube>)
+                  (pdkind/add-reachability-lemma! frame-store solver k current))
                 (loop (cdr stack)))
                (else
                 (values 'unknown #f))))))))))))
 
-(define (pdkind/check-reachable frame-store solver start end cube)
+(define (pdkind/check-reachable frame-store solver start end target)
   (let ((start (max 0 start)))
     (let loop ((k start))
       (cond
@@ -265,7 +323,7 @@
        (else
         (multiple-value-bind
             (status witness-k)
-            (pdkind/check-reachable-at frame-store solver k cube)
+            (pdkind/check-reachable-at frame-store solver k target)
           (cond
            ((eq? status 'reachable)
             (values 'reachable witness-k))
@@ -360,8 +418,8 @@
     (define (register-induction-lemma! lemma)
       (cdr-solver/add-induction-lemma! solver lemma)
       (pdkind/report-lemma "added induction lemma" frame-index lemma))
-    (define (forward-obligation score target-cube target-expr parent edge-length)
-      (let* ((lemma (pdkind/select-forward-lemma solver frame-index target-cube))
+    (define (forward-obligation score seed-cube target-cube target-expr parent edge-length)
+      (let* ((lemma (pdkind/select-forward-lemma solver frame-index seed-cube))
              (obligation (make-cdr-pdkind-obligation lemma
                                                      target-cube
                                                      target-expr
@@ -386,8 +444,11 @@
       (set! invalid-edge-length first-edge-length))
     (define (target-hit? obligation end-cube)
       (let ((target-cube (cdr-pdkind-obligation/target-cube obligation)))
-        (or (not target-cube)
-            (cube-satisfies-cube? end-cube target-cube))))
+        (if target-cube
+          (cube-satisfies-cube? end-cube target-cube)
+          (cube-satisfies-expr? solver
+                                end-cube
+                                (cdr-pdkind-obligation/target-expr obligation)))))
     (define (retry-obligation! obligation)
       (let ((retried (pdkind/make-obligation-retry obligation
                                                    (pdkind/decrease-score
@@ -399,6 +460,10 @@
           (status start-cube end-cube)
           (cdr-solver/check-inductive-witness solver
                                               (cdr-pdkind-obligation/f-fwd obligation))
+        (when (>= (verbosity-level) 5)
+          (verbose-message 5 "sal-cdr PDKIND: witness query returned ~a at frame ~a."
+                           status
+                           frame-index))
         (cond
          ((equal? status "unsat")
           (next-add! obligation)
@@ -406,19 +471,25 @@
          ((not (equal? status "sat"))
           'unknown)
          ((target-hit? obligation end-cube)
-          (let* ((generalized-start
-                  (pdkind/generalize-induction-cube solver
-                                                    start-cube
-                                                    (cdr-pdkind-obligation/target-expr obligation)))
+          (when (>= (verbosity-level) 5)
+            (verbose-message 5 "sal-cdr PDKIND: target hit, generalizing target expression."))
+          (let* ((generalized-start-expr
+                  (cdr-solver/generalize-induction-target
+                   solver
+                   (cdr-pdkind-obligation/target-expr obligation)))
                  (reach-start (max 0 (- (+ frame-index 1) frame-depth)))
-                 (reach-end frame-index))
+                  (reach-end frame-index))
+            (when (>= (verbosity-level) 5)
+              (verbose-message 5 "sal-cdr PDKIND: checking generalized target reachability in [~a, ~a]."
+                               reach-start
+                               reach-end))
             (multiple-value-bind
                 (reach-status root-k)
                 (pdkind/check-reachable frame-store
                                         solver
                                         reach-start
                                         reach-end
-                                        generalized-start)
+                                        generalized-start-expr)
               (cond
                ((eq? reach-status 'reachable)
                 (multiple-value-bind
@@ -436,9 +507,9 @@
                     'unknown)
                    (else
                     (forward-obligation (pdkind/initial-score)
-                                        generalized-start
-                                        (cdr-cube->expr generalized-start
-                                                        (cdr-solver/flat-module solver))
+                                        start-cube
+                                        #f
+                                        generalized-start-expr
                                         obligation
                                         frame-depth)
                     (retry-obligation! obligation)
@@ -447,9 +518,9 @@
                 'unknown)
                (else
                 (forward-obligation (pdkind/initial-score)
-                                    generalized-start
-                                    (cdr-cube->expr generalized-start
-                                                    (cdr-solver/flat-module solver))
+                                    start-cube
+                                    #f
+                                    generalized-start-expr
                                     obligation
                                     frame-depth)
                 (retry-obligation! obligation)
@@ -457,19 +528,19 @@
          (else
           (let* ((negated-f-fwd (sal-ast/simplify
                                  (make-sal-not (cdr-pdkind-obligation/f-fwd obligation))))
-                 (generalized-start
-                  (pdkind/generalize-induction-cube solver
-                                                    start-cube
-                                                    negated-f-fwd))
+                 (generalized-start-expr
+                  (cdr-solver/generalize-induction-target solver negated-f-fwd))
                  (reach-start (max 0 (- (+ frame-index 1) frame-depth)))
                  (reach-end frame-index))
+            (when (>= (verbosity-level) 5)
+              (verbose-message 5 "sal-cdr PDKIND: target missed, generalizing negated forward lemma."))
             (multiple-value-bind
                 (reach-status root-k)
                 (pdkind/check-reachable frame-store
                                         solver
                                         reach-start
                                         reach-end
-                                        generalized-start)
+                                        generalized-start-expr)
               (cond
                ((eq? reach-status 'reachable)
                 (set! frame-next-index
@@ -478,8 +549,10 @@
                 (let* ((candidate (sal-ast/simplify
                                    (make-sal-not (cdr-pdkind-obligation/target-expr obligation))))
                        (pushed-f-fwd (or (cdr-solver/usable-lemma solver candidate)
-                                         (cdr-cube->lemma (cdr-pdkind-obligation/target-cube obligation)
-                                                          (cdr-solver/flat-module solver))))
+                                         (and (cdr-pdkind-obligation/target-cube obligation)
+                                              (cdr-cube->lemma (cdr-pdkind-obligation/target-cube obligation)
+                                                               (cdr-solver/flat-module solver)))
+                                         candidate))
                        (next-obligation
                         (make-cdr-pdkind-obligation pushed-f-fwd
                                                     (cdr-pdkind-obligation/target-cube obligation)
@@ -495,13 +568,15 @@
                ((eq? reach-status 'unknown)
                 'unknown)
                (else
-                (let* ((learned (pdkind/select-forward-lemma solver frame-index generalized-start))
+                (let* ((learned (pdkind/select-forward-lemma solver frame-index start-cube))
                        (refined-f-fwd
                         (or (cdr-solver/usable-lemma solver
-                                                     (sal-ast/simplify
-                                                      (make-sal-and* (list (cdr-pdkind-obligation/f-fwd obligation)
-                                                                           learned)
-                                                                     (cdr-solver/flat-module solver))))
+                                                     (cdr-solver/minimize-state-formula
+                                                      solver
+                                                      (sal-ast/simplify
+                                                       (make-sal-and* (list (cdr-pdkind-obligation/f-fwd obligation)
+                                                                            learned)
+                                                                      (cdr-solver/flat-module solver)))))
                             learned))
                        (refined
                         (make-cdr-pdkind-obligation refined-f-fwd
@@ -563,9 +638,9 @@
            ((>= frame-index max-frame)
             (values 'unknown #f))
            (else
-            (set! frame-index frame-next-index)
+           (set! frame-index frame-next-index)
             (set! frame-depth (+ frame-depth 1))
-            (set! next-obligations (reverse! next-obligations))
+            (set! next-obligations (pdkind/minimize-frame solver (reverse! next-obligations)))
             (cdr-solver/reset-induction! solver frame-depth)
             (load-frame! next-obligations)
             (set! next-obligations '())

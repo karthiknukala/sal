@@ -35,7 +35,8 @@
                 (sal/yices2-silent-mode?)
                 (yices2-sat/execute in-file)
                 (yices2/execute-core in-file)
-                (yices2/execute in-file yices2-id->sal-decl-proc place-provider)))
+                (yices2/execute in-file yices2-id->sal-decl-proc place-provider)
+                (yices2/string->sal-expr str yices2-id->sal-decl-proc place-provider)))
 
 
 ;;
@@ -381,6 +382,16 @@
     (cons 'CONST (make-mpq (the-string))))
    ((: #\- num #\/ num)
     (cons 'CONST (make-mpq (the-string))))
+   ("=>" (cons 'ID '=>))
+   ("<=" (cons 'ID '<=))
+   (">=" (cons 'ID '>=))
+   ("<" (cons 'ID '<))
+   (">" (cons 'ID '>))
+   ("+" (cons 'ID '+))
+   ("*" (cons 'ID '*))
+   ("-" (cons 'ID '-))
+   ("/" (cons 'ID '/))
+   ("^" (cons 'ID '^))
    (id
     (cons 'ID (the-symbol)))
    (else
@@ -567,6 +578,178 @@
    (else
     (yices2-id->sal-name-expr/expected 'missing #f))))
 
+(define (make-yices2-builtin-app class args)
+  (apply make-sal-builtin-application class *place-provider* args))
+
+(define (yices2-natural-exponent raw-term)
+  (let ((expr (yices2-raw-term->sal-expr raw-term #f)))
+    (and (instance-of? expr <sal-numeral>)
+         (let ((num (slot-value expr :num)))
+           (and (mpq/integer? num)
+                (>=mpq num *mpq-zero*)
+                (mpq->integer num))))))
+
+(define (make-yices2-power-expr base exponent)
+  (cond
+   ((= exponent 0)
+    (make-sal-numeral 1 *place-provider*))
+   ((= exponent 1)
+    base)
+   (else
+    (apply make-sal-builtin-application
+           <sal-mul>
+           *place-provider*
+           (let loop ((remaining exponent)
+                      (result '()))
+             (if (= remaining 0)
+               (reverse! result)
+               (loop (- remaining 1) (cons base result))))))))
+
+(define (yices2-raw-app/operator raw-term)
+  (and (yices2-raw-app? raw-term)
+       (let ((fun (yices2-raw-app/fun raw-term)))
+         (and (yices2-raw-id? fun)
+              (yices2-raw-id/value fun)))))
+
+(define (yices2-convert-operator-app operator raw-args expected-type)
+  (cond
+   ((eq? operator '=)
+    (make-sal-equality (yices2-raw-term->sal-expr (car raw-args) #f)
+                       (yices2-raw-term->sal-expr (cadr raw-args) #f)))
+   ((or (eq? operator 'distinct)
+        (eq? operator '/=))
+    (make-sal-and*
+     (let loop ((remaining raw-args)
+                (result '()))
+       (if (null? remaining)
+         (reverse! result)
+         (let ((lhs (yices2-raw-term->sal-expr (car remaining) #f)))
+           (loop (cdr remaining)
+                 (append (map (lambda (rhs)
+                                (make-yices2-builtin-app
+                                 <sal-diseq>
+                                 (list lhs
+                                       (yices2-raw-term->sal-expr rhs #f))))
+                              (cdr remaining))
+                         result)))))
+     *place-provider*))
+   ((eq? operator 'and)
+    (make-sal-and*
+     (map (lambda (arg)
+            (yices2-raw-term->sal-expr arg
+                                       (make-sal-builtin-name <sal-bool-type> *place-provider*)))
+          raw-args)
+     *place-provider*))
+   ((eq? operator 'or)
+    (make-sal-or*
+     (map (lambda (arg)
+            (yices2-raw-term->sal-expr arg
+                                       (make-sal-builtin-name <sal-bool-type> *place-provider*)))
+          raw-args)
+     *place-provider*))
+   ((eq? operator 'not)
+    (make-sal-not
+     (yices2-raw-term->sal-expr (car raw-args)
+                                (make-sal-builtin-name <sal-bool-type> *place-provider*))))
+   ((eq? operator '=>)
+    (make-yices2-builtin-app
+     <sal-implies>
+     (map (lambda (arg)
+            (yices2-raw-term->sal-expr arg
+                                       (make-sal-builtin-name <sal-bool-type> *place-provider*)))
+          raw-args)))
+   ((eq? operator '+)
+    (apply make-sal-builtin-application
+           <sal-add>
+           *place-provider*
+           (map (lambda (arg)
+                  (yices2-raw-term->sal-expr arg expected-type))
+                raw-args)))
+   ((eq? operator '-)
+    (let ((converted (map (lambda (arg)
+                            (yices2-raw-term->sal-expr arg expected-type))
+                          raw-args)))
+      (if (= (length converted) 1)
+        (make-yices2-builtin-app
+         <sal-sub>
+         (list (make-sal-numeral 0 *place-provider*)
+               (car converted)))
+        (apply make-sal-builtin-application
+               <sal-sub>
+               *place-provider*
+               converted))))
+   ((eq? operator '*)
+    (apply make-sal-builtin-application
+           <sal-mul>
+           *place-provider*
+           (map (lambda (arg)
+                  (yices2-raw-term->sal-expr arg expected-type))
+                raw-args)))
+   ((eq? operator '/)
+    (apply make-sal-builtin-application
+           <sal-div>
+           *place-provider*
+           (map (lambda (arg)
+                  (yices2-raw-term->sal-expr arg expected-type))
+                raw-args)))
+   ((eq? operator 'div)
+    (apply make-sal-builtin-application
+           <sal-idiv>
+           *place-provider*
+           (map (lambda (arg)
+                  (yices2-raw-term->sal-expr arg expected-type))
+                raw-args)))
+   ((eq? operator 'mod)
+    (apply make-sal-builtin-application
+           <sal-mod>
+           *place-provider*
+           (map (lambda (arg)
+                  (yices2-raw-term->sal-expr arg expected-type))
+                raw-args)))
+   ((eq? operator '<)
+    (make-yices2-builtin-app
+     <sal-lt>
+     (map (lambda (arg)
+            (yices2-raw-term->sal-expr arg #f))
+          raw-args)))
+   ((eq? operator '<=)
+    (make-yices2-builtin-app
+     <sal-le>
+     (map (lambda (arg)
+            (yices2-raw-term->sal-expr arg #f))
+          raw-args)))
+   ((eq? operator '>)
+    (make-yices2-builtin-app
+     <sal-gt>
+     (map (lambda (arg)
+            (yices2-raw-term->sal-expr arg #f))
+          raw-args)))
+   ((eq? operator '>=)
+    (make-yices2-builtin-app
+     <sal-ge>
+     (map (lambda (arg)
+            (yices2-raw-term->sal-expr arg #f))
+          raw-args)))
+   ((eq? operator '^)
+    (let ((exponent (and (= (length raw-args) 2)
+                         (yices2-natural-exponent (cadr raw-args)))))
+      (unless exponent
+        (sign-error "Unsupported Yices 2 power term: ~a"
+                    (make-yices2-raw-app (make-yices2-raw-id operator) raw-args)))
+      (make-yices2-power-expr
+       (yices2-raw-term->sal-expr (car raw-args) expected-type)
+       exponent)))
+   ((eq? operator 'ite)
+    (make-ast-instance
+     <sal-conditional>
+     *place-provider*
+     :cond-expr (yices2-raw-term->sal-expr (car raw-args)
+                                           (make-sal-builtin-name <sal-bool-type> *place-provider*))
+     :then-expr (yices2-raw-term->sal-expr (cadr raw-args) expected-type)
+     :else-expr (yices2-raw-term->sal-expr (caddr raw-args) expected-type)))
+   (else
+    #f)))
+
 (define (yices2-raw-term->sal-expr raw-term expected-type)
   (cond
    ((yices2-missing-term? raw-term)
@@ -576,29 +759,34 @@
    ((yices2-raw-id? raw-term)
     (yices2-id->sal-name-expr/expected (yices2-raw-id/value raw-term) expected-type))
    ((yices2-raw-app? raw-term)
-    (let* ((fun-expr (yices2-raw-term->sal-expr (yices2-raw-app/fun raw-term) #f))
-           (fun-type (sal-expr/type fun-expr))
-           (domain-types (if (instance-of? fun-type <sal-function-type>)
-                           (sal-function-type/domain-types fun-type)
-                           '()))
-           (raw-args (if (instance-of? fun-type <sal-function-type>)
-                       (yices2-pad-missing (yices2-raw-app/args raw-term)
-                                           (length domain-types))
-                       (yices2-raw-app/args raw-term)))
-           (arg-list
-            (let loop ((remaining-args raw-args)
-                       (remaining-types domain-types)
-                       (result '()))
-              (if (null? remaining-args)
-                (reverse! result)
-                (let ((arg-type (if (null? remaining-types) #f (car remaining-types))))
-                  (loop (cdr remaining-args)
-                        (if (null? remaining-types) '() (cdr remaining-types))
-                        (cons (yices2-raw-term->sal-expr (car remaining-args) arg-type) result)))))))
-      (yices2-convert-term
-       (make-sal-application fun-expr
-                             (apply make-application-argument arg-list))
-       expected-type)))
+    (or (let ((operator (yices2-raw-app/operator raw-term)))
+          (and operator
+               (yices2-convert-operator-app operator
+                                            (yices2-raw-app/args raw-term)
+                                            expected-type)))
+        (let* ((fun-expr (yices2-raw-term->sal-expr (yices2-raw-app/fun raw-term) #f))
+               (fun-type (sal-expr/type fun-expr))
+               (domain-types (if (instance-of? fun-type <sal-function-type>)
+                               (sal-function-type/domain-types fun-type)
+                               '()))
+               (raw-args (if (instance-of? fun-type <sal-function-type>)
+                           (yices2-pad-missing (yices2-raw-app/args raw-term)
+                                               (length domain-types))
+                           (yices2-raw-app/args raw-term)))
+               (arg-list
+                (let loop ((remaining-args raw-args)
+                           (remaining-types domain-types)
+                           (result '()))
+                  (if (null? remaining-args)
+                    (reverse! result)
+                    (let ((arg-type (if (null? remaining-types) #f (car remaining-types))))
+                      (loop (cdr remaining-args)
+                            (if (null? remaining-types) '() (cdr remaining-types))
+                            (cons (yices2-raw-term->sal-expr (car remaining-args) arg-type) result)))))))
+          (yices2-convert-term
+           (make-sal-application fun-expr
+                                 (apply make-application-argument arg-list))
+           expected-type))))
    ((yices2-raw-update? raw-term)
     (let* ((target-expr (yices2-raw-term->sal-expr (yices2-raw-update/target raw-term) #f))
            (target-type (sal-expr/type target-expr))
@@ -730,6 +918,27 @@
     ((ID) #unspecified))
    ))
 
+(define *yices2-term-parser*
+  (lalr-grammar
+   (TRUE FALSE UPDATE LP RP = CONST ID)
+   (start
+    ((term@t)
+     (yices2-raw-term->sal-expr t #f)))
+   (term
+    ((CONST) (make-sal-numeral CONST *place-provider*))
+    ((=) (make-yices2-raw-id '=))
+    ((ID) (make-yices2-raw-id ID))
+    ((LP term term-list RP)
+     (make-yices2-raw-app term (reverse! term-list)))
+    ((LP UPDATE term@target LP term-list@idxs RP term@val RP)
+     (make-yices2-raw-update target (reverse! idxs) val))
+    ((TRUE) (make-sal-true *place-provider*))
+    ((FALSE) (make-sal-false *place-provider*)))
+   (term-list
+    (() '())
+    ((term) (list term))
+    ((term-list term) (cons term term-list)))))
+
 (define (parse)
   (status-message :parsing-yices-output)
   (verbose-message 3 "  parsing output produced by Yices 2...")
@@ -742,6 +951,19 @@
      (cond
       ((equal? proc "parser")
        (sign-error (xformat #f "Unexpected output from Yices 2: ~a. Please contact support." msg)))
+      (else
+       (error proc msg obj))))))
+
+(define (parse-term)
+  (try
+   (read/lalrp
+    *yices2-term-parser*
+    *yices2-output-lexer*
+    (current-input-port))
+   (lambda (escape proc msg obj)
+     (cond
+      ((equal? proc "parser")
+       (sign-error (xformat #f "Unexpected Yices 2 term: ~a." msg)))
       (else
        (error proc msg obj))))))
 
@@ -759,3 +981,12 @@
   (set! *yices2-aux-decl-idx* 0)
   (with-input-from-file file-name
     parse))
+
+(define (yices2/string->sal-expr str yices2-id->sal-decl-proc place-provider)
+  (set! *yices2-id->sal-decl* yices2-id->sal-decl-proc)
+  (set! *place-provider* place-provider)
+  (set! *aux-decls* (make-hashtable))
+  (set! *typed-aux-decls* '())
+  (set! *yices2-aux-decl-idx* 0)
+  (with-input-from-string str
+    parse-term))

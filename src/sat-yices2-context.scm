@@ -22,7 +22,11 @@
                 sal-ast-copy fast-hash-table queue sal-type sal-expression gmp-scheme
                 sat-generic-context-result sal-environment yices2-interface tmp-files)
         (export <sat-yices2-context>
-                (make-sat-yices2-context place-provider))
+                (make-sat-yices2-context place-provider)
+                (make-yices2-translation-info)
+                (sal-type/collect-yices2-sorts! type info)
+                (sal-type/display-yices2 type info)
+                (sal-ast/display-yices2 ast info))
         )
 
 (define-class <sat-yices2-context> (<sat-generic-context>) ())
