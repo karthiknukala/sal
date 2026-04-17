@@ -15,7 +15,18 @@
                 sat-generic-context-result sal-environment smtlib2-interface
                 tmp-files sal-ast-for-each)
         (export <sat-smtlib2-context>
-                (make-sat-smtlib2-context place-provider)))
+                <smtlib2-translation-info>
+                (make-sat-smtlib2-context place-provider)
+                (make-smtlib2-translation-info)
+                (smtlib2-translation-info/var-id info decl)
+                (sat-smtlib2-context/collect-translation-info! sat-context info)
+                (sat-smtlib2-context/translation-sort-ids info)
+                (sat-smtlib2-context/translation-id->decl-mapping info)
+                (sat-smtlib2-context/translation-sort->type info)
+                (sat-smtlib2-context/logic ctx)
+                (sat-smtlib2-context/display-declaration decl info)
+                (sat-smtlib2-context/display-expr expr info)
+                (sat-smtlib2-context/display-assert expr info)))
 
 (define-class <sat-smtlib2-context> (<sat-generic-context>) ())
 
@@ -35,6 +46,21 @@
 
 (define (make-sat-smtlib2-context place-provider)
   (sat-generic-context/init! (make-instance <sat-smtlib2-context>) place-provider))
+
+(define (sat-smtlib2-context/collect-translation-info! sat-context info)
+  (for-each (lambda (decl)
+              (sal-type/collect-smtlib2-sorts! (slot-value decl :type) info))
+            (queue->list (slot-value sat-context :declaration-queue)))
+  info)
+
+(define (sat-smtlib2-context/translation-sort-ids info)
+  (queue->list (slot-value info :sort-id-queue)))
+
+(define (sat-smtlib2-context/translation-id->decl-mapping info)
+  (slot-value (slot-value info :dp-info) :id->decl-mapping))
+
+(define (sat-smtlib2-context/translation-sort->type info)
+  (slot-value info :sort->type))
 
 (define (smtlib2-translation-info/var-id info decl)
   (dp-translation-info/var-id (slot-value info :dp-info) decl))
@@ -342,28 +368,38 @@
       "QF_AUFNIRA"
       "QF_AUFLIRA")))
 
+(define (sat-smtlib2-context/logic ctx)
+  (sat-context/smtlib2-logic ctx))
+
+(define (sat-smtlib2-context/display-declaration decl info)
+  (display-smtlib2-declaration decl info))
+
+(define (sat-smtlib2-context/display-expr expr info)
+  (sal-ast/display-smtlib2 expr info))
+
+(define (sat-smtlib2-context/display-assert expr info)
+  (sal-constraint/display-smtlib2 expr info))
+
 (define (sat-context/display-smtlib2! sat-context)
   (let ((info (make-smtlib2-translation-info)))
-    (for-each (lambda (decl)
-                (sal-type/collect-smtlib2-sorts! (slot-value decl :type) info))
-              (queue->list (slot-value sat-context :declaration-queue)))
+    (sat-smtlib2-context/collect-translation-info! sat-context info)
     (print "(set-option :produce-models true)")
     (print "(set-logic " (sat-context/smtlib2-logic sat-context) ")")
     (for-each (lambda (sort-id)
                 (print "(declare-sort " sort-id " 0)"))
-              (queue->list (slot-value info :sort-id-queue)))
+              (sat-smtlib2-context/translation-sort-ids info))
     (for-each (lambda (decl)
-                (display-smtlib2-declaration decl info))
+                (sat-smtlib2-context/display-declaration decl info))
               (queue->list (slot-value sat-context :declaration-queue)))
     (if (queue/empty? (slot-value sat-context :constraint-queue))
       (print "(assert true)")
       (for-each (lambda (expr)
-                  (sal-constraint/display-smtlib2 expr info))
+                  (sat-smtlib2-context/display-assert expr info))
                 (queue->list (slot-value sat-context :constraint-queue))))
     (print "(check-sat)")
     (print "(get-model)")
-    (cons (slot-value (slot-value info :dp-info) :id->decl-mapping)
-          (slot-value info :sort->type))))
+    (cons (sat-smtlib2-context/translation-id->decl-mapping info)
+          (sat-smtlib2-context/translation-sort->type info))))
 
 (define-method (sat-context/solve (ctx <sat-smtlib2-context>))
   (sat-generic-context/simplify! ctx :ite->ite-bool? #f

@@ -1,9 +1,10 @@
-Examples of nonlinear systems for sal-inf-bmc with Yices2/MCSAT
----------------------------------------------------------------
+Examples of nonlinear systems for sal-inf-bmc and sal-cdr with Yices2/MCSAT
+----------------------------------------------------------------------------
 
 These examples exercise the Yices 2 SMT backend through
 
   sal-inf-bmc -s yices2 ...
+  sal-cdr --solver=yices2 ...
 
 The Yices 2 integration now appends `--mcsat` to the SMT command, so
 you need a Yices2 binary built with MCSAT support and configured via
@@ -21,6 +22,10 @@ you need a Yices2 binary built with MCSAT support and configured via
 
      sal-inf-bmc -s yices2 -d 2 nonlinear_square nonnegative
      sal-inf-bmc -s yices2 -d 1 nonlinear_square bad_bound
+     sal-cdr --solver=yices2 --to=2 nonlinear_square nonnegative
+     sal-cdr --solver=yices2 --to=2 nonlinear_square bad_bound
+     sal-cdr -i --solver=yices2 --to=2 nonlinear_square nonnegative
+     sal-cdr -i --solver=yices2 --to=2 nonlinear_square bad_bound
 
    The first command should report no counterexample, while the second
    should produce a trace with x = 2 followed by x = 4.
@@ -36,5 +41,9 @@ you need a Yices2 binary built with MCSAT support and configured via
 
      sal-inf-bmc -s yices2 -d 2 nonlinear_product positive
      sal-inf-bmc -s yices2 -d 1 nonlinear_product bad_bound
+     sal-cdr --solver=yices2 --to=2 nonlinear_product positive
+     sal-cdr --solver=yices2 --to=2 nonlinear_product bad_bound
+     sal-cdr -i --solver=yices2 --to=2 nonlinear_product positive
+     sal-cdr -i --solver=yices2 --to=2 nonlinear_product bad_bound
 
    The second command should produce a trace with y = 3 followed by y = 6.

@@ -25,7 +25,8 @@
         (export <sat-generic-bmc-context>
                 <sat-step-decl>
                 (sat-generic-bmc-context/init! ctx flat-module cont-proc)
-                (make-sat-generic-bmc-context flat-module cont-proc))
+                (make-sat-generic-bmc-context flat-module cont-proc)
+                (build-state-constraint constraint inv-step-decls inv-global-decls))
         )
 
 (define-class <sat-generic-bmc-context> (<sat-generic-context> <sat-bmc-context>) ())
@@ -487,7 +488,6 @@
 (define-method (sal-inequality/swap-class (ast <sal-lt>)) <sal-gt>)
 (define-method (sal-inequality/swap-class (ast <sal-ge>)) <sal-le>)
 (define-method (sal-inequality/swap-class (ast <sal-gt>)) <sal-lt>)
-
 
 
 

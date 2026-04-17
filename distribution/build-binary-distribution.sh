@@ -158,15 +158,15 @@ safe_cp src/no-compilation-support-code.scm $SALENVDIR/src
 safe_cp src/ltllib.lsal $SALENVDIR/src
 
 echo "Creating man pages..."
-for name in salenv salenv-safe sal-wfc lsal2xml sal2bool sal-smc sal-bmc sal-inf-bmc sal-path-finder sal-deadlock-checker sal-sim sal-wmc ltl2buchi sal-emc sal-path-explorer sal-atg sal-atg2 sal-sld sal-sc; do
+for name in salenv salenv-safe sal-wfc lsal2xml sal2bool sal-smc sal-bmc sal-inf-bmc sal-cdr sal-path-finder sal-deadlock-checker sal-sim sal-wmc ltl2buchi sal-emc sal-path-explorer sal-atg sal-atg2 sal-sld sal-sc; do
   if [ $name != salenv ] && [ $name != salenv-safe ]; then
       help2man -N --include=doc/man-extra ./bin/$name > $SALENVDIR/doc/man/$name.1
   fi
 done 
 
 echo "Copying scripts..."
-for name in sal-wfc-front-end.scm lsal2xml-front-end.scm sal2bool-front-end.scm sal-path-finder-front-end.scm sal-smc-front-end.scm sal-bmc-core-front-end.scm sal-bmc-front-end.scm sal-inf-bmc-front-end.scm sal-script-util.scm sal-deadlock-checker-front-end.scm sal-simulator-front-end.scm sal-wmc-front-end.scm ltl2buchi-front-end.scm sal-emc-front-end.scm sal-path-explorer-front-end.scm sal-atg-core.scm sal-atg-front-end.scm sal-atg-core2.scm; do cp src/$name $SALENVDIR/src; done
-for name in salenv salenv-safe sal-wfc lsal2xml sal2bool sal-smc sal-bmc sal-inf-bmc sal-path-finder sal-deadlock-checker sal-sim sal-wmc ltl2buchi sal-emc sal-path-explorer sal-atg sal-atg2 sal-sld sal-sc; do cp src/$name.template $SALENVDIR/src; done
+for name in sal-wfc-front-end.scm lsal2xml-front-end.scm sal2bool-front-end.scm sal-path-finder-front-end.scm sal-smc-front-end.scm sal-bmc-core-front-end.scm sal-bmc-front-end.scm sal-inf-bmc-front-end.scm sal-cdr-front-end.scm sal-script-util.scm sal-deadlock-checker-front-end.scm sal-simulator-front-end.scm sal-wmc-front-end.scm ltl2buchi-front-end.scm sal-emc-front-end.scm sal-path-explorer-front-end.scm sal-atg-core.scm sal-atg-front-end.scm sal-atg-core2.scm; do cp src/$name $SALENVDIR/src; done
+for name in salenv salenv-safe sal-wfc lsal2xml sal2bool sal-smc sal-bmc sal-inf-bmc sal-cdr sal-path-finder sal-deadlock-checker sal-sim sal-wmc ltl2buchi sal-emc sal-path-explorer sal-atg sal-atg2 sal-sld sal-sc; do cp src/$name.template $SALENVDIR/src; done
 
 echo "Generating tar file..."
 chmod -R og+rX $SALENVDIR

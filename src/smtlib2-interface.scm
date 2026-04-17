@@ -20,7 +20,10 @@
                 (sal/set-smtlib2-profile! profile)
                 (sal/smtlib2-command)
                 (smtlib2/execute-core in-file)
-                (smtlib2/execute in-file smtlib2-id->sal-decl-proc smtlib2-sort->sal-type-proc place-provider)))
+                (smtlib2/execute in-file smtlib2-id->sal-decl-proc smtlib2-sort->sal-type-proc place-provider)
+                (smtlib2/read-forms-from-string str)
+                (smtlib2/model-forms->constraints forms smtlib2-id->sal-decl-proc smtlib2-sort->sal-type-proc place-provider)
+                (smtlib2/form->sal-expr form smtlib2-id->sal-decl-proc smtlib2-sort->sal-type-proc place-provider)))
 
 (define *smtlib2-profile-commands*
   '((yices2 . "yices-smt2")
@@ -55,6 +58,7 @@
                   (map car *smtlib2-profile-commands*))))))
 
 (define (sal/smtlib2-command)
+  (smtlib2/configure-from-env!)
   *smtlib2-command*)
 
 (define (smtlib2/configure-from-env!)
@@ -312,6 +316,11 @@
         (reverse! forms)
         (loop (cons (read-smtlib2-form token) forms))))))
 
+(define (smtlib2/read-forms-from-string str)
+  (with-input-from-string str
+    (lambda ()
+      (read-smtlib2-forms))))
+
 (define (symbol-from-string str)
   (string->symbol str))
 
@@ -514,6 +523,30 @@
 (define (make-builtin-app class args)
   (apply make-sal-builtin-application class *place-provider* args))
 
+(define (smtlib2-natural-exponent term env)
+  (let ((expr (smtlib2-term->sal-expr term env #f)))
+    (and (instance-of? expr <sal-numeral>)
+         (let ((num (slot-value expr :num)))
+           (and (mpq/integer? num)
+                (>=mpq num *mpq-zero*)
+                (mpq->integer num))))))
+
+(define (make-power-expr base exponent)
+  (cond
+   ((= exponent 0)
+   (make-sal-numeral 1 *place-provider*))
+   ((= exponent 1)
+    base)
+   (else
+    (apply make-sal-builtin-application
+           <sal-mul>
+           *place-provider*
+           (let loop ((remaining exponent)
+                      (result '()))
+             (if (= remaining 0)
+               (reverse! result)
+               (loop (- remaining 1) (cons base result))))))))
+
 (define (smtlib2-function-value params result-type body)
   (let* ((param-decls (map (lambda (param)
                              (unless (and (pair? param) (= (length param) 2))
@@ -557,7 +590,9 @@
        ((and (string? head) (string=? head "="))
         (make-sal-equality (smtlib2-term->sal-expr (car args) env #f)
                            (smtlib2-term->sal-expr (cadr args) env #f)))
-       ((and (string? head) (string=? head "distinct"))
+       ((and (string? head)
+             (or (string=? head "distinct")
+                 (string=? head "/=")))
         (make-sal-and*
          (let loop ((remaining args)
                     (result '()))
@@ -592,6 +627,13 @@
        ((and (string? head) (string=? head "*"))
         (apply make-sal-builtin-application <sal-mul> *place-provider*
                (map (lambda (arg) (smtlib2-term->sal-expr arg env expected-type)) args)))
+       ((and (string? head) (string=? head "^"))
+        (let ((exponent (and (= (length args) 2)
+                             (smtlib2-natural-exponent (cadr args) env))))
+          (unless exponent
+            (sign-error "Unsupported SMT-LIB2 power term in model/interpolant: ~a" term))
+          (make-power-expr (smtlib2-term->sal-expr (car args) env expected-type)
+                           exponent)))
        ((and (string? head) (string=? head "/"))
         (apply make-sal-builtin-application <sal-div> *place-provider*
                (map (lambda (arg) (smtlib2-term->sal-expr arg env expected-type)) args)))
@@ -715,14 +757,41 @@
    (else
     '())))
 
-(define (parse-smtlib2-output-file file-name smtlib2-id->sal-decl-proc smtlib2-sort->sal-type-proc place-provider)
+(define (setup-smtlib2-decode-context! smtlib2-id->sal-decl-proc smtlib2-sort->sal-type-proc place-provider)
   (set! *smtlib2-id->sal-decl* smtlib2-id->sal-decl-proc)
   (set! *smtlib2-sort->sal-type* smtlib2-sort->sal-type-proc)
   (set! *place-provider* place-provider)
   (set! *model-helper-defs* (make-hashtable))
   (set! *model-helper-values* (make-hashtable))
   (set! *model-aux-decls* (make-hashtable))
-  (set! *model-in-progress* '())
+  (set! *model-in-progress* '()))
+
+(define (coerce-model-forms forms)
+  (cond
+   ((null? forms)
+    (normalize-model-forms forms))
+   ((string? (car forms))
+    (normalize-model-forms forms))
+   ((and (= (length forms) 1)
+         (pair? (car forms))
+         (not (null? (car forms)))
+         (pair? (caar forms)))
+    (car forms))
+   (else
+    forms)))
+
+(define (smtlib2/model-forms->constraints forms smtlib2-id->sal-decl-proc smtlib2-sort->sal-type-proc place-provider)
+  (setup-smtlib2-decode-context! smtlib2-id->sal-decl-proc smtlib2-sort->sal-type-proc place-provider)
+  (let ((model-forms (coerce-model-forms forms)))
+    (and model-forms
+         (apply append (map model-entry->constraint model-forms)))))
+
+(define (smtlib2/form->sal-expr form smtlib2-id->sal-decl-proc smtlib2-sort->sal-type-proc place-provider)
+  (setup-smtlib2-decode-context! smtlib2-id->sal-decl-proc smtlib2-sort->sal-type-proc place-provider)
+  (smtlib2-term->sal-expr form '() #f))
+
+(define (parse-smtlib2-output-file file-name smtlib2-id->sal-decl-proc smtlib2-sort->sal-type-proc place-provider)
+  (setup-smtlib2-decode-context! smtlib2-id->sal-decl-proc smtlib2-sort->sal-type-proc place-provider)
   (with-input-from-file file-name
     (lambda ()
       (status-message :parsing-yices-output)

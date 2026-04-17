@@ -19,13 +19,30 @@ if [[ -z "${YICES2_MCSAT_COMMAND:-}" ]]; then
     exit 2
 fi
 
+normalize_yices2_command() {
+    local cmd="$1"
+    case "$cmd" in
+        */yices_smt2|*/yices-smt2)
+            local dir
+            dir="$(dirname "$cmd")"
+            if [[ -x "$dir/yices" ]]; then
+                printf '%s\n' "$dir/yices"
+                return 0
+            fi
+            ;;
+    esac
+    printf '%s\n' "$cmd"
+}
+
+YICES2_COMMAND="$(normalize_yices2_command "$YICES2_MCSAT_COMMAND")"
+
 TMP_HOME="$(mktemp -d "${TMPDIR:-/tmp}/sal-yices2-mcsat.XXXXXX")"
 trap 'rm -rf "$TMP_HOME"' EXIT
 
-printf '%s\n' "(sal/set-yices2-command! \"$YICES2_MCSAT_COMMAND\")" > "$TMP_HOME/.salrc"
+printf '%s\n' "(sal/set-yices2-command! \"$YICES2_COMMAND\")" > "$TMP_HOME/.salrc"
 
 echo "[INFO] Using temporary HOME: $TMP_HOME"
-echo "[INFO] Using Yices2 command: $YICES2_MCSAT_COMMAND"
+echo "[INFO] Using Yices2 command: $YICES2_COMMAND"
 
 cd "$EXAMPLES_DIR"
 

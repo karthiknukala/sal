@@ -1,0 +1,11 @@
+profile	family	benchmarks	solved	valid	invalid	unknown	timeout	error	time_s	oracle	matches	mismatches
+sal-cdr	handcrafted	14	3	2	1	11	0	0	104.9	14	3	0
+sal-cdr	isat3-cfg	10	3	3	0	3	4	0	106.9	10	3	0
+sal-cdr	nuxmv	2	0	0	0	0	0	2	2.1	2	0	0
+sal-cdr	tcm	2	0	0	0	0	1	1	25.0	2	0	0
+sal-cdr	total	28	6	5	1	14	5	3	238.9	28	6	0
+sal-cdr-i	handcrafted	14	1	0	1	0	12	1	257.0	14	1	0
+sal-cdr-i	isat3-cfg	10	3	0	3	0	4	3	132.1	10	3	0
+sal-cdr-i	nuxmv	2	0	0	0	0	0	2	2.4	2	0	0
+sal-cdr-i	tcm	2	0	0	0	0	1	1	25.4	2	0	0
+sal-cdr-i	total	28	4	0	4	0	17	7	416.9	28	4	0

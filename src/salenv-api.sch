@@ -70,4 +70,5 @@ sal-esm-random-simulation sal-esm-guided-simulation
 sal-esmc-core sal-esmc-idfs-support sal-esmc-dfs-support
 sal-esmc-bfs sal-esmc-dfs sal-esmc-guided sal-esmc-ndfs
 sal-esmc sal-path-explorer
-yices-interface yices2-interface smtlib2-interface))
+yices-interface yices2-interface smtlib2-interface
+cdr-solver cdr-frames cdr-obligations cdr-pdkind cdr-yices2-smt2 sal-cdr))

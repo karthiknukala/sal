@@ -20,13 +20,30 @@ if [[ -z "${YICES2_MCSAT_COMMAND:-}" ]]; then
   exit 0
 fi
 
+normalize_yices2_command() {
+  local cmd="$1"
+  case "$cmd" in
+    */yices_smt2|*/yices-smt2)
+      local dir
+      dir="$(dirname "$cmd")"
+      if [[ -x "$dir/yices" ]]; then
+        printf '%s\n' "$dir/yices"
+        return 0
+      fi
+      ;;
+  esac
+  printf '%s\n' "$cmd"
+}
+
+YICES2_COMMAND="$(normalize_yices2_command "$YICES2_MCSAT_COMMAND")"
+
 tmp_home="$(mktemp -d)"
 cleanup() {
   rm -rf "$tmp_home"
 }
 trap cleanup EXIT
 
-printf '(sal/set-yices2-command! "%s")\n' "$YICES2_MCSAT_COMMAND" >"$tmp_home/.salrc"
+printf '(sal/set-yices2-command! "%s")\n' "$YICES2_COMMAND" >"$tmp_home/.salrc"
 
 echo "Running sal-inf-bmc on example_4..."
 HOME="$tmp_home" "$ROOT_DIR/bin/sal-inf-bmc" -s yices2 -d 6 \
@@ -35,4 +52,14 @@ HOME="$tmp_home" "$ROOT_DIR/bin/sal-inf-bmc" -s yices2 -d 6 \
 echo
 echo "Running sal-inf-bmc on keymaera_nonlinear1..."
 HOME="$tmp_home" "$ROOT_DIR/bin/sal-inf-bmc" -s yices2 -d 3 \
+  "$SUITE_DIR/keymaera_nonlinear1.sal" property
+
+echo
+echo "Running sal-cdr on example_4..."
+HOME="$tmp_home" "$ROOT_DIR/bin/sal-cdr" --solver=yices2 --to=6 \
+  "$SUITE_DIR/example_4.sal" property
+
+echo
+echo "Running sal-cdr -i on keymaera_nonlinear1..."
+HOME="$tmp_home" "$ROOT_DIR/bin/sal-cdr" -i --solver=yices2 --to=6 \
   "$SUITE_DIR/keymaera_nonlinear1.sal" property

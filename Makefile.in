@@ -256,7 +256,8 @@ sat-smtlib2-context smtlib2-interface sat-smtlib2-bmc-context           \
 sal-module-simplifications yices-interface                              \
 sat-boolean-yices-bmc-context sat-yices-context sat-yices-bmc-context   \
 yices2-interface sat-boolean-yices2-bmc-context sat-yices2-context      \
-sat-yices2-bmc-context
+sat-yices2-bmc-context cdr-solver cdr-frames cdr-obligations            \
+cdr-pdkind cdr-yices2-smt2 sal-cdr
 
 
 SAL_SCM_FILE = $(SAL_CORE_SCM_FILE) $(SAL_SPECIFIC_SCM_FILE)

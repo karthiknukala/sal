@@ -203,6 +203,16 @@ sal-inf-bmc -s yices2 -d 1 nonlinear_product bad_bound
 These examples live under `examples/nonlinear/` and require a Yices2
 binary with MCSAT support configured in `.salrc`.
 
+#### Nonlinear sal-cdr Smoke Tests
+```bash
+./tests/run_nonlinear_cdr_smoke.sh
+YICES2_MCSAT_COMMAND=/path/to/yices ./tests/run_nonlinear_cdr_smoke.sh
+YICES2_MCSAT_COMMAND=/path/to/yices ./tests/run_nonlinear_cdr_pdkind_smoke.sh
+```
+These smoke scripts run the nonlinear examples through `sal-cdr` in base PDR
+mode and `sal-cdr -i` mode, checking for a sane terminal status and rejecting
+parser/runtime crashes.
+
 #### TACAS'17 NRA Translation Baseline
 ```bash
 ./tests/run_cimatti_tacas17_nra_smoke.sh
@@ -211,7 +221,21 @@ YICES2_MCSAT_COMMAND=/path/to/yices ./tests/run_cimatti_tacas17_nra_smoke.sh
 This regenerates the SAL versions of the 114 VMT transition systems from the
 `benchmarks/vmt/nra` Zenodo suite under `examples/cimatti-tacas17-nra/`,
 syntax-checks every translated benchmark, and optionally runs two
-representative `sal-inf-bmc` examples with Yices2/MCSAT enabled.
+representative `sal-inf-bmc` examples plus spot checks for `sal-cdr` and
+`sal-cdr -i` with Yices2/MCSAT enabled.
+
+#### TACAS'17 NRA sal-cdr Comparison Harness
+```bash
+python3 ./tests/run_cimatti_tacas17_nra_cdr_bench.py \
+  --yices2 /path/to/yices \
+  --known-only \
+  --timeout-s 20 \
+  --frame-cap 32
+```
+Runs `sal-cdr` and `sal-cdr -i` across the TACAS'17 NRA suite metadata in
+`examples/cimatti-tacas17-nra/`, writes per-benchmark and per-family TSVs, and
+generates a Markdown report with family/total comparisons against the 2018 and
+2021 paper tables.
 
 #### TACAS'17 NRA k-Induction Comparison Harness
 ```bash

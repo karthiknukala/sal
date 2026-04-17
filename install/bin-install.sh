@@ -37,7 +37,7 @@ gen_script ()
 }
 
 echo "Generating auxiliary scripts..."
-for name in salenv salenv-safe sal-wfc lsal2xml sal2bool sal-smc sal-bmc sal-inf-bmc sal-path-finder sal-deadlock-checker sal-sim sal-wmc ltl2buchi sal-emc sal-path-explorer sal-atg sal-atg2 sal-sld sal-sc; do gen_script $name; done
+for name in salenv salenv-safe sal-wfc lsal2xml sal2bool sal-smc sal-bmc sal-inf-bmc sal-cdr sal-path-finder sal-deadlock-checker sal-sim sal-wmc ltl2buchi sal-emc sal-path-explorer sal-atg sal-atg2 sal-sld sal-sc; do gen_script $name; done
 
 if bin/sal-smc --version 2>&1 | grep GLIBC; then
     echo "Your system contains an incompatible version of GLIBC. SAL requires GLIBC version >= 2.3. You should upgrade your system, or download the SAL static distribution package for your plataform."

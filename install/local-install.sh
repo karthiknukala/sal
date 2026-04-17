@@ -45,7 +45,7 @@ exec "\$SAL_BIN_DIR/$ARCH-$SALENV_BUILD_MODE/salenv-exec-safe" "\$@"
 EOF
 chmod +x bin/salenv-exec-safe
 
-for name in salenv salenv-safe sal-wfc lsal2xml sal2bool sal-smc sal-bmc sal-inf-bmc sal-path-finder sal-deadlock-checker sal-sim sal-wmc ltl2buchi sal-emc sal-path-explorer sal-atg sal-atg2 sal-sld sal-sc
+for name in salenv salenv-safe sal-wfc lsal2xml sal2bool sal-smc sal-bmc sal-inf-bmc sal-cdr sal-path-finder sal-deadlock-checker sal-sim sal-wmc ltl2buchi sal-emc sal-path-explorer sal-atg sal-atg2 sal-sld sal-sc
 do 
 	if sed -e "s|__SALENV_DIR__|$runtime_salenv_dir_escaped|g;s|__BIGLOO_LIB_DIR__|$runtime_bigloolib_escaped|g;s|__DOT_A_LIBS__|$DOT_A_LIBS|g" src/$name.template > bin/$name
 	then

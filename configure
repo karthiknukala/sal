@@ -5036,8 +5036,8 @@ fi
 
 salenv_exec="salenv-exec"
 salenv_doc_db="salenv.doc.db"
-sal_front_end_code="sal-wfc-front-end.scm lsal2xml-front-end.scm sal2bool-front-end.scm sal-path-finder-front-end.scm sal-smc-front-end.scm sal-bmc-core-front-end.scm sal-bmc-front-end.scm sal-inf-bmc-front-end.scm sal-script-util.scm sal-deadlock-checker-front-end.scm sal-simulator-front-end.scm sal-wmc-front-end.scm ltl2buchi-front-end.scm sal-emc-front-end.scm sal-path-explorer-front-end.scm sal-atg-core.scm sal-atg-front-end.scm sal-atg-core2.scm"
-sal_core_scripts="salenv salenv-safe sal-wfc lsal2xml sal2bool sal-smc sal-bmc sal-inf-bmc sal-path-finder sal-deadlock-checker sal-sim sal-wmc ltl2buchi sal-emc sal-path-explorer sal-atg sal-atg2"
+sal_front_end_code="sal-wfc-front-end.scm lsal2xml-front-end.scm sal2bool-front-end.scm sal-path-finder-front-end.scm sal-smc-front-end.scm sal-bmc-core-front-end.scm sal-bmc-front-end.scm sal-inf-bmc-front-end.scm sal-cdr-front-end.scm sal-script-util.scm sal-deadlock-checker-front-end.scm sal-simulator-front-end.scm sal-wmc-front-end.scm ltl2buchi-front-end.scm sal-emc-front-end.scm sal-path-explorer-front-end.scm sal-atg-core.scm sal-atg-front-end.scm sal-atg-core2.scm"
+sal_core_scripts="salenv salenv-safe sal-wfc lsal2xml sal2bool sal-smc sal-bmc sal-inf-bmc sal-cdr sal-path-finder sal-deadlock-checker sal-sim sal-wmc ltl2buchi sal-emc sal-path-explorer sal-atg sal-atg2"
 if eval "test x$SALENV_STATIC = xyes"; then
    sal_scripts=$sal_core_scripts
 else
@@ -6286,5 +6286,4 @@ if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: unrecognized options: $ac_unrecognized_opts" >&5
 printf "%s\n" "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
-
 

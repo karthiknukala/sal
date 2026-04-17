@@ -7,7 +7,10 @@ This directory contains the comprehensive test suite for SAL (Symbolic Analysis 
 - `TEST_CATALOGUE.md` - Complete catalogue of all SAL features, tools, options, edge cases, and test scenarios
 - `run_tests.sh` - Automated test runner script
 - `run_nonlinear_mcsat_smoke.sh` - Optional smoke test for `sal-inf-bmc` + Yices2/MCSAT nonlinear examples
+- `run_nonlinear_cdr_smoke.sh` - Optional smoke test for `sal-cdr` on the small nonlinear examples
+- `run_nonlinear_cdr_pdkind_smoke.sh` - Optional smoke test for `sal-cdr -i` on the small nonlinear examples
 - `run_cimatti_tacas17_nra_smoke.sh` - Regenerates and syntax-checks the 114 translated TACAS'17 NRA benchmarks, with optional `sal-inf-bmc` spot checks
+- `run_cimatti_tacas17_nra_cdr_bench.py` - Runs `sal-cdr` and `sal-cdr -i` over the TACAS'17 NRA suite and emits TSV/Markdown comparison tables
 - `run_cimatti_tacas17_nra_kind_bench.py` - Runs `sal-inf-bmc -i` over the TACAS'17 NRA suite and prints paper-style family summaries
 - `README.md` - This file
 
@@ -50,6 +53,15 @@ Runs the small nonlinear `sal-inf-bmc` examples in `examples/nonlinear/`
 against an MCSAT-enabled Yices2 executable configured through a temporary
 `.salrc`.
 
+### Nonlinear sal-cdr Smoke Tests
+```bash
+YICES2_MCSAT_COMMAND=/path/to/yices ./run_nonlinear_cdr_smoke.sh
+YICES2_MCSAT_COMMAND=/path/to/yices ./run_nonlinear_cdr_pdkind_smoke.sh
+```
+Runs the small nonlinear `sal-cdr` examples in base PDR mode and in
+`-i` PDKIND mode, checking that each run ends with a SAL status instead of a
+parser/runtime failure.
+
 ### TACAS'17 NRA Benchmark Smoke Test
 ```bash
 ./run_cimatti_tacas17_nra_smoke.sh
@@ -58,7 +70,22 @@ YICES2_MCSAT_COMMAND=/path/to/yices ./run_cimatti_tacas17_nra_smoke.sh
 Regenerates the SAL translations for the 114-source `benchmarks/vmt/nra`
 suite under `examples/cimatti-tacas17-nra/`, syntax-checks every generated
 SAL file, and optionally runs two representative `sal-inf-bmc` cases against
-an MCSAT-capable Yices2 binary.
+an MCSAT-capable Yices2 binary. When `YICES2_MCSAT_COMMAND` is set, the smoke
+run also executes representative `sal-cdr` and `sal-cdr -i` cases from the
+translated suite.
+
+### TACAS'17 NRA sal-cdr Comparison Harness
+```bash
+python3 ./run_cimatti_tacas17_nra_cdr_bench.py \
+  --yices2 /path/to/yices \
+  --known-only \
+  --timeout-s 20 \
+  --frame-cap 32
+```
+Reads `examples/cimatti-tacas17-nra/benchmark_metadata.tsv`, runs `sal-cdr`
+and `sal-cdr -i` on the selected benchmarks, writes a per-benchmark TSV plus a
+family-summary TSV, and emits a Markdown report that lines up the SAL results
+with the checked-in 2018/2021 paper baselines.
 
 ### TACAS'17 NRA k-Induction Comparison Harness
 ```bash

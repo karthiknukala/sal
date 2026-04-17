@@ -21,6 +21,14 @@ from collections import defaultdict
 from pathlib import Path
 
 
+def normalize_yices2_command(path: Path) -> Path:
+    if path.name in {"yices_smt2", "yices-smt2"}:
+        sibling = path.with_name("yices")
+        if sibling.exists():
+            return sibling
+    return path
+
+
 def read_tsv(path: Path) -> list[dict[str, str]]:
     with path.open(newline="") as handle:
         return list(csv.DictReader(handle, delimiter="\t"))
@@ -137,12 +145,14 @@ def main() -> None:
     if not metadata:
         raise SystemExit("No benchmarks selected.")
 
+    yices2_command = normalize_yices2_command(args.yices2)
+
     results: list[dict[str, str]] = []
     sal_inf_bmc = args.sal_root / "bin" / "sal-inf-bmc"
 
     with tempfile.TemporaryDirectory(prefix="sal-kind-home-", dir="/tmp") as tmp_home:
         salrc_path = Path(tmp_home) / ".salrc"
-        salrc_path.write_text(f'(sal/set-yices2-command! "{args.yices2}")\n')
+        salrc_path.write_text(f'(sal/set-yices2-command! "{yices2_command}")\n')
         env = os.environ.copy()
         env["HOME"] = tmp_home
 
