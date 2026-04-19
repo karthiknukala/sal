@@ -390,6 +390,7 @@
    ("+" (cons 'ID '+))
    ("*" (cons 'ID '*))
    ("-" (cons 'ID '-))
+   ("/=" (cons 'ID '/=))
    ("/" (cons 'ID '/))
    ("^" (cons 'ID '^))
    (id

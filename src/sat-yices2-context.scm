@@ -201,16 +201,22 @@
   (sal-application/display-yices2 ast "*" info))
 
 (define-method (sal-ast/display-yices2 (ast <sal-div>) (info <dp-translation-info>))
-  (let ((new-ast (div->mul ast)))
-    (unless new-ast
-      (sign-unsupported-feature ast "Yices does not support nonlinear arithmetic."))
-    (sal-ast/display-yices2 new-ast info)))
+  (sal-application/display-yices2 ast "/" info))
 
 (define-method (sal-ast/display-yices2 (ast <sal-mod>) (info <dp-translation-info>))
-  (sign-unsupported-feature ast "Yices 2 dioes not support the 'mod' operator."))
+  (sal-application/display-yices2 ast "mod" info))
 
 (define-method (sal-ast/display-yices2 (ast <sal-idiv>) (info <dp-translation-info>))
-  (sign-unsupported-feature ast "Yices 2 dioes not support the 'div' operator."))
+  (sal-application/display-yices2 ast "div" info))
+
+(define-method (sal-ast/display-yices2 (ast <sal-implies>) (info <dp-translation-info>))
+  (sal-application/display-yices2 ast "=>" info))
+
+(define-method (sal-ast/display-yices2 (ast <sal-iff>) (info <dp-translation-info>))
+  (sal-application/display-yices2 ast "<=>" info))
+
+(define-method (sal-ast/display-yices2 (ast <sal-xor>) (info <dp-translation-info>))
+  (sal-application/display-yices2 ast "xor" info))
 
 (define-method (sal-ast/display-yices2 (ast <sal-numeral>) (info <dp-translation-info>))
   (display (mpq->string (slot-value ast :num))))
