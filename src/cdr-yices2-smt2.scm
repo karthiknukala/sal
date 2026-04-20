@@ -63,6 +63,8 @@
    :helper-name->term
    :registered-sorts
    :expr-term-cache
+   :expr-text-term-cache
+   :synced-decls
    :yices-owned?
    :reach-lemmas
    :induction-lemmas
@@ -100,6 +102,11 @@
                                         (object->string idx)
                                         "]"))
       (loop (cdr remaining) (+ idx 1)))))
+
+(define (sal-expr->string expr)
+  (with-output-to-string
+    (lambda ()
+      (sal/pp expr))))
 
 (define (sal-expr/conjuncts expr)
   (cond
@@ -162,6 +169,28 @@
      decls)
     (reverse! result)))
 
+(define (compact-declaration-queue! ctx)
+  (let* ((decls (dedupe-decls (queue->list (slot-value ctx :declaration-queue))))
+         (queue (make-queue)))
+    (for-each (lambda (decl)
+                (queue/insert! queue decl))
+              decls)
+    (set-slot-value! ctx :declaration-queue queue)
+    decls))
+
+(define (collect-unsynced-decls synced ctx-decls extra-decls)
+  (let ((pending (make-eq-hash-table))
+        (result '()))
+    (define (remember! decl)
+      (when (and decl
+                 (not (eq-hash-table/contains? synced decl))
+                 (not (eq-hash-table/contains? pending decl)))
+        (eq-hash-table/put! pending decl #unspecified)
+        (set! result (cons decl result))))
+    (for-each remember! ctx-decls)
+    (for-each remember! extra-decls)
+    (reverse! result)))
+
 (define (render-yices2-type-string type info)
   (normalize-yices-inline
    (with-output-to-string
@@ -173,6 +202,19 @@
    (with-output-to-string
      (lambda ()
        (sal-ast/display-yices2 expr info)))))
+
+(define (make-mapped-yices2-translation-info solver decls)
+  (let* ((smt-info (slot-value solver :info))
+         (info (make-yices2-translation-info)))
+    (for-each
+     (lambda (decl)
+       (sal-type/collect-yices2-sorts! (slot-value decl :type) info)
+       (let ((id (smtlib2-translation-info/var-id smt-info decl)))
+         (when id
+           (eq-hash-table/put! (slot-value info :decl->id-mapping) decl id)
+           (eq-hash-table/put! (slot-value info :id->decl-mapping) id decl))))
+     decls)
+    info))
 
 (define (yices-inline-whitespace? c)
   (or (char=? c #\space)
@@ -222,7 +264,25 @@
 
 (define (helper-generalize-formulas solver keep-decls formulas)
   (let* ((decls (collect-formula-decls formulas keep-decls))
-         (_ (solver/sync-yices-translation! solver decls))
+         (_ (let* ((info (slot-value solver :info))
+                   (yices-info (make-yices2-translation-info)))
+              (sat-smtlib2-context/collect-translation-info! (slot-value solver :ctx) info)
+              (for-each
+               (lambda (decl)
+                 (sal-type/collect-yices2-sorts! (slot-value decl :type) yices-info))
+               decls)
+              (for-each (lambda (sort-id)
+                          (solver/ensure-yices-sort! solver sort-id))
+                        (queue->list (slot-value yices-info :sort-id-queue)))
+              (for-each
+               (lambda (decl)
+                 (let ((name (smt-id->string (smtlib2-translation-info/var-id info decl))))
+                   (unless (solver/lookup-yices-term solver name)
+                     (solver/ensure-yices-decl! solver
+                                                name
+                                                (render-yices2-type-string (slot-value decl :type)
+                                                                           yices-info)))))
+               decls)))
          (_ (for-each
              (lambda (decl)
                (let* ((name (smt-id->string (smtlib2-translation-info/var-id (slot-value solver :info) decl)))
@@ -234,11 +294,11 @@
                                                (render-yices2-type-string (slot-value decl :type) type-info)))))
              decls))
          (generalized-terms
-          (yices2-api/generalize-terms
+         (yices2-api/generalize-terms
            (apply append
                   (map (lambda (expr)
                          (map (lambda (conjunct)
-                                (solver/expr->term solver conjunct))
+                                (solver/expr->term/presynced solver conjunct))
                               (let ((conjuncts (sal-expr/conjuncts expr)))
                                 (if (null? conjuncts)
                                   (list (make-sal-true (slot-value solver :flat-module)))
@@ -317,25 +377,52 @@
         (solver/sync-yices-translation! solver)
         (solver/lookup-yices-term solver name))))
 
-(define (solver/expr->term solver expr)
-  (solver/sync-yices-translation! solver
-                                  (collect-formula-decls (list expr) '()))
-  (let ((cache (slot-value solver :expr-term-cache)))
+(define (solver/expr->term/with-lookup solver expr lookup-term)
+  (let ((cache (slot-value solver :expr-term-cache))
+        (text-cache (slot-value solver :expr-text-term-cache))
+        (info (slot-value solver :info)))
     (define (build expr)
       (cond
        ((eq-hash-table/get cache expr) => cdr)
        (else
-        (try
-         (let ((term (solver/expr->term/core solver expr build)))
-           (eq-hash-table/put! cache expr term)
-           term)
-         (lambda (_escape _proc msg _obj)
-           (sign-error "sal-cdr failed to construct a native Yices term for subexpression:\n~a\nReason: ~a"
-                       (render-smt2-expr expr (slot-value solver :info))
-                       msg))))))
+        (let ((expr-text (render-smt2-expr expr info)))
+          (cond
+           ((hashtable-get text-cache expr-text)
+           =>
+            (lambda (term)
+              (eq-hash-table/put! cache expr term)
+              term))
+           (else
+            (try
+             (let ((term (solver/expr->term/core solver expr build lookup-term)))
+               (eq-hash-table/put! cache expr term)
+               (hashtable-put! text-cache expr-text term)
+               term)
+             (lambda (_escape _proc msg _obj)
+               (sign-error "sal-cdr failed to construct a native Yices term for subexpression:\n~a\nReason: ~a"
+                           expr-text
+                           msg)))))))))
     (build expr)))
 
-(define (solver/expr->term/core solver expr recur)
+(define (solver/expr->term solver expr)
+  (solver/sync-yices-translation! solver
+                                  (collect-formula-decls (list expr) '()))
+  (solver/expr->term/with-lookup
+   solver
+   expr
+   (lambda (name)
+     (solver/lookup-or-sync-yices-term solver name))))
+
+(define (solver/expr->term/presynced solver expr)
+  (solver/expr->term/with-lookup
+   solver
+   expr
+   (lambda (name)
+     (solver/lookup-yices-term solver name))))
+
+(define *native-yices-parse-fallback-arity* 8)
+
+(define (solver/expr->term/core solver expr recur lookup-term)
     (cond
      ((instance-of? expr <sal-true>)
       (yices2-api/true-term))
@@ -347,7 +434,7 @@
       (let* ((name (smt-id->string
                     (smtlib2-translation-info/var-id (slot-value solver :info)
                                                      (slot-value expr :decl))))
-             (term (solver/lookup-or-sync-yices-term solver name)))
+             (term (lookup-term name)))
         (unless term
           (sign-error "sal-cdr failed to map SAL declaration ~a to a native Yices term."
                       (sal-decl/name (slot-value expr :decl))))
@@ -365,13 +452,18 @@
         (yices2-api/neq-term (recur arg1)
                              (recur arg2))))
      ((instance-of? expr <sal-and>)
-      (yices2-api/and-terms
-       (map recur
-            (sal-application/argument-list expr))))
+      (let ((args (sal-application/argument-list expr)))
+        (if (> (length args) *native-yices-parse-fallback-arity*)
+          ;; Large boolean n-ary terms are still handled natively by Yices,
+          ;; but parsing them in-process is more robust than constructing one
+          ;; huge term array by hand.
+          (solver/expr->parsed-term solver expr)
+          (yices2-api/and-terms (map recur args)))))
      ((instance-of? expr <sal-or>)
-      (yices2-api/or-terms
-       (map recur
-            (sal-application/argument-list expr))))
+      (let ((args (sal-application/argument-list expr)))
+        (if (> (length args) *native-yices-parse-fallback-arity*)
+          (solver/expr->parsed-term solver expr)
+          (yices2-api/or-terms (map recur args)))))
      ((instance-of? expr <sal-not>)
       (yices2-api/not-term
        (recur (car (sal-application/argument-list expr)))))
@@ -529,6 +621,21 @@
                                    step
                                    *pos*)))
 
+(define (solver/expr->parsed-term solver expr)
+  (let* ((decls (collect-formula-decls (list expr) '()))
+         (_ (solver/sync-yices-translation! solver decls))
+         (yices-info (make-mapped-yices2-translation-info solver decls))
+         (text (render-yices2-expr-string expr yices-info)))
+    (yices2-api/parse-term text)))
+
+(define (solver/state-expr->parsed-term solver expr step)
+  (solver/expr->parsed-term solver
+                            (sal-ast->sat expr
+                                          (slot-value solver :ctx)
+                                          *cdr-empty-env*
+                                          step
+                                          *pos*)))
+
 (define (sal-numeral-value expr)
   (and (instance-of? expr <sal-numeral>)
        (slot-value expr :num)))
@@ -594,18 +701,20 @@
 (define (solver/sync-yices-translation! solver . maybe-extra-decls)
   (let* ((ctx (slot-value solver :ctx))
          (info (slot-value solver :info))
+         (synced (slot-value solver :synced-decls))
          (extra-decls (if (null? maybe-extra-decls)
                         '()
                         (car maybe-extra-decls)))
-         (decls (dedupe-decls
-                 (append (queue->list (slot-value ctx :declaration-queue))
-                         extra-decls)))
+         (ctx-decls (queue->list (slot-value ctx :declaration-queue)))
+         (new-decls (collect-unsynced-decls synced
+                                            ctx-decls
+                                            extra-decls))
          (yices-info (make-yices2-translation-info)))
     (sat-smtlib2-context/collect-translation-info! ctx info)
     (for-each
      (lambda (decl)
        (sal-type/collect-yices2-sorts! (slot-value decl :type) yices-info))
-     decls)
+     new-decls)
     (for-each (lambda (sort-id)
                 (solver/ensure-yices-sort! solver sort-id))
               (queue->list (slot-value yices-info :sort-id-queue)))
@@ -617,7 +726,10 @@
                                       name
                                       (render-yices2-type-string (slot-value decl :type)
                                                                  yices-info)))))
-     decls)))
+     new-decls)
+    (for-each (lambda (decl)
+                (eq-hash-table/put! synced decl #unspecified))
+              new-decls)))
 
 (define (solver/native-term-owned? solver term)
   (let ((name (yices2-api/term-name term)))
@@ -786,6 +898,9 @@
 
 (define (session/pop! session)
   (yices2-api/context-pop! (slot-value session :context)))
+
+(define (session/reset! session)
+  (yices2-api/context-reset! (slot-value session :context)))
 
 (define (session/check-sat! session)
   (verbose-message 5 "sal-cdr: session ~a check-sat..." (slot-value session :name))
@@ -1279,6 +1394,8 @@
                                        :helper-name->term (make-hashtable)
                                        :registered-sorts (make-hashtable)
                                        :expr-term-cache (make-eq-hash-table)
+                                       :expr-text-term-cache (make-hashtable)
+                                       :synced-decls (make-eq-hash-table)
                                        :yices-owned? #t
                                        :reach-lemmas (make-vector 4 #f)
                                        :induction-lemmas '()
@@ -1365,35 +1482,73 @@
 (define (session/query-assertion-unsat? session assert-cmd)
   (equal? (session/query-with-assertion session assert-cmd) "unsat"))
 
+(define (make-minimization-session solver)
+  (let* ((ctx (slot-value solver :ctx))
+         (info (slot-value solver :info)))
+    (make-cdr-yices2-session
+     solver
+     "minimize"
+     (slot-value solver :effective-command)
+     (sat-smtlib2-context/logic ctx)
+     #f
+     '()
+     '()
+     '()
+     (make-id->decl-proc info)
+     (make-sort->type-proc info)
+     (slot-value solver :flat-module))))
+
 (define (get-minimization-session solver)
   (or (slot-value solver :minimization-session)
-      (let* ((ctx (slot-value solver :ctx))
-             (info (slot-value solver :info))
-             (session
-              (make-cdr-yices2-session
-               solver
-               "minimize"
-               (slot-value solver :effective-command)
-               (sat-smtlib2-context/logic ctx)
-               #f
-               '()
-               '()
-               '()
-               (make-id->decl-proc info)
-               (make-sort->type-proc info)
-               (slot-value solver :flat-module))))
+      (let ((session (make-minimization-session solver)))
         (set-slot-value! solver :minimization-session session)
         session)))
 
+(define (call/temporary-minimization-session solver proc)
+  (let ((session (make-minimization-session solver)))
+    (unwind-protect
+     (proc session)
+     (session/close! session))))
+
+(define (state-formulas-imply/with-session? solver session antecedents consequent)
+  (let ((assertions
+         (append
+          (map (lambda (expr)
+                 (solver/state-expr->parsed-term solver expr 0))
+               antecedents)
+          (list (yices2-api/not-term
+                 (solver/state-expr->parsed-term solver consequent 0))))))
+    (when (>= (verbosity-level) 5)
+      (verbose-message 5
+                       "sal-cdr: checking state implication with ~a antecedent(s): ~a => ~a"
+                       (length antecedents)
+                       (map sal-expr->string antecedents)
+                       (sal-expr->string consequent)))
+    (let ((ctx (yices2-api/new-context #f)))
+      (unwind-protect
+       (begin
+         (for-each (lambda (term)
+                     (yices2-api/assert-formula! ctx term))
+                   assertions)
+         (let ((label (yices2-api/status->string (yices2-api/check-context ctx))))
+           (when (>= (verbosity-level) 5)
+             (verbose-message 5 "sal-cdr: implication check returned ~a." label))
+           (cond
+            ((equal? label "unsat")
+             #t)
+            ((or (equal? label "sat")
+                 (equal? label "unknown"))
+             #f)
+            (else
+             (sign-error "sal-cdr expected sat/unsat/unknown from a minimization implication check, received ~a."
+                         label)))))
+       (yices2-api/free-context! ctx)))))
+
 (define (state-formulas-imply? solver antecedents consequent)
-  (let* ((session (get-minimization-session solver))
-         (assertions (append (map (lambda (expr)
-                                    (solver/state-expr->term solver expr 0))
-                                  antecedents)
-                             (list (solver/state-expr->term solver
-                                                            (make-sal-not consequent)
-                                                            0)))))
-    (equal? (session/query-with-assertions session assertions) "unsat")))
+  (state-formulas-imply/with-session? solver
+                                      #f
+                                      antecedents
+                                      consequent))
 
 (define (minimize-state-formula/greedy solver expr)
   (let* ((simplified (sal-ast/simplify expr))
@@ -1415,7 +1570,7 @@
                                      kept)))
             (if (state-formulas-imply? solver reduced simplified)
               (loop (cdr remaining) reduced)
-              (loop (cdr remaining) kept)))))))))
+              (loop (cdr remaining) kept))))))))))
 
 (define (minimize-forward-lemma/greedy solver level lemma)
   (let* ((simplified (sal-ast/simplify lemma))
@@ -1597,8 +1752,12 @@
         (set-slot-value! solver :reach-lemmas new-lemmas)
         (set-slot-value! solver :bad-sessions new-bad)
         (set-slot-value! solver :induction-sessions new-induction)))
+    (when (>= (verbosity-level) 5)
+      (verbose-message 5 "sal-cdr: creating backend frame F~a." level))
     (create-level-session! solver level)
     (set-slot-value! solver :num-levels (+ level 1))
+    (when (>= (verbosity-level) 5)
+      (verbose-message 5 "sal-cdr: backend frame F~a is ready." level))
     level))
 
 (define-method (cdr-solver/add-lemma-at-level! (solver <cdr-yices2-solver>) (level <primitive>) (lemma <sal-expr>))
@@ -1785,6 +1944,8 @@
             #f)))))))
 
 (define-method (cdr-solver/reset-induction! (solver <cdr-yices2-solver>) (depth <primitive>))
+  (when (>= (verbosity-level) 5)
+    (verbose-message 5 "sal-cdr: rebuilding PDKIND induction session for depth ~a." depth))
   (when (slot-value solver :pdkind-induction-session)
     (session/close! (slot-value solver :pdkind-induction-session)))
   (set-slot-value! solver :pdkind-induction-depth depth)
@@ -1792,6 +1953,8 @@
   (set-slot-value! solver
                    :pdkind-induction-session
                    (make-pdkind-induction-session solver depth))
+  (when (>= (verbosity-level) 5)
+    (verbose-message 5 "sal-cdr: PDKIND induction session for depth ~a is ready." depth))
   depth)
 
 (define (assert-induction-lemma-at-step! solver session lemma step)

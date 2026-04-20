@@ -2933,7 +2933,7 @@ SUBCLASSES: ()
 CLASS: <cdr-yices2-solver>
 FAST SLOT ACCESS: #t
 IDX: 476
-SLOTS: (:capabilities :flat-module :state-vars :trace-solver-id :solver-description :ctx :info :property :definition :initialization :transition :valid-input :valid-state :i0 :t01 :bad0 :bad1 :init-session :reach-sessions :shared-reach-session :bad-sessions :induction-sessions :pdkind-induction-session :pdkind-induction-depth :minimization-session :decl-name->term :helper-name->term :registered-sorts :expr-term-cache :yices-owned? :reach-lemmas :induction-lemmas :num-levels :effective-command :pdkind?)
+SLOTS: (:capabilities :flat-module :state-vars :trace-solver-id :solver-description :ctx :info :property :definition :initialization :transition :valid-input :valid-state :i0 :t01 :bad0 :bad1 :init-session :reach-sessions :shared-reach-session :bad-sessions :induction-sessions :pdkind-induction-session :pdkind-induction-depth :minimization-session :decl-name->term :helper-name->term :registered-sorts :expr-term-cache :expr-text-term-cache :synced-decls :yices-owned? :reach-lemmas :induction-lemmas :num-levels :effective-command :pdkind?)
 SUBCLASSES: ()
 ---------------------------
 GENERIC: api-entry/print

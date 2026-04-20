@@ -53,6 +53,10 @@ void bgl_yices_free_context(void *ctx) {
   yices_free_context((context_t *)ctx);
 }
 
+void bgl_yices_reset_context(void *ctx) {
+  yices_reset_context((context_t *)ctx);
+}
+
 int bgl_yices_parse_type(char *type_string) {
   return yices_parse_type(type_string);
 }

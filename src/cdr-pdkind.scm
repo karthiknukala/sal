@@ -638,10 +638,25 @@
            ((>= frame-index max-frame)
             (values 'unknown #f))
            (else
-           (set! frame-index frame-next-index)
+            (when (>= (verbosity-level) 5)
+              (verbose-message 5 "sal-cdr PDKIND: advancing from frame ~a to ~a with ~a queued obligation(s)."
+                               frame-index
+                               frame-next-index
+                               (length next-obligations)))
+            (set! frame-index frame-next-index)
             (set! frame-depth (+ frame-depth 1))
             (set! next-obligations (pdkind/minimize-frame solver (reverse! next-obligations)))
+            (when (>= (verbosity-level) 5)
+              (verbose-message 5 "sal-cdr PDKIND: minimized next frame to ~a obligation(s) at induction depth ~a."
+                               (length next-obligations)
+                               frame-depth))
+            (when (>= (verbosity-level) 5)
+              (verbose-message 5 "sal-cdr PDKIND: resetting induction solver for depth ~a."
+                               frame-depth))
             (cdr-solver/reset-induction! solver frame-depth)
+            (when (>= (verbosity-level) 5)
+              (verbose-message 5 "sal-cdr PDKIND: loading minimized frame ~a."
+                               frame-index))
             (load-frame! next-obligations)
             (set! next-obligations '())
             (search-loop))))

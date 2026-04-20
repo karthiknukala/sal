@@ -30,6 +30,7 @@
          (yices-set-config::int (::yices-config ::string ::string) "bgl_yices_set_config")
          (yices-new-context::yices-context (::yices-config) "bgl_yices_new_context")
          (yices-free-context::void (::yices-context) "bgl_yices_free_context")
+         (yices-reset-context::void (::yices-context) "bgl_yices_reset_context")
          (yices-parse-type::int (::string) "bgl_yices_parse_type")
          (yices-parse-term-raw::int (::string) "bgl_yices_parse_term")
          (yices-parse-rational-raw::int (::string) "bgl_yices_parse_rational")
@@ -142,6 +143,7 @@
                 (yices2-api/product-component-term term idx)
                 (yices2-api/new-context interpolants?)
                 (yices2-api/free-context! ctx)
+                (yices2-api/context-reset! ctx)
                 (yices2-api/context-push! ctx)
                 (yices2-api/context-pop! ctx)
                 (yices2-api/assert-formula! ctx term)
@@ -680,6 +682,10 @@
 (define (yices2-api/free-context! ctx)
   (when (yices2-api/pointer-live? ctx yices-context-null?)
     (yices-free-context ctx)))
+
+(define (yices2-api/context-reset! ctx)
+  (when (yices2-api/pointer-live? ctx yices-context-null?)
+    (yices-reset-context ctx)))
 
 (define (yices2-api/context-push! ctx)
   (yices2-api/check-code (yices-push-raw ctx) "yices_push"))
