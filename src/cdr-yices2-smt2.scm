@@ -203,6 +203,9 @@
      (lambda ()
        (sal-ast/display-yices2 expr info)))))
 
+(define (parsed-term-cache-key text)
+  (string-append "[yices-term]" text))
+
 (define (make-mapped-yices2-translation-info solver decls)
   (let* ((smt-info (slot-value solver :info))
          (info (make-yices2-translation-info)))
@@ -264,6 +267,12 @@
 
 (define (helper-generalize-formulas solver keep-decls formulas)
   (let* ((decls (collect-formula-decls formulas keep-decls))
+         (_ (when (>= (verbosity-level) 5)
+              (verbose-message 5
+                               "sal-cdr: helper generalization on ~a formula(s), ~a decl(s), ~a kept decl(s)."
+                               (length formulas)
+                               (length decls)
+                               (length keep-decls))))
          (_ (let* ((info (slot-value solver :info))
                    (yices-info (make-yices2-translation-info)))
               (sat-smtlib2-context/collect-translation-info! (slot-value solver :ctx) info)
@@ -294,24 +303,36 @@
                                                (render-yices2-type-string (slot-value decl :type) type-info)))))
              decls))
          (generalized-terms
-         (yices2-api/generalize-terms
-           (apply append
-                  (map (lambda (expr)
-                         (map (lambda (conjunct)
-                                (solver/expr->term/presynced solver conjunct))
-                              (let ((conjuncts (sal-expr/conjuncts expr)))
-                                (if (null? conjuncts)
-                                  (list (make-sal-true (slot-value solver :flat-module)))
-                                  conjuncts))))
-                       formulas))
-           (map-and-filter
-            (lambda (decl)
-              (and (not (member decl keep-decls))
-                   (solver/lookup-yices-term
-                    solver
-                    (smt-id->string
-                     (smtlib2-translation-info/var-id (slot-value solver :info) decl)))))
-            decls)))
+          (let* ((formula-terms
+                  (apply append
+                         (map (lambda (expr)
+                                (map (lambda (conjunct)
+                                       (solver/expr->term/presynced solver conjunct))
+                                     (let ((conjuncts (sal-expr/conjuncts expr)))
+                                       (if (null? conjuncts)
+                                         (list (make-sal-true (slot-value solver :flat-module)))
+                                         conjuncts))))
+                              formulas)))
+                 (elim-terms
+                  (map-and-filter
+                   (lambda (decl)
+                     (and (not (member decl keep-decls))
+                          (solver/lookup-yices-term
+                           solver
+                           (smt-id->string
+                            (smtlib2-translation-info/var-id (slot-value solver :info) decl)))))
+                   decls))
+                 (_ (when (>= (verbosity-level) 5)
+                      (verbose-message 5
+                                       "sal-cdr: helper generalization invoking Yices on ~a conjunct term(s), eliminating ~a term(s)."
+                                       (length formula-terms)
+                                       (length elim-terms))))
+                 (terms (yices2-api/generalize-terms formula-terms elim-terms)))
+            (when (>= (verbosity-level) 5)
+              (verbose-message 5
+                               "sal-cdr: helper generalization received ~a generalized term(s)."
+                               (length terms)))
+            terms))
          (id->decl-proc (make-id->decl-proc (slot-value solver :info)))
          (exprs
           (map (lambda (term)
@@ -327,7 +348,7 @@
                generalized-terms)))
       (sal-expr/from-conjuncts (if (null? exprs)
                                 (list (make-sal-true (slot-value solver :flat-module)))
-                                exprs)
+                               exprs)
                               (slot-value solver :flat-module)))))
 
 (define (tracked-state-vars flat-module)
@@ -420,9 +441,71 @@
    (lambda (name)
      (solver/lookup-yices-term solver name))))
 
-(define *native-yices-parse-fallback-arity* 8)
+(define *native-yices-bool-node-arity* 8)
+
+(define (partition-list lst chunk-size)
+  (let loop ((remaining lst)
+             (current '())
+             (current-size 0)
+             (chunks '()))
+    (cond
+     ((null? remaining)
+      (reverse!
+       (if (null? current)
+         chunks
+         (cons (reverse! current) chunks))))
+     ((= current-size chunk-size)
+      (loop remaining
+            '()
+            0
+            (cons (reverse! current) chunks)))
+     (else
+      (loop (cdr remaining)
+            (cons (car remaining) current)
+            (+ current-size 1)
+            chunks)))))
+
+(define (build-balanced-boolean-term terms combine)
+  (cond
+   ((null? terms)
+    (combine terms))
+   ((null? (cdr terms))
+    (car terms))
+   (else
+    (let loop ((level terms))
+      (if (<= (length level) *native-yices-bool-node-arity*)
+        (combine level)
+        (loop (map combine
+                   (partition-list level
+                                   *native-yices-bool-node-arity*))))))))
 
 (define (solver/expr->term/core solver expr recur lookup-term)
+    (define (build-boolean-term label args combine)
+      (let ((built-args
+             (map (lambda (arg)
+                    (try
+                     (recur arg)
+                     (lambda (_escape _proc msg _obj)
+                       (sign-error "sal-cdr failed to construct a native Yices term for ~a child:\n~a\nReason: ~a"
+                                   label
+                                   (render-smt2-expr arg (slot-value solver :info))
+                                   msg))))
+                  args)))
+        (for-each
+         (lambda (binding)
+           (unless (yices2-api/term-bool? (cdr binding))
+             (sign-error "sal-cdr expected a native boolean term for ~a child:\n~a\nNative term: ~a"
+                         label
+                         (render-smt2-expr (car binding) (slot-value solver :info))
+                         (yices2-api/term->string (cdr binding)))))
+         (map cons args built-args))
+        (try
+         (build-balanced-boolean-term built-args combine)
+         (lambda (_escape _proc msg _obj)
+           (sign-error "sal-cdr failed to combine native Yices terms for ~a:\n~a\nReason: ~a"
+                       label
+                       (render-smt2-expr expr (slot-value solver :info))
+                       msg)))))
     (cond
      ((instance-of? expr <sal-true>)
       (yices2-api/true-term))
@@ -431,39 +514,44 @@
      ((instance-of? expr <sal-numeral>)
       (yices2-api/rational-term (mpq->string (slot-value expr :num))))
      ((instance-of? expr <sal-name-expr>)
-      (let* ((name (smt-id->string
-                    (smtlib2-translation-info/var-id (slot-value solver :info)
-                                                     (slot-value expr :decl))))
-             (term (lookup-term name)))
+      (let* ((decl (slot-value expr :decl))
+             (id (solver/existing-decl-id solver decl))
+             (name (and id (smt-id->string id)))
+             (term (and name (lookup-term name))))
+        (unless id
+          (sign-error "sal-cdr failed to find a synced SMT identifier for SAL declaration ~a."
+                      (sal-decl/name decl)))
         (unless term
           (sign-error "sal-cdr failed to map SAL declaration ~a to a native Yices term."
-                      (sal-decl/name (slot-value expr :decl))))
+                      (sal-decl/name decl)))
         term))
      ((instance-of? expr <sal-eq>)
       (multiple-value-bind
           (arg1 arg2)
           (sal-binary-application/arguments expr)
-        (yices2-api/eq-term (recur arg1)
-                            (recur arg2))))
+        (if (sal-type/boolean? (sal-expr/type arg1))
+          (yices2-api/iff-term (recur arg1)
+                               (recur arg2))
+          (yices2-api/eq-term (recur arg1)
+                              (recur arg2)))))
      ((instance-of? expr <sal-diseq>)
       (multiple-value-bind
           (arg1 arg2)
           (sal-binary-application/arguments expr)
-        (yices2-api/neq-term (recur arg1)
-                             (recur arg2))))
+        (if (sal-type/boolean? (sal-expr/type arg1))
+          (yices2-api/not-term
+           (yices2-api/iff-term (recur arg1)
+                                (recur arg2)))
+          (yices2-api/neq-term (recur arg1)
+                               (recur arg2)))))
      ((instance-of? expr <sal-and>)
-      (let ((args (sal-application/argument-list expr)))
-        (if (> (length args) *native-yices-parse-fallback-arity*)
-          ;; Large boolean n-ary terms are still handled natively by Yices,
-          ;; but parsing them in-process is more robust than constructing one
-          ;; huge term array by hand.
-          (solver/expr->parsed-term solver expr)
-          (yices2-api/and-terms (map recur args)))))
+      (build-boolean-term "and"
+                          (sal-application/argument-list expr)
+                          yices2-api/and-terms))
      ((instance-of? expr <sal-or>)
-      (let ((args (sal-application/argument-list expr)))
-        (if (> (length args) *native-yices-parse-fallback-arity*)
-          (solver/expr->parsed-term solver expr)
-          (yices2-api/or-terms (map recur args)))))
+      (build-boolean-term "or"
+                          (sal-application/argument-list expr)
+                          yices2-api/or-terms))
      ((instance-of? expr <sal-not>)
       (yices2-api/not-term
        (recur (car (sal-application/argument-list expr)))))
@@ -500,18 +588,35 @@
            (map recur
                 (sal-application/argument-list expr))))))
      ((instance-of? expr <sal-sub>)
-      (multiple-value-bind
-          (arg1 arg2)
-          (sal-binary-application/arguments expr)
-        (let ((num1 (sal-numeral-value arg1))
-              (num2 (sal-numeral-value arg2)))
-          (if (and num1 num2)
-            (yices2-api/rational-term (mpq->string (-mpq num1 num2)))
-            (if (and num1
-                     (=mpq num1 *mpq-zero*))
-              (yices2-api/neg-term (recur arg2))
-              (yices2-api/sub-term (recur arg1)
-                                   (recur arg2)))))))
+      (let ((args (sal-application/argument-list expr)))
+        (cond
+         ((null? args)
+          (sign-error "sal-cdr encountered a subtraction with no arguments."))
+         ((null? (cdr args))
+          (let* ((arg (car args))
+                 (num (sal-numeral-value arg)))
+            (if num
+              (yices2-api/rational-term (mpq->string (-mpq *mpq-zero* num)))
+              (yices2-api/neg-term (recur arg)))))
+         ((null? (cddr args))
+          (let* ((arg1 (car args))
+                 (arg2 (cadr args))
+                 (num1 (sal-numeral-value arg1))
+                 (num2 (sal-numeral-value arg2)))
+            (if (and num1 num2)
+              (yices2-api/rational-term (mpq->string (-mpq num1 num2)))
+              (if (and num1
+                       (=mpq num1 *mpq-zero*))
+                (yices2-api/neg-term (recur arg2))
+                (yices2-api/sub-term (recur arg1)
+                                     (recur arg2))))))
+         (else
+          (let loop ((acc (recur (car args)))
+                     (rest (cdr args)))
+            (if (null? rest)
+              acc
+              (loop (yices2-api/sub-term acc (recur (car rest)))
+                    (cdr rest))))))))
      ((instance-of? expr <sal-mul>)
       (let ((numerals (sal-numeral-list-values (sal-application/argument-list expr))))
         (if numerals
@@ -571,30 +676,26 @@
       (multiple-value-bind
           (arg1 arg2)
           (sal-binary-application/arguments expr)
-        (yices2-api/lt0-term
-         (yices2-api/sub-term (recur arg1)
-                              (recur arg2)))))
+        (yices2-api/lt-term (recur arg1)
+                            (recur arg2))))
      ((instance-of? expr <sal-le>)
       (multiple-value-bind
           (arg1 arg2)
           (sal-binary-application/arguments expr)
-        (yices2-api/le0-term
-         (yices2-api/sub-term (recur arg1)
-                              (recur arg2)))))
+        (yices2-api/le-term (recur arg1)
+                            (recur arg2))))
      ((instance-of? expr <sal-gt>)
       (multiple-value-bind
           (arg1 arg2)
           (sal-binary-application/arguments expr)
-        (yices2-api/gt0-term
-         (yices2-api/sub-term (recur arg1)
-                              (recur arg2)))))
+        (yices2-api/gt-term (recur arg1)
+                            (recur arg2))))
      ((instance-of? expr <sal-ge>)
       (multiple-value-bind
           (arg1 arg2)
           (sal-binary-application/arguments expr)
-        (yices2-api/ge0-term
-         (yices2-api/sub-term (recur arg1)
-                              (recur arg2)))))
+        (yices2-api/ge-term (recur arg1)
+                            (recur arg2))))
      ((instance-of? expr <sal-conditional>)
       (yices2-api/ite-term (recur (slot-value expr :cond-expr))
                            (recur (slot-value expr :then-expr))
@@ -624,9 +725,25 @@
 (define (solver/expr->parsed-term solver expr)
   (let* ((decls (collect-formula-decls (list expr) '()))
          (_ (solver/sync-yices-translation! solver decls))
-         (yices-info (make-mapped-yices2-translation-info solver decls))
-         (text (render-yices2-expr-string expr yices-info)))
-    (yices2-api/parse-term text)))
+         (expr-cache (slot-value solver :expr-term-cache))
+         (text-cache (slot-value solver :expr-text-term-cache)))
+    (cond
+     ((eq-hash-table/get expr-cache expr) => cdr)
+     (else
+      (let* ((yices-info (make-mapped-yices2-translation-info solver decls))
+             (text (render-yices2-expr-string expr yices-info))
+             (text-key (parsed-term-cache-key text)))
+        (cond
+         ((hashtable-get text-cache text-key)
+          =>
+          (lambda (term)
+            (eq-hash-table/put! expr-cache expr term)
+            term))
+         (else
+          (let ((term (yices2-api/parse-term text)))
+            (eq-hash-table/put! expr-cache expr term)
+            (hashtable-put! text-cache text-key term)
+            term))))))))
 
 (define (solver/state-expr->parsed-term solver expr step)
   (solver/expr->parsed-term solver
@@ -675,6 +792,14 @@
    ((symbol? id) (symbol->string id))
    (else
     (object->string id))))
+
+(define (solver/existing-decl-id solver decl)
+  (let* ((info (slot-value solver :info))
+         (dp-info (slot-value info :dp-info))
+         (decl->id-mapping (slot-value dp-info :decl->id-mapping)))
+    (cond
+     ((eq-hash-table/get decl->id-mapping decl) => cdr)
+     (else #f))))
 
 (define (solver/lookup-yices-term solver name)
   (or (hashtable-get (slot-value solver :decl-name->term) name)
@@ -946,6 +1071,33 @@
                            (slot-value session :id->decl-proc)
                            (slot-value session :place-provider)))
 
+(define (session/value-string->sal-expr session value-string)
+  (let ((normalized (normalize-yices-inline value-string)))
+    (try
+     (session/term->sal-expr session
+                             (yices2-api/parse-term normalized))
+     (lambda (_escape _proc msg _obj)
+       (try
+        (yices2/string->sal-expr normalized
+                                 (slot-value session :id->decl-proc)
+                                 (slot-value session :place-provider))
+        (lambda (_escape2 _proc2 _msg2 _obj2)
+          (sign-error "sal-cdr failed to convert a native Yices model value into a SAL expression.\nRaw value: ~a\nReason: ~a"
+                      normalized
+                      msg)))))))
+
+(define (session/value-formula-string->state-expr session formula-string)
+  (let* ((solver (slot-value session :solver))
+         (normalized (normalize-yices-inline formula-string))
+         (form (session/term->sal-expr session
+                                       (yices2-api/parse-term normalized))))
+    (multiple-value-bind
+        (state-constraint _max-step)
+        (build-state-constraint form
+                                (slot-value (slot-value solver :ctx) :inv-step-decls)
+                                (slot-value (slot-value solver :ctx) :inv-global-decls))
+      state-constraint)))
+
 (define (cube->yices-model-binding-terms solver cube step)
   (let* ((ctx (slot-value solver :ctx))
          (info (slot-value solver :info))
@@ -979,6 +1131,30 @@
     (values vars
             (yices2-api/model-from-map vars value-terms))))
 
+(define (call/state-expr-model solver expr step proc)
+  (let ((ctx #f)
+        (model #f))
+    (unwind-protect
+     (begin
+       (set! ctx (yices2-api/new-context #f))
+       (yices2-api/assert-formula! ctx (solver/state-expr->term solver expr step))
+       (let ((status (yices2-api/status->string (yices2-api/check-context ctx))))
+         (cond
+          ((equal? status "sat")
+           (set! model (yices2-api/get-model ctx))
+           (proc (map cdr (query-term-bindings solver step))
+                 model))
+          ((equal? status "unsat")
+           #f)
+          (else
+           (sign-error "sal-cdr expected a satisfiable formula-generalization query at step ~a, but Yices returned ~a."
+                       step
+                       status)))))
+     (when model
+       (yices2-api/free-model! model))
+     (when ctx
+       (yices2-api/free-context! ctx)))))
+
 (define (session/check-sat-with-model! session model terms)
   (extract-status session
                   (yices2-api/check-context-with-model (slot-value session :context)
@@ -1003,12 +1179,29 @@
             (let* ((binding (car remaining))
                    (decl (car binding))
                    (term (cdr binding))
-                   (value-term (yices2-api/try-value-as-term model term)))
+                   (value-term (yices2-api/try-value-as-term model term))
+                   (value-formula-string (and (not value-term)
+                                              (yices2-api/try-value-formula-string model term)))
+                   (value-string (and (not value-term)
+                                      (not value-formula-string)
+                                      (yices2-api/try-value-string model term))))
               (cond
                (value-term
                 (loop (cdr remaining)
                       (cons (cons decl
                                   (session/term->sal-expr session value-term))
+                            result)))
+               (value-formula-string
+                (loop (cdr remaining)
+                      (cons (cons decl
+                                  (make-cdr-cube-binding-formula
+                                   (session/value-formula-string->state-expr session
+                                                                             value-formula-string)))
+                            result)))
+               (value-string
+                (loop (cdr remaining)
+                      (cons (cons decl
+                                  (session/value-string->sal-expr session value-string))
                             result)))
                (else
                 (when (>= (verbosity-level) 4)
@@ -1511,44 +1704,50 @@
      (session/close! session))))
 
 (define (state-formulas-imply/with-session? solver session antecedents consequent)
-  (let ((assertions
-         (append
-          (map (lambda (expr)
-                 (solver/state-expr->parsed-term solver expr 0))
-               antecedents)
-          (list (yices2-api/not-term
-                 (solver/state-expr->parsed-term solver consequent 0))))))
+  (let* ((query-expr (sal-expr/from-conjuncts (append antecedents
+                                                      (list (make-sal-not consequent)))
+                                              (slot-value solver :flat-module)))
+         (query-term (solver/state-expr->parsed-term solver query-expr 0)))
     (when (>= (verbosity-level) 5)
       (verbose-message 5
                        "sal-cdr: checking state implication with ~a antecedent(s): ~a => ~a"
                        (length antecedents)
                        (map sal-expr->string antecedents)
                        (sal-expr->string consequent)))
-    (let ((ctx (yices2-api/new-context #f)))
-      (unwind-protect
-       (begin
-         (for-each (lambda (term)
-                     (yices2-api/assert-formula! ctx term))
-                   assertions)
-         (let ((label (yices2-api/status->string (yices2-api/check-context ctx))))
-           (when (>= (verbosity-level) 5)
-             (verbose-message 5 "sal-cdr: implication check returned ~a." label))
-           (cond
-            ((equal? label "unsat")
-             #t)
-            ((or (equal? label "sat")
-                 (equal? label "unknown"))
-             #f)
-            (else
-             (sign-error "sal-cdr expected sat/unsat/unknown from a minimization implication check, received ~a."
-                         label)))))
-       (yices2-api/free-context! ctx)))))
+    (define (interpret-status label)
+      (when (>= (verbosity-level) 5)
+        (verbose-message 5 "sal-cdr: implication check returned ~a." label))
+      (cond
+       ((equal? label "unsat")
+        #t)
+       ((or (equal? label "sat")
+            (equal? label "unknown"))
+        #f)
+       (else
+        (sign-error "sal-cdr expected sat/unsat/unknown from a minimization implication check, received ~a."
+                    label))))
+    (if session
+      (begin
+        (session/push-assert! session query-term)
+        (unwind-protect
+         (interpret-status (session/check-sat! session))
+         (session/pop! session)))
+      (call/temporary-minimization-session
+       solver
+       (lambda (fresh-session)
+         (state-formulas-imply/with-session? solver
+                                             fresh-session
+                                             antecedents
+                                             consequent))))))
 
 (define (state-formulas-imply? solver antecedents consequent)
-  (state-formulas-imply/with-session? solver
-                                      #f
-                                      antecedents
-                                      consequent))
+  (call/temporary-minimization-session
+   solver
+   (lambda (session)
+     (state-formulas-imply/with-session? solver
+                                         session
+                                         antecedents
+                                         consequent))))
 
 (define (minimize-state-formula/greedy solver expr)
   (let* ((simplified (sal-ast/simplify expr))
@@ -1641,13 +1840,13 @@
   (and lemma
        (let* ((init-session (slot-value solver :init-session))
               (negated-lemma (make-sal-not lemma))
-              (init-assert-term (solver/state-expr->term solver
-                                                         negated-lemma
-                                                         0))
+              (init-assert-term (solver/state-expr->parsed-term solver
+                                                                negated-lemma
+                                                                0))
               (transition-assert-term (and (> level 0)
-                                           (solver/state-expr->term solver
-                                                                    negated-lemma
-                                                                    1)))
+                                           (solver/state-expr->parsed-term solver
+                                                                           negated-lemma
+                                                                           1)))
               (init-ok? (session/query-assertion-unsat? init-session
                                                         init-assert-term))
               (transition-ok?
@@ -1848,75 +2047,79 @@
     #f
     (let ((session (if (slot-value solver :shared-reach-session)
                      (slot-value solver :shared-reach-session)
-                     (vector-ref (slot-value solver :reach-sessions) level)))
-          (model #f))
+                     (vector-ref (slot-value solver :reach-sessions) level))))
       (when (slot-value solver :shared-reach-session)
         (push-shared-reach-level! solver level))
       (unwind-protect
-       (begin
-         (multiple-value-bind
-             (terms local-model)
-             (cube->yices-model solver cube 1)
-           (set! model local-model)
-           (let ((status (session/check-sat-with-model! session model terms)))
-             (when (>= (verbosity-level) 5)
-             (verbose-message 5 "sal-cdr: interpolant query status at F~a: ~a"
-                                level
-                                status))
-             (if (equal? status "unsat")
-               (session/get-interpolant-expr solver session model)
-               #f))))
-       (when model
-         (yices2-api/free-model! model))
+       (call/state-expr-model
+        solver
+        (cdr-cube->expr cube (slot-value solver :flat-module))
+        1
+        (lambda (terms model)
+          (let ((status (session/check-sat-with-model! session model terms)))
+            (when (>= (verbosity-level) 5)
+              (verbose-message 5 "sal-cdr: interpolant query status at F~a: ~a"
+                               level
+                               status))
+            (if (equal? status "unsat")
+              (session/get-interpolant-expr solver session model)
+              #f))))
        (when (slot-value solver :shared-reach-session)
          (session/pop! session))))))
 
-(define-method (cdr-solver/learn-forward-cube (solver <cdr-yices2-solver>) (level <primitive>) (cube <cdr-cube>))
+(define (finalize-forward-lemma solver level lemma)
+  (let* ((minimized (and lemma
+                         (minimize-forward-lemma/greedy solver level lemma)))
+         (simplified (and minimized (sal-ast/simplify minimized))))
+    (cond
+     ((and simplified (forward-lemma-valid? solver level simplified))
+      simplified)
+     ((and minimized (forward-lemma-valid? solver level minimized))
+      minimized)
+     ((and lemma (forward-lemma-valid? solver level lemma))
+      lemma)
+     (else
+      #f))))
+
+(define-method (cdr-solver/learn-forward-expr (solver <cdr-yices2-solver>) (level <primitive>) (expr <sal-expr>))
   (if (not (cdr-solver-capabilities/interpolants?
             (cdr-solver/capabilities solver)))
     #f
     (let* ((init-session (slot-value solver :init-session))
            (initial-lemma
-            (let ((model #f))
-              (unwind-protect
-               (begin
-                 (when (>= (verbosity-level) 5)
-                   (verbose-message 5 "sal-cdr: forward learning, checking initial model assumption..."))
-                 (multiple-value-bind
-                     (terms local-model)
-                     (cube->yices-model solver cube 0)
-                   (set! model local-model)
-                   (when (>= (verbosity-level) 5)
-                     (verbose-message 5 "sal-cdr: forward learning initial assumption terms: ~a"
-                                      (length terms)))
-                   (and (equal? (session/check-sat-with-model! init-session model terms) "unsat")
-                        (session/get-interpolant-expr solver init-session model))))
-               (when model
-                 (yices2-api/free-model! model)))))
+            (call/state-expr-model
+             solver
+             expr
+             0
+             (lambda (terms model)
+               (when (>= (verbosity-level) 5)
+                 (verbose-message 5 "sal-cdr: forward learning, checking initial formula assumption..."))
+               (when (>= (verbosity-level) 5)
+                 (verbose-message 5 "sal-cdr: forward learning initial formula assumption terms: ~a"
+                                  (length terms)))
+               (and (equal? (session/check-sat-with-model! init-session model terms) "unsat")
+                    (session/get-interpolant-expr solver init-session model)))))
            (transition-lemma
             (and (> level 0)
                  (let ((session (if (slot-value solver :shared-reach-session)
                                   (slot-value solver :shared-reach-session)
-                                  (vector-ref (slot-value solver :reach-sessions) (- level 1))))
-                       (model #f))
+                                  (vector-ref (slot-value solver :reach-sessions) (- level 1)))))
                    (when (slot-value solver :shared-reach-session)
                      (push-shared-reach-level! solver (- level 1)))
                    (unwind-protect
-                    (begin
-                      (when (>= (verbosity-level) 5)
-                        (verbose-message 5 "sal-cdr: forward learning, checking transition model assumption at F~a..." (- level 1)))
-                      (multiple-value-bind
-                          (terms local-model)
-                          (cube->yices-model solver cube 1)
-                        (set! model local-model)
-                        (when (>= (verbosity-level) 5)
-                          (verbose-message 5 "sal-cdr: forward learning transition assumption terms: ~a"
-                                           (length terms)))
-                        (if (equal? (session/check-sat-with-model! session model terms) "unsat")
-                          (session/get-interpolant-expr solver session model)
-                          #f)))
-                    (when model
-                      (yices2-api/free-model! model))
+                    (call/state-expr-model
+                     solver
+                     expr
+                     1
+                     (lambda (terms model)
+                       (when (>= (verbosity-level) 5)
+                         (verbose-message 5 "sal-cdr: forward learning, checking transition formula assumption at F~a..."
+                                          (- level 1)))
+                       (when (>= (verbosity-level) 5)
+                         (verbose-message 5 "sal-cdr: forward learning transition formula assumption terms: ~a"
+                                          (length terms)))
+                       (and (equal? (session/check-sat-with-model! session model terms) "unsat")
+                            (session/get-interpolant-expr solver session model))))
                     (when (slot-value solver :shared-reach-session)
                       (session/pop! session)))))))
       (let ((lemma
@@ -1930,18 +2133,12 @@
                transition-lemma)
               (else
                #f))))
-        (let* ((minimized (and lemma
-                               (minimize-forward-lemma/greedy solver level lemma)))
-               (simplified (and minimized (sal-ast/simplify minimized))))
-          (cond
-           ((and simplified (forward-lemma-valid? solver level simplified))
-            simplified)
-           ((and minimized (forward-lemma-valid? solver level minimized))
-            minimized)
-           ((and lemma (forward-lemma-valid? solver level lemma))
-            lemma)
-           (else
-            #f)))))))
+        (finalize-forward-lemma solver level lemma)))))
+
+(define-method (cdr-solver/learn-forward-cube (solver <cdr-yices2-solver>) (level <primitive>) (cube <cdr-cube>))
+  (cdr-solver/learn-forward-expr solver
+                                 level
+                                 (cdr-cube->expr cube (slot-value solver :flat-module))))
 
 (define-method (cdr-solver/reset-induction! (solver <cdr-yices2-solver>) (depth <primitive>))
   (when (>= (verbosity-level) 5)
@@ -2001,13 +2198,22 @@
                                                                      target-expr))))
 
 (define-method (cdr-solver/generalize-induction-target (solver <cdr-yices2-solver>) (target-expr <sal-expr>))
-  (cdr-solver/minimize-state-formula
-   solver
-   (helper-generalize-formulas solver
-                               (solver-step-state-decls solver 0)
-                               (induction-generalization-formulas solver
-                                                                  (slot-value solver :pdkind-induction-depth)
-                                                                  target-expr))))
+  (when (>= (verbosity-level) 5)
+    (verbose-message 5
+                     "sal-cdr: generalizing induction target at depth ~a."
+                     (slot-value solver :pdkind-induction-depth)))
+  (let ((generalized
+         (helper-generalize-formulas solver
+                                     (solver-step-state-decls solver 0)
+                                     (induction-generalization-formulas solver
+                                                                        (slot-value solver :pdkind-induction-depth)
+                                                                        target-expr))))
+    (when (>= (verbosity-level) 5)
+      (verbose-message 5 "sal-cdr: minimizing generalized induction target."))
+    (let ((minimized (cdr-solver/minimize-state-formula solver generalized)))
+      (when (>= (verbosity-level) 5)
+        (verbose-message 5 "sal-cdr: finished induction-target generalization."))
+      minimized)))
 
 (define-method (cdr-solver/check-induction-path (solver <cdr-yices2-solver>) (cube <cdr-cube>) (target-expr <sal-expr>))
   (let* ((session (slot-value solver :pdkind-induction-session))

@@ -49,6 +49,10 @@
          (yices-ite-raw::int (::int ::int ::int) "bgl_yices_ite")
          (yices-or-raw::int (::int ::yices-term-array) "bgl_yices_or_terms")
          (yices-and-raw::int (::int ::yices-term-array) "bgl_yices_and_terms")
+         (yices-or2-raw::int (::int ::int) "bgl_yices_or2")
+         (yices-and2-raw::int (::int ::int) "bgl_yices_and2")
+         (yices-or3-raw::int (::int ::int ::int) "bgl_yices_or3")
+         (yices-and3-raw::int (::int ::int ::int) "bgl_yices_and3")
          (yices-application-raw::int (::int ::int ::yices-term-array) "bgl_yices_application")
          (yices-update-raw::int (::int ::int ::yices-term-array ::int) "bgl_yices_update")
          (yices-add-raw::int (::int ::int) "bgl_yices_add")
@@ -78,6 +82,8 @@
                                                 "bgl_yices_model_from_map")
          (yices-get-model-interpolant-raw::int (::yices-context) "bgl_yices_get_model_interpolant")
          (yices-get-value-as-term-raw::int (::yices-model ::int) "bgl_yices_get_value_as_term")
+         (yices-get-value-formula-string-raw::obj (::yices-model ::int) "bgl_yices_get_value_formula_string")
+         (yices-get-value-string-raw::obj (::yices-model ::int) "bgl_yices_get_value_string")
          (yices-generalize-model-array::int (::yices-model ::int ::yices-term-array ::int ::yices-term-array ::int ::yices-term-vector)
                                             "bgl_yices_generalize_model_array")
          (yices-error-string::obj () "bgl_yices_error_string")
@@ -86,6 +92,7 @@
          (yices-term-num-children-raw::int (::int) "bgl_yices_term_num_children")
          (yices-term-child-raw::int (::int ::int) "bgl_yices_term_child")
          (yices-term-name-raw::obj (::int) "bgl_yices_get_term_name")
+         (yices-term-is-bool-raw::int (::int) "bgl_yices_term_is_bool")
          (yices-sum-component-term-raw::int (::int ::int) "bgl_yices_sum_component_term")
          (yices-product-component-term-raw::int (::int ::int) "bgl_yices_product_component_term")
          (yices-term-array-alloc::yices-term-array (::int) "bgl_yices_term_array_alloc")
@@ -139,6 +146,7 @@
                 (yices2-api/term-num-children term)
                 (yices2-api/term-child term idx)
                 (yices2-api/term-name term)
+                (yices2-api/term-bool? term)
                 (yices2-api/sum-component-term term idx)
                 (yices2-api/product-component-term term idx)
                 (yices2-api/new-context interpolants?)
@@ -154,6 +162,8 @@
                 (yices2-api/model-from-map vars values)
                 (yices2-api/get-model-interpolant ctx)
                 (yices2-api/try-value-as-term model term)
+                (yices2-api/try-value-formula-string model term)
+                (yices2-api/try-value-string model term)
                 (yices2-api/term-array-values model terms)
                 (yices2-api/generalize-model-terms model formula-terms elim-terms)
                 (yices2-api/generalize-terms formula-terms elim-terms)
@@ -423,41 +433,89 @@
     (yices2-api/check-code term "yices_ite")
     term))
 
-(define (yices2-api/or-terms terms)
-  (yices2-api/check-term-list terms "or-terms")
+(define (split-list-halves terms)
+  (let* ((len (length terms))
+         (left-size (/fx len 2)))
+    (let loop ((remaining terms)
+               (count left-size)
+               (left '()))
+      (if (= count 0)
+        (values (reverse! left) remaining)
+        (loop (cdr remaining)
+              (-fx count 1)
+              (cons (car remaining) left))))))
+
+(define (build-nary-boolean-term terms zero-term two-raw three-raw label)
+  (yices2-api/check-term-list terms label)
   (cond
    ((null? terms)
-    (yices2-api/false-term))
+    zero-term)
    ((null? (cdr terms))
     (car terms))
+   ((null? (cddr terms))
+    (let ((result (two-raw (car terms) (cadr terms))))
+      (yices2-api/check-code result label)
+      result))
+   ((null? (cdddr terms))
+    (let ((result (three-raw (car terms) (cadr terms) (caddr terms))))
+      (yices2-api/check-code result label)
+      result))
    (else
-    (let ((term-array #f))
-      (unwind-protect
-       (begin
-         (set! term-array (yices2-api/list->term-array terms "or-terms"))
-         (let ((result (yices-or-raw (length terms) term-array)))
-           (yices2-api/check-code result "yices_or")
-           result))
-       (when (yices2-api/pointer-live? term-array yices-term-array-null?)
-         (yices-term-array-free term-array)))))))
+    (multiple-value-bind
+        (left right)
+        (split-list-halves terms)
+      (let ((result (two-raw (build-nary-boolean-term left
+                                                      zero-term
+                                                      two-raw
+                                                      three-raw
+                                                      label)
+                             (build-nary-boolean-term right
+                                                      zero-term
+                                                      two-raw
+                                                      three-raw
+                                                      label))))
+        (yices2-api/check-code result label)
+        result)))))
+
+(define (build-nary-binary-term terms zero-term two-raw label)
+  (yices2-api/check-term-list terms label)
+  (cond
+   ((null? terms)
+    zero-term)
+   ((null? (cdr terms))
+    (car terms))
+   ((null? (cddr terms))
+    (let ((result (two-raw (car terms) (cadr terms))))
+      (yices2-api/check-code result label)
+      result))
+   (else
+    (multiple-value-bind
+        (left right)
+        (split-list-halves terms)
+      (let ((result (two-raw (build-nary-binary-term left
+                                                     zero-term
+                                                     two-raw
+                                                     label)
+                             (build-nary-binary-term right
+                                                     zero-term
+                                                     two-raw
+                                                     label))))
+        (yices2-api/check-code result label)
+        result)))))
+
+(define (yices2-api/or-terms terms)
+  (build-nary-boolean-term terms
+                           (yices2-api/false-term)
+                           yices-or2-raw
+                           yices-or3-raw
+                           "yices_or"))
 
 (define (yices2-api/and-terms terms)
-  (yices2-api/check-term-list terms "and-terms")
-  (cond
-   ((null? terms)
-    (yices2-api/true-term))
-   ((null? (cdr terms))
-    (car terms))
-   (else
-    (let ((term-array #f))
-      (unwind-protect
-       (begin
-         (set! term-array (yices2-api/list->term-array terms "and-terms"))
-         (let ((result (yices-and-raw (length terms) term-array)))
-         (yices2-api/check-code result "yices_and")
-         result))
-       (when (yices2-api/pointer-live? term-array yices-term-array-null?)
-         (yices-term-array-free term-array)))))))
+  (build-nary-boolean-term terms
+                           (yices2-api/true-term)
+                           yices-and2-raw
+                           yices-and3-raw
+                           "yices_and"))
 
 (define (yices2-api/application-term fun args)
   (unless (integer? fun)
@@ -496,26 +554,10 @@
        (yices-term-array-free term-array)))))
 
 (define (yices2-api/add-terms terms)
-  (yices2-api/check-term-list terms "sum terms")
-  (cond
-   ((null? terms)
-    (yices2-api/rational-term "0"))
-   ((null? (cdr terms))
-    (car terms))
-   ((null? (cddr terms))
-    (let ((term (yices-add-raw (car terms) (cadr terms))))
-      (yices2-api/check-code term "yices_add")
-      term))
-   (else
-    (let ((term-array #f))
-      (unwind-protect
-       (begin
-         (set! term-array (yices2-api/list->term-array terms "sum terms"))
-         (let ((term (yices-sum-raw (length terms) term-array)))
-           (yices2-api/check-code term "yices_sum")
-           term))
-       (when (yices2-api/pointer-live? term-array yices-term-array-null?)
-         (yices-term-array-free term-array)))))))
+  (build-nary-binary-term terms
+                          (yices2-api/rational-term "0")
+                          yices-add-raw
+                          "yices_add"))
 
 (define (yices2-api/sub-term left right)
   (yices2-api/check-binary-terms left right "sub")
@@ -524,26 +566,10 @@
     term))
 
 (define (yices2-api/mul-terms terms)
-  (yices2-api/check-term-list terms "product terms")
-  (cond
-   ((null? terms)
-    (yices2-api/rational-term "1"))
-   ((null? (cdr terms))
-    (car terms))
-   ((null? (cddr terms))
-    (let ((term (yices-mul-raw (car terms) (cadr terms))))
-      (yices2-api/check-code term "yices_mul")
-      term))
-   (else
-    (let ((term-array #f))
-      (unwind-protect
-       (begin
-         (set! term-array (yices2-api/list->term-array terms "product terms"))
-         (let ((term (yices-product-raw (length terms) term-array)))
-           (yices2-api/check-code term "yices_product")
-           term))
-       (when (yices2-api/pointer-live? term-array yices-term-array-null?)
-         (yices-term-array-free term-array)))))))
+  (build-nary-binary-term terms
+                          (yices2-api/rational-term "1")
+                          yices-mul-raw
+                          "yices_mul"))
 
 (define (yices2-api/division-term left right)
   (yices2-api/check-binary-terms left right "division")
@@ -646,6 +672,11 @@
   (let ((name (yices-term-name-raw term)))
     (and (string? name)
          name)))
+
+(define (yices2-api/term-bool? term)
+  (unless (integer? term)
+    (sign-error "sal-cdr expected a Yices term id, received ~a." term))
+  (= (yices-term-is-bool-raw term) 1))
 
 (define (yices2-api/sum-component-term term idx)
   (unless (integer? term)
@@ -754,6 +785,21 @@
   (let ((value-term (yices-get-value-as-term-raw model term)))
     (and (>= value-term 0)
          value-term)))
+
+(define (yices2-api/try-value-formula-string model term)
+  (unless (integer? term)
+    (sign-error "sal-cdr expected a Yices term id for formula extraction, received ~a." term))
+  (let ((value-string (yices-get-value-formula-string-raw model term)))
+    (and (string? value-string)
+         value-string)))
+
+(define (yices2-api/try-value-string model term)
+  (unless (integer? term)
+    (sign-error "sal-cdr expected a Yices term id for value extraction, received ~a." term))
+  (let ((value-string (yices-get-value-string-raw model term)))
+    (and (string? value-string)
+         (> (string-length value-string) 0)
+         value-string)))
 
 (define (yices2-api/term-array-values model terms)
   (yices2-api/check-term-list terms "model value query terms")

@@ -16,6 +16,11 @@
                 (cdr-solver-capabilities/models? caps)
                 (cdr-solver-capabilities/interpolants? caps)
                 (cdr-solver-capabilities/unsat-cores? caps)
+                <cdr-cube-binding-formula>
+                (make-cdr-cube-binding-formula expr)
+                (cdr-cube-binding-formula? value)
+                (cdr-cube-binding-expr value)
+                (cdr-cube-binding->expr binding place-provider)
                 <cdr-cube>
                 (make-cdr-cube bindings)
                 (cdr-cube/bindings cube)
@@ -44,6 +49,7 @@
                 (cdr-solver/check-lemma-propagation solver level lemma)
                 (cdr-solver/interpolant-for-cube solver level cube)
                 (cdr-solver/learn-forward-cube solver level cube)
+                (cdr-solver/learn-forward-expr solver level expr)
                 (cdr-solver/reset-induction! solver depth)
                 (cdr-solver/add-induction-lemma! solver lemma)
                 (cdr-solver/check-inductive-witness solver lemma)
@@ -77,6 +83,20 @@
 
 (define (cdr-solver-capabilities/unsat-cores? caps)
   (slot-value caps :unsat-cores?))
+
+(define-class <cdr-cube-binding-formula> ()
+  (:expr))
+
+(define (make-cdr-cube-binding-formula expr)
+  (make-instance <cdr-cube-binding-formula> :expr expr))
+
+(define (cdr-cube-binding-formula? value)
+  (instance-of? value <cdr-cube-binding-formula>))
+
+(define (cdr-cube-binding-expr value)
+  (if (cdr-cube-binding-formula? value)
+    (slot-value value :expr)
+    value))
 
 (define-class <cdr-cube> ()
   (:bindings))
@@ -116,7 +136,8 @@
   (and (= (cdr-cube/size cube1) (cdr-cube/size cube2))
        (for-all (lambda (b1 b2)
                   (and (eq? (car b1) (car b2))
-                       (sal-ast/equivalent? (cdr b1) (cdr b2))))
+                       (sal-ast/equivalent? (cdr-cube-binding->expr b1 (car b1))
+                                            (cdr-cube-binding->expr b2 (car b2)))))
                 (cdr-cube/bindings cube1)
                 (cdr-cube/bindings cube2))))
 
@@ -125,11 +146,18 @@
          (value (cdr binding))
          (name-expr (make-sal-name-expr decl place-provider))
          (type (slot-value decl :type)))
-    (if (sal-type/boolean? type)
+    (cond
+     ((cdr-cube-binding-formula? value)
+      (cdr-cube-binding-expr value))
+     ((sal-type/boolean? type)
       (if (sal-expr/true? value)
         name-expr
-        (make-sal-not name-expr))
-      (make-sal-equality name-expr value))))
+        (make-sal-not name-expr)))
+     (else
+      (make-sal-equality name-expr value)))))
+
+(define (cdr-cube-binding->expr binding place-provider)
+  (binding->literal binding place-provider))
 
 (define (cdr-cube->expr cube place-provider)
   (let ((literals (map (lambda (binding)
@@ -182,6 +210,9 @@
 (define-generic (cdr-solver/check-lemma-propagation solver level lemma))
 (define-generic (cdr-solver/interpolant-for-cube solver level cube))
 (define-generic (cdr-solver/learn-forward-cube solver level cube))
+(define-generic (cdr-solver/learn-forward-expr solver level expr))
+(define-method (cdr-solver/learn-forward-expr (solver <cdr-solver>) (level <primitive>) (expr <sal-expr>))
+  #f)
 (define-generic (cdr-solver/reset-induction! solver depth))
 (define-generic (cdr-solver/add-induction-lemma! solver lemma))
 (define-generic (cdr-solver/check-inductive-witness solver lemma))

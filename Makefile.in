@@ -48,6 +48,7 @@ CPPFLAGS += @CPPFLAGS@ -I$(BIGLOOLIBDIR) -DOS_$(posixos)
 LDFLAGS  += @LDFLAGS@
 LIBS     += @LIBS@
 LIBS     += -lyices
+LIBS     += -lpoly
 
 ifneq ($(wildcard /usr/local/lib/libyices.dylib),)
 LDFLAGS += -L/usr/local/lib -Wl,-rpath,/usr/local/lib

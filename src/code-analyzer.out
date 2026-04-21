@@ -2888,51 +2888,57 @@ IDX: 468
 SLOTS: (:incremental? :models? :interpolants? :unsat-cores?)
 SUBCLASSES: ()
 ---------------------------
-CLASS: <cdr-cube>
+CLASS: <cdr-cube-binding-formula>
 FAST SLOT ACCESS: #t
 IDX: 469
+SLOTS: (:expr)
+SUBCLASSES: ()
+---------------------------
+CLASS: <cdr-cube>
+FAST SLOT ACCESS: #t
+IDX: 470
 SLOTS: (:bindings)
 SUBCLASSES: ()
 ---------------------------
 CLASS: <cdr-solver>
 FAST SLOT ACCESS: #t
-IDX: 470
+IDX: 471
 SLOTS: (:capabilities :flat-module :state-vars :trace-solver-id :solver-description)
 SUBCLASSES: (<cdr-yices2-solver>)
 ---------------------------
 CLASS: <cdr-frame-store>
 FAST SLOT ACCESS: #t
-IDX: 471
+IDX: 472
 SLOTS: (:num-frames :frame-lemmas :frame-tables)
 SUBCLASSES: ()
 ---------------------------
 CLASS: <cdr-obligation>
 FAST SLOT ACCESS: #t
-IDX: 472
+IDX: 473
 SLOTS: (:cube :level :parent)
 SUBCLASSES: ()
 ---------------------------
 CLASS: <cdr-obligation-queue>
 FAST SLOT ACCESS: #t
-IDX: 473
+IDX: 474
 SLOTS: (:obligations)
 SUBCLASSES: ()
 ---------------------------
 CLASS: <cdr-pdkind-obligation>
 FAST SLOT ACCESS: #t
-IDX: 474
+IDX: 475
 SLOTS: (:f-fwd :target-cube :target-expr :distance :score :refined :parent :edge-length)
 SUBCLASSES: ()
 ---------------------------
 CLASS: <cdr-yices2-session>
 FAST SLOT ACCESS: #t
-IDX: 475
+IDX: 476
 SLOTS: (:name :solver :context :command :logic :interpolants? :process :input-port :output-port :transcript :echo-counter :id->decl-proc :sort->type-proc :place-provider)
 SUBCLASSES: ()
 ---------------------------
 CLASS: <cdr-yices2-solver>
 FAST SLOT ACCESS: #t
-IDX: 476
+IDX: 477
 SLOTS: (:capabilities :flat-module :state-vars :trace-solver-id :solver-description :ctx :info :property :definition :initialization :transition :valid-input :valid-state :i0 :t01 :bad0 :bad1 :init-session :reach-sessions :shared-reach-session :bad-sessions :induction-sessions :pdkind-induction-session :pdkind-induction-depth :minimization-session :decl-name->term :helper-name->term :registered-sorts :expr-term-cache :expr-text-term-cache :synced-decls :yices-owned? :reach-lemmas :induction-lemmas :num-levels :effective-command :pdkind?)
 SUBCLASSES: ()
 ---------------------------
@@ -5091,131 +5097,136 @@ IDX: 430
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: cdr-solver/generalize-reachability-target
+GENERIC: cdr-solver/learn-forward-expr
 IDX: 431
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: cdr-solver/generalize-induction-target
+GENERIC: cdr-solver/generalize-reachability-target
 IDX: 432
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: cdr-solver/state-formulas-imply?
+GENERIC: cdr-solver/generalize-induction-target
 IDX: 433
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: cdr-solver/minimize-state-formula
+GENERIC: cdr-solver/state-formulas-imply?
 IDX: 434
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
-GENERIC: cdr-solver/minimize-obligation-frame
+GENERIC: cdr-solver/minimize-state-formula
 IDX: 435
+NUM DISCRIMINATORS: 1
+DISCRIMINATORS POSITIONS: (0)
+----------------------------
+GENERIC: cdr-solver/minimize-obligation-frame
+IDX: 436
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
 GENERIC: cdr-solver/usable-lemma
-IDX: 436
+IDX: 437
 NUM DISCRIMINATORS: 1
 DISCRIMINATORS POSITIONS: (0)
 ----------------------------
 GENERIC: cdr-solver/add-frame!
-IDX: 437
-NUM DISCRIMINATORS: 0
-DISCRIMINATORS POSITIONS: ()
-----------------------------
-GENERIC: cdr-solver/add-lemma-at-level!
 IDX: 438
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: cdr-solver/add-lemma!
+GENERIC: cdr-solver/add-lemma-at-level!
 IDX: 439
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: cdr-solver/check-initial-bad
+GENERIC: cdr-solver/add-lemma!
 IDX: 440
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: cdr-solver/check-initial-cube
+GENERIC: cdr-solver/check-initial-bad
 IDX: 441
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: cdr-solver/check-initial-expr
+GENERIC: cdr-solver/check-initial-cube
 IDX: 442
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: cdr-solver/check-bad-at-frame
+GENERIC: cdr-solver/check-initial-expr
 IDX: 443
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: cdr-solver/check-predecessor
+GENERIC: cdr-solver/check-bad-at-frame
 IDX: 444
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: cdr-solver/check-predecessor-expr
+GENERIC: cdr-solver/check-predecessor
 IDX: 445
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: cdr-solver/check-predecessor-status
+GENERIC: cdr-solver/check-predecessor-expr
 IDX: 446
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: cdr-solver/check-lemma-propagation
+GENERIC: cdr-solver/check-predecessor-status
 IDX: 447
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: cdr-solver/interpolant-for-cube
+GENERIC: cdr-solver/check-lemma-propagation
 IDX: 448
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: cdr-solver/learn-forward-cube
+GENERIC: cdr-solver/interpolant-for-cube
 IDX: 449
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: cdr-solver/reset-induction!
+GENERIC: cdr-solver/learn-forward-cube
 IDX: 450
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: cdr-solver/add-induction-lemma!
+GENERIC: cdr-solver/reset-induction!
 IDX: 451
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: cdr-solver/check-inductive-witness
+GENERIC: cdr-solver/add-induction-lemma!
 IDX: 452
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: cdr-solver/check-induction-path
+GENERIC: cdr-solver/check-inductive-witness
 IDX: 453
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
-GENERIC: cdr-solver/close!
+GENERIC: cdr-solver/check-induction-path
 IDX: 454
 NUM DISCRIMINATORS: 0
 DISCRIMINATORS POSITIONS: ()
 ----------------------------
+GENERIC: cdr-solver/close!
+IDX: 455
+NUM DISCRIMINATORS: 0
+DISCRIMINATORS POSITIONS: ()
+----------------------------
 STATISTICS:
-number of classes: 476
-number of classes which support fast slot access: 474
-number of generic methods: 455
+number of classes: 477
+number of classes which support fast slot access: 475
+number of generic methods: 456
 number of static dispatch generic methods: 45
-number of single dispatch generic methods: 372
+number of single dispatch generic methods: 373
 number of double dispatch generic methods: 34
 number of multi dispatch generic methods: 4
