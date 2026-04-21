@@ -157,6 +157,21 @@
      formulas)
     (reverse! result)))
 
+(define (collect-formula-reference-decls formulas keep-decls)
+  (let ((table (make-eq-hash-table))
+        (result '()))
+    (define (remember! decl)
+      (unless (eq-hash-table/contains? table decl)
+        (eq-hash-table/put! table decl #unspecified)
+        (set! result (cons decl result))))
+    (for-each remember! keep-decls)
+    (for-each
+     (lambda (expr)
+       (for-each remember!
+                 (sal-ast/open-reference-list expr)))
+     formulas)
+    (reverse! result)))
+
 (define (dedupe-decls decls)
   (let ((table (make-eq-hash-table))
         (result '()))
@@ -267,6 +282,7 @@
 
 (define (helper-generalize-formulas solver keep-decls formulas)
   (let* ((decls (collect-formula-decls formulas keep-decls))
+         (reference-decls (collect-formula-reference-decls formulas keep-decls))
          (_ (when (>= (verbosity-level) 5)
               (verbose-message 5
                                "sal-cdr: helper generalization on ~a formula(s), ~a decl(s), ~a kept decl(s)."
@@ -304,15 +320,13 @@
              decls))
          (generalized-terms
           (let* ((formula-terms
-                  (apply append
-                         (map (lambda (expr)
-                                (map (lambda (conjunct)
-                                       (solver/expr->term/presynced solver conjunct))
-                                     (let ((conjuncts (sal-expr/conjuncts expr)))
-                                       (if (null? conjuncts)
-                                         (list (make-sal-true (slot-value solver :flat-module)))
-                                         conjuncts))))
-                              formulas)))
+                  (map (lambda (expr)
+                         (solver/expr->term/presynced
+                          solver
+                          (if (sal-expr/true? expr)
+                            (make-sal-true (slot-value solver :flat-module))
+                            expr)))
+                       formulas))
                  (elim-terms
                   (map-and-filter
                    (lambda (decl)
@@ -321,10 +335,10 @@
                            solver
                            (smt-id->string
                             (smtlib2-translation-info/var-id (slot-value solver :info) decl)))))
-                   decls))
+                   reference-decls))
                  (_ (when (>= (verbosity-level) 5)
                       (verbose-message 5
-                                       "sal-cdr: helper generalization invoking Yices on ~a conjunct term(s), eliminating ~a term(s)."
+                                       "sal-cdr: helper generalization invoking Yices on ~a conjunct term(s), eliminating ~a variable term(s)."
                                        (length formula-terms)
                                        (length elim-terms))))
                  (terms (yices2-api/generalize-terms formula-terms elim-terms)))
@@ -1479,6 +1493,70 @@
                   (slot-value solver :flat-module)))
     (vector-set! (slot-value solver :induction-sessions) level induction)))
 
+(define (make-initial-interpolation-session solver)
+  (let* ((ctx (slot-value solver :ctx))
+         (info (slot-value solver :info)))
+    (make-cdr-yices2-session
+     solver
+     "interp-init"
+     (slot-value solver :effective-command)
+     (sat-smtlib2-context/logic ctx)
+     #t
+     '()
+     '()
+     (make-session-base-terms solver (list (slot-value solver :i0)))
+     (make-id->decl-proc info)
+     (make-sort->type-proc info)
+     (slot-value solver :flat-module))))
+
+(define (make-reach-interpolation-session solver level)
+  (let* ((ctx (slot-value solver :ctx))
+         (info (slot-value solver :info))
+         (session (make-cdr-yices2-session
+                   solver
+                   (string-append "interp-reach-" (object->string level))
+                   (slot-value solver :effective-command)
+                   (sat-smtlib2-context/logic ctx)
+                   #t
+                   '()
+                   '()
+                   (make-session-base-terms solver
+                                            (if (= level 0)
+                                              (list (slot-value solver :i0)
+                                                    (slot-value solver :t01))
+                                              (list (slot-value solver :t01))))
+                   (make-id->decl-proc info)
+                   (make-sort->type-proc info)
+                   (slot-value solver :flat-module))))
+    (for-each
+     (lambda (lemma)
+       (session/assert-permanent! session
+                                  (solver/state-expr->term solver lemma 0)))
+     (or (vector-ref (slot-value solver :reach-lemmas) level)
+         '()))
+    session))
+
+(define (call/temporary-initial-interpolation-session solver proc)
+  (let ((session (make-initial-interpolation-session solver)))
+    (unwind-protect
+     (proc session)
+     (session/close! session))))
+
+(define (call/temporary-reach-interpolation-session solver level proc)
+  (let ((session (make-reach-interpolation-session solver level)))
+    (unwind-protect
+     (proc session)
+     (session/close! session))))
+
+(define (interpolate-state-expr-with-session solver session expr step)
+  (call/state-expr-model
+   solver
+   expr
+   step
+   (lambda (terms model)
+     (and (equal? (session/check-sat-with-model! session model terms) "unsat")
+          (session/get-interpolant-expr solver session model)))))
+
 (define (transition-step-term solver step)
   (solver/expr->term
    solver
@@ -2045,27 +2123,21 @@
   (if (not (cdr-solver-capabilities/interpolants?
             (cdr-solver/capabilities solver)))
     #f
-    (let ((session (if (slot-value solver :shared-reach-session)
-                     (slot-value solver :shared-reach-session)
-                     (vector-ref (slot-value solver :reach-sessions) level))))
-      (when (slot-value solver :shared-reach-session)
-        (push-shared-reach-level! solver level))
-      (unwind-protect
-       (call/state-expr-model
-        solver
-        (cdr-cube->expr cube (slot-value solver :flat-module))
-        1
-        (lambda (terms model)
-          (let ((status (session/check-sat-with-model! session model terms)))
-            (when (>= (verbosity-level) 5)
-              (verbose-message 5 "sal-cdr: interpolant query status at F~a: ~a"
-                               level
-                               status))
-            (if (equal? status "unsat")
-              (session/get-interpolant-expr solver session model)
-              #f))))
-       (when (slot-value solver :shared-reach-session)
-         (session/pop! session))))))
+    (call/temporary-reach-interpolation-session
+     solver
+     level
+     (lambda (session)
+       (let ((interpolant
+              (interpolate-state-expr-with-session
+               solver
+               session
+               (cdr-cube->expr cube (slot-value solver :flat-module))
+               1)))
+         (when (>= (verbosity-level) 5)
+           (verbose-message 5 "sal-cdr: interpolant query at F~a returned ~a."
+                            level
+                            (if interpolant "interpolant" "no interpolant")))
+         interpolant)))))
 
 (define (finalize-forward-lemma solver level lemma)
   (let* ((minimized (and lemma
@@ -2085,28 +2157,28 @@
   (if (not (cdr-solver-capabilities/interpolants?
             (cdr-solver/capabilities solver)))
     #f
-    (let* ((init-session (slot-value solver :init-session))
-           (initial-lemma
-            (call/state-expr-model
+    (let* ((initial-lemma
+            (call/temporary-initial-interpolation-session
              solver
-             expr
-             0
-             (lambda (terms model)
-               (when (>= (verbosity-level) 5)
-                 (verbose-message 5 "sal-cdr: forward learning, checking initial formula assumption..."))
-               (when (>= (verbosity-level) 5)
-                 (verbose-message 5 "sal-cdr: forward learning initial formula assumption terms: ~a"
-                                  (length terms)))
-               (and (equal? (session/check-sat-with-model! init-session model terms) "unsat")
-                    (session/get-interpolant-expr solver init-session model)))))
+             (lambda (init-session)
+               (call/state-expr-model
+                solver
+                expr
+                0
+                (lambda (terms model)
+                  (when (>= (verbosity-level) 5)
+                    (verbose-message 5 "sal-cdr: forward learning, checking initial formula assumption..."))
+                  (when (>= (verbosity-level) 5)
+                    (verbose-message 5 "sal-cdr: forward learning initial formula assumption terms: ~a"
+                                     (length terms)))
+                  (and (equal? (session/check-sat-with-model! init-session model terms) "unsat")
+                       (session/get-interpolant-expr solver init-session model)))))))
            (transition-lemma
             (and (> level 0)
-                 (let ((session (if (slot-value solver :shared-reach-session)
-                                  (slot-value solver :shared-reach-session)
-                                  (vector-ref (slot-value solver :reach-sessions) (- level 1)))))
-                   (when (slot-value solver :shared-reach-session)
-                     (push-shared-reach-level! solver (- level 1)))
-                   (unwind-protect
+                 (call/temporary-reach-interpolation-session
+                  solver
+                  (- level 1)
+                  (lambda (session)
                     (call/state-expr-model
                      solver
                      expr
@@ -2119,9 +2191,7 @@
                          (verbose-message 5 "sal-cdr: forward learning transition formula assumption terms: ~a"
                                           (length terms)))
                        (and (equal? (session/check-sat-with-model! session model terms) "unsat")
-                            (session/get-interpolant-expr solver session model))))
-                    (when (slot-value solver :shared-reach-session)
-                      (session/pop! session)))))))
+                            (session/get-interpolant-expr solver session model)))))))))
       (let ((lemma
              (cond
               ((and initial-lemma transition-lemma)

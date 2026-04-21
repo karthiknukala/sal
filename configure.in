@@ -353,7 +353,27 @@ LIBS=$save_libs
 pwd=`pwd`
 SALENV_BOOTDIR=$pwd
 ARCH=`./config.guess`
-posixos=`./os`
+if test -x ./os; then
+   posixos=`./os`
+else
+   case `uname -s 2>/dev/null || echo unknown` in
+      Linux*)
+         posixos=linux
+         ;;
+      CYGWIN*|Cygwin*|cygwin*)
+         posixos=cygwin
+         ;;
+      SunOS*|sunos*|Sunos*)
+         posixos=sunos
+         ;;
+      Darwin*|darwin*)
+         posixos=darwin
+         ;;
+      *)
+         posixos=unix
+         ;;
+   esac
+fi
 
 MINGW32="False"
 case "$ARCH" in

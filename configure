@@ -2633,7 +2633,27 @@ DOT_A_LIBS=""
 pwd=`pwd`
 SALENV_BOOTDIR=$pwd
 ARCH=`./config.guess`
-posixos=`./os`
+if test -x ./os; then
+  posixos=`./os`
+else
+  case `uname -s 2>/dev/null || echo unknown` in
+    Linux*)
+      posixos=linux
+      ;;
+    CYGWIN*|Cygwin*|cygwin*)
+      posixos=cygwin
+      ;;
+    SunOS*|sunos*|Sunos*)
+      posixos=sunos
+      ;;
+    Darwin*|darwin*)
+      posixos=darwin
+      ;;
+    *)
+      posixos=unix
+      ;;
+  esac
+fi
 
 MINGW32="False"
 case "$ARCH" in
@@ -6286,4 +6306,3 @@ if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: unrecognized options: $ac_unrecognized_opts" >&5
 printf "%s\n" "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
-

@@ -5,8 +5,15 @@
 #include <gmp.h>
 #include <bigloo.h>
 #include <bigloo_string.h>
+
+#if defined(__has_include)
+#if __has_include(<poly/algebraic_number.h>) && __has_include(<poly/upolynomial.h>)
 #include <poly/algebraic_number.h>
 #include <poly/upolynomial.h>
+#define SAL_HAVE_LIBPOLY 1
+#endif
+#endif
+
 #include <yices.h>
 
 static obj_t bgl_string_from_c(char *value) {
@@ -130,7 +137,7 @@ static int bgl_emit_polynomial_term(FILE *stream, const lp_upolynomial_t *poly, 
 }
 
 static obj_t bgl_yices_get_value_formula_string_internal(model_t *mdl, term_t term) {
-#ifdef LIBPOLY_VERSION
+#ifdef SAL_HAVE_LIBPOLY
   lp_algebraic_number_t algebraic;
   const char *var_name;
   char *buffer = NULL;
@@ -683,7 +690,7 @@ obj_t bgl_yices_get_value_string(void *model, int term_id) {
     return result;
   }
 
-#ifdef LIBPOLY_VERSION
+#ifdef SAL_HAVE_LIBPOLY
   case YVAL_ALGEBRAIC: {
     obj_t printed = bgl_yices_printed_value_string(mdl, term);
     lp_algebraic_number_t algebraic;
