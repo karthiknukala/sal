@@ -1,6 +1,15 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
+#include <limits.h>
+#include <sys/resource.h>
+
+#if defined(__APPLE__)
+#include <mach/mach.h>
+#elif defined(__linux__)
+#include <unistd.h>
+#endif
 
 #include <gmp.h>
 #include <bigloo.h>
@@ -292,6 +301,45 @@ void bgl_yices_reset(void) {
   yices_reset();
 }
 
+int bgl_current_rss_mb(void) {
+#if defined(__APPLE__)
+  mach_task_basic_info_data_t info;
+  mach_msg_type_number_t count = MACH_TASK_BASIC_INFO_COUNT;
+
+  if (task_info(mach_task_self(),
+                MACH_TASK_BASIC_INFO,
+                (task_info_t)&info,
+                &count) == KERN_SUCCESS) {
+    return (int)(info.resident_size / (1024 * 1024));
+  }
+#elif defined(__linux__)
+  FILE *stream = fopen("/proc/self/statm", "r");
+  if (stream != NULL) {
+    long resident_pages = 0;
+    long page_size = sysconf(_SC_PAGESIZE);
+
+    if (page_size > 0 && fscanf(stream, "%*s %ld", &resident_pages) == 1) {
+      fclose(stream);
+      return (int)((resident_pages * page_size) / (1024 * 1024));
+    }
+    fclose(stream);
+  }
+#endif
+
+  {
+    struct rusage usage;
+    if (getrusage(RUSAGE_SELF, &usage) == 0) {
+#if defined(__APPLE__)
+      return (int)(usage.ru_maxrss / (1024 * 1024));
+#else
+      return (int)(usage.ru_maxrss / 1024);
+#endif
+    }
+  }
+
+  return -1;
+}
+
 int bgl_yices_has_mcsat(void) {
   return yices_has_mcsat();
 }
@@ -574,6 +622,14 @@ int32_t bgl_yices_term_child(int32_t term, int index) {
   return yices_term_child((term_t)term, index);
 }
 
+int32_t bgl_yices_proj_arg(int32_t term) {
+  term_t arg = yices_proj_arg((term_t)term);
+  if (arg == NULL_TERM && yices_error_code() != YICES_NO_ERROR) {
+    return INT32_MIN;
+  }
+  return arg;
+}
+
 obj_t bgl_yices_get_term_name(int32_t term) {
   const char *name = yices_get_term_name((term_t)term);
   if (name == NULL) {
@@ -596,7 +652,33 @@ int32_t bgl_yices_sum_component_term(int32_t term, int index) {
   mpq_clear(coeff);
 
   if (code < 0) {
+    return INT32_MIN;
+  }
+
+  return component;
+}
+
+int32_t bgl_yices_bvsum_component_term(int32_t term, int index) {
+  term_t component;
+  uint32_t nbits;
+  int32_t *coeff_bits;
+  int code;
+
+  nbits = yices_term_bitsize((term_t)term);
+  if (nbits == 0) {
     return NULL_TERM;
+  }
+
+  coeff_bits = (int32_t *)malloc((size_t)nbits * sizeof(int32_t));
+  if (coeff_bits == NULL) {
+    return NULL_TERM;
+  }
+
+  code = yices_bvsum_component((term_t)term, index, coeff_bits, &component);
+  free(coeff_bits);
+
+  if (code < 0) {
+    return INT32_MIN;
   }
 
   return component;
@@ -609,10 +691,42 @@ int32_t bgl_yices_product_component_term(int32_t term, int index) {
 
   code = yices_product_component((term_t)term, index, &factor, &exponent);
   if (code < 0) {
-    return NULL_TERM;
+    return INT32_MIN;
   }
 
   return factor;
+}
+
+int bgl_yices_ctor_variable(void) {
+  return YICES_VARIABLE;
+}
+
+int bgl_yices_ctor_uninterpreted_term(void) {
+  return YICES_UNINTERPRETED_TERM;
+}
+
+int bgl_yices_ctor_select_term(void) {
+  return YICES_SELECT_TERM;
+}
+
+int bgl_yices_ctor_bit_term(void) {
+  return YICES_BIT_TERM;
+}
+
+int bgl_yices_ctor_bv_sum(void) {
+  return YICES_BV_SUM;
+}
+
+int bgl_yices_ctor_arith_sum(void) {
+  return YICES_ARITH_SUM;
+}
+
+int bgl_yices_ctor_arith_ff_sum(void) {
+  return YICES_ARITH_FF_SUM;
+}
+
+int bgl_yices_ctor_power_product(void) {
+  return YICES_POWER_PRODUCT;
 }
 
 term_t *bgl_yices_term_array_alloc(int count) {

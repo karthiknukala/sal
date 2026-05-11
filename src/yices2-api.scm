@@ -23,6 +23,7 @@
          (yices-term-vector-null?::bool (::yices-term-vector) "bgl_yices_pointer_null")
          (yices-init::void () "bgl_yices_init")
          (yices-exit::void () "bgl_yices_exit")
+         (yices-current-rss-mb::int () "bgl_current_rss_mb")
          (yices-has-mcsat::int () "bgl_yices_has_mcsat")
          (yices-version::obj () "bgl_yices_version_string")
          (yices-new-config::yices-config () "bgl_yices_new_config")
@@ -91,10 +92,20 @@
          (yices-term-constructor-raw::int (::int) "bgl_yices_term_constructor")
          (yices-term-num-children-raw::int (::int) "bgl_yices_term_num_children")
          (yices-term-child-raw::int (::int ::int) "bgl_yices_term_child")
+         (yices-proj-arg-raw::int (::int) "bgl_yices_proj_arg")
          (yices-term-name-raw::obj (::int) "bgl_yices_get_term_name")
          (yices-term-is-bool-raw::int (::int) "bgl_yices_term_is_bool")
          (yices-sum-component-term-raw::int (::int ::int) "bgl_yices_sum_component_term")
+         (yices-bvsum-component-term-raw::int (::int ::int) "bgl_yices_bvsum_component_term")
          (yices-product-component-term-raw::int (::int ::int) "bgl_yices_product_component_term")
+         (yices-ctor-variable-raw::int () "bgl_yices_ctor_variable")
+         (yices-ctor-uninterpreted-term-raw::int () "bgl_yices_ctor_uninterpreted_term")
+         (yices-ctor-select-term-raw::int () "bgl_yices_ctor_select_term")
+         (yices-ctor-bit-term-raw::int () "bgl_yices_ctor_bit_term")
+         (yices-ctor-bv-sum-raw::int () "bgl_yices_ctor_bv_sum")
+         (yices-ctor-arith-sum-raw::int () "bgl_yices_ctor_arith_sum")
+         (yices-ctor-arith-ff-sum-raw::int () "bgl_yices_ctor_arith_ff_sum")
+         (yices-ctor-power-product-raw::int () "bgl_yices_ctor_power_product")
          (yices-term-array-alloc::yices-term-array (::int) "bgl_yices_term_array_alloc")
          (yices-term-array-set!::void (::yices-term-array ::int ::int) "bgl_yices_term_array_set")
          (yices-term-array-ref::int (::yices-term-array ::int) "bgl_yices_term_array_ref")
@@ -108,6 +119,7 @@
          (yices-term-vector-ref::int (::yices-term-vector ::int) "bgl_yices_term_vector_ref"))
         (export (yices2-api/acquire!)
                 (yices2-api/release!)
+                (yices2-api/current-rss-mb)
                 (yices2-api/has-mcsat?)
                 (yices2-api/version-string)
                 (yices2-api/status->string status)
@@ -142,13 +154,26 @@
                 (yices2-api/gt0-term term)
                 (yices2-api/ge0-term term)
                 (yices2-api/term->string term)
+                (yices2-api/constructor-variable)
+                (yices2-api/constructor-uninterpreted-term)
+                (yices2-api/constructor-select-term)
+                (yices2-api/constructor-bit-term)
+                (yices2-api/constructor-bv-sum)
+                (yices2-api/constructor-arith-sum)
+                (yices2-api/constructor-arith-ff-sum)
+                (yices2-api/constructor-power-product)
                 (yices2-api/term-constructor term)
                 (yices2-api/term-num-children term)
                 (yices2-api/term-child term idx)
+                (yices2-api/proj-arg term)
                 (yices2-api/term-name term)
                 (yices2-api/term-bool? term)
                 (yices2-api/sum-component-term term idx)
+                (yices2-api/try-sum-component-term term idx)
+                (yices2-api/bvsum-component-term term idx)
+                (yices2-api/try-bvsum-component-term term idx)
                 (yices2-api/product-component-term term idx)
+                (yices2-api/try-product-component-term term idx)
                 (yices2-api/new-context interpolants?)
                 (yices2-api/free-context! ctx)
                 (yices2-api/context-reset! ctx)
@@ -176,6 +201,7 @@
 (define *yices-status-sat* 3)
 (define *yices-gen-default* 0)
 (define *yices-gen-by-subst* 1)
+(define *yices-term-error-sentinel* -2147483648)
 
 (define *yices2-api-refcount* 0)
 
@@ -189,6 +215,13 @@
 (define (yices2-api/check-code code where)
   (when (< code 0)
     (sign-error "~a failed: ~a" where (yices2-api/error-string))))
+
+(define (yices2-api/check-term-id term where)
+  (when (<= term 0)
+    (sign-error "~a returned invalid term id ~a: ~a"
+                where
+                term
+                (yices2-api/error-string))))
 
 (define (yices2-api/check-pointer ptr null? where)
   (when (or (eq? ptr #f)
@@ -219,7 +252,12 @@
           (sign-error "sal-cdr expected ~a[~a] to be a Yices term id, received ~a."
                       label
                       idx
-                      term)))
+                      term))
+        (yices2-api/check-term-id term
+                                  (string-append label
+                                                 "["
+                                                 (object->string idx)
+                                                 "]")))
       (loop (cdr remaining) (+ idx 1)))))
 
 (define (yices2-api/check-decl-specs decl-specs)
@@ -261,6 +299,11 @@
     (yices-exit))
   *yices2-api-refcount*)
 
+(define (yices2-api/current-rss-mb)
+  (with-yices2-api
+   (lambda ()
+     (yices-current-rss-mb))))
+
 (define (with-yices2-api thunk)
   (yices2-api/acquire!)
   (unwind-protect
@@ -294,6 +337,11 @@
                         label
                         idx
                         term))
+          (yices2-api/check-term-id term
+                                    (string-append label
+                                                   "["
+                                                   (object->string idx)
+                                                   "]"))
           (yices-term-array-set! array idx term)
           (loop (cdr remaining) (+ idx 1)))))
     array))
@@ -304,8 +352,11 @@
     (if (= idx len)
       (reverse! result)
       (let ((term (yices-term-array-ref array idx)))
-        (when (< term 0)
-          (sign-error "sal-cdr failed to read ~a[~a] from a Yices term array." label idx))
+        (when (<= term 0)
+          (sign-error "sal-cdr failed to read a valid ~a[~a] term from a Yices term array: ~a"
+                      label
+                      idx
+                      term))
         (loop (+ idx 1) (cons term result))))))
 
 (define (yices2-api/collect-generalized-term-ids generalized)
@@ -314,9 +365,19 @@
                (result '()))
       (if (= idx size)
         (reverse! result)
-        (loop (+ idx 1)
-              (cons (yices-term-vector-ref generalized idx)
-                    result))))))
+        (let ((term (yices-term-vector-ref generalized idx)))
+          (cond
+           ((< term 0)
+            (sign-error "sal-cdr failed to read generalized term[~a] from Yices." idx))
+           ((= term 0)
+            (when (>= (verbosity-level) 4)
+              (verbose-message 4
+                               "sal-cdr: dropping NULL_TERM generalized result at index ~a."
+                               idx))
+            (loop (+ idx 1) result))
+           (else
+            (loop (+ idx 1)
+                  (cons term result)))))))))
 
 (define (yices2-api/collect-generalized-terms generalized)
   (map yices2-api/term->string
@@ -341,8 +402,8 @@
     (yices2-api/check-code tau
                            (string-append "yices_parse_type(" name ")"))
     (let ((term (yices-new-uninterpreted-term tau)))
-      (yices2-api/check-code term
-                             (string-append "yices_new_uninterpreted_term(" name ")"))
+      (yices2-api/check-term-id term
+                                (string-append "yices_new_uninterpreted_term(" name ")"))
       (yices2-api/check-code (yices-set-term-name term name)
                              (string-append "yices_set_term_name(" name ")"))
       term)))
@@ -351,41 +412,38 @@
   (unless (string? term-string)
     (sign-error "sal-cdr expected a Yices term string, received ~a." term-string))
   (let ((term (yices-parse-term-raw term-string)))
-    (when (< term 0)
-      (sign-error "yices_parse_term failed: ~a\nFormula: ~a"
-                  (yices2-api/error-string)
-                  term-string))
+    (yices2-api/check-term-id term "yices_parse_term")
     term))
 
 (define (yices2-api/rational-term rational-string)
   (unless (string? rational-string)
     (sign-error "sal-cdr expected a rational string, received ~a." rational-string))
   (let ((term (yices-parse-rational-raw rational-string)))
-    (yices2-api/check-code term "yices_parse_rational")
+    (yices2-api/check-term-id term "yices_parse_rational")
     term))
 
 (define (yices2-api/true-term)
   (let ((term (yices-true-raw)))
-    (yices2-api/check-code term "yices_true")
+    (yices2-api/check-term-id term "yices_true")
     term))
 
 (define (yices2-api/false-term)
   (let ((term (yices-false-raw)))
-    (yices2-api/check-code term "yices_false")
+    (yices2-api/check-term-id term "yices_false")
     term))
 
 (define (yices2-api/not-term term)
   (unless (integer? term)
     (sign-error "sal-cdr expected a Yices term id, received ~a." term))
   (let ((negated (yices-not-raw term)))
-    (yices2-api/check-code negated "yices_not")
+    (yices2-api/check-term-id negated "yices_not")
     negated))
 
 (define (yices2-api/neg-term term)
   (unless (integer? term)
     (sign-error "sal-cdr expected a Yices term id, received ~a." term))
   (let ((negated (yices-neg-raw term)))
-    (yices2-api/check-code negated "yices_neg")
+    (yices2-api/check-term-id negated "yices_neg")
     negated))
 
 (define (yices2-api/check-binary-terms left right label)
@@ -401,25 +459,25 @@
 (define (yices2-api/eq-term left right)
   (yices2-api/check-binary-terms left right "eq")
   (let ((term (yices-eq-raw left right)))
-    (yices2-api/check-code term "yices_eq")
+    (yices2-api/check-term-id term "yices_eq")
     term))
 
 (define (yices2-api/neq-term left right)
   (yices2-api/check-binary-terms left right "neq")
   (let ((term (yices-neq-raw left right)))
-    (yices2-api/check-code term "yices_neq")
+    (yices2-api/check-term-id term "yices_neq")
     term))
 
 (define (yices2-api/iff-term left right)
   (yices2-api/check-binary-terms left right "iff")
   (let ((term (yices-iff-raw left right)))
-    (yices2-api/check-code term "yices_iff")
+    (yices2-api/check-term-id term "yices_iff")
     term))
 
 (define (yices2-api/implies-term left right)
   (yices2-api/check-binary-terms left right "implies")
   (let ((term (yices-implies-raw left right)))
-    (yices2-api/check-code term "yices_implies")
+    (yices2-api/check-term-id term "yices_implies")
     term))
 
 (define (yices2-api/ite-term cond then-term else-term)
@@ -430,7 +488,7 @@
   (unless (integer? else-term)
     (sign-error "sal-cdr expected an ite else-branch term id, received ~a." else-term))
   (let ((term (yices-ite-raw cond then-term else-term)))
-    (yices2-api/check-code term "yices_ite")
+    (yices2-api/check-term-id term "yices_ite")
     term))
 
 (define (split-list-halves terms)
@@ -454,11 +512,11 @@
     (car terms))
    ((null? (cddr terms))
     (let ((result (two-raw (car terms) (cadr terms))))
-      (yices2-api/check-code result label)
+      (yices2-api/check-term-id result label)
       result))
    ((null? (cdddr terms))
     (let ((result (three-raw (car terms) (cadr terms) (caddr terms))))
-      (yices2-api/check-code result label)
+      (yices2-api/check-term-id result label)
       result))
    (else
     (multiple-value-bind
@@ -474,7 +532,7 @@
                                                       two-raw
                                                       three-raw
                                                       label))))
-        (yices2-api/check-code result label)
+        (yices2-api/check-term-id result label)
         result)))))
 
 (define (build-nary-binary-term terms zero-term two-raw label)
@@ -486,7 +544,7 @@
     (car terms))
    ((null? (cddr terms))
     (let ((result (two-raw (car terms) (cadr terms))))
-      (yices2-api/check-code result label)
+      (yices2-api/check-term-id result label)
       result))
    (else
     (multiple-value-bind
@@ -500,7 +558,7 @@
                                                      zero-term
                                                      two-raw
                                                      label))))
-        (yices2-api/check-code result label)
+        (yices2-api/check-term-id result label)
         result)))))
 
 (define (yices2-api/or-terms terms)
@@ -530,7 +588,7 @@
        (begin
          (set! term-array (yices2-api/list->term-array args "application arguments"))
          (let ((term (yices-application-raw fun (length args) term-array)))
-           (yices2-api/check-code term "yices_application")
+           (yices2-api/check-term-id term "yices_application")
            term))
        (when (yices2-api/pointer-live? term-array yices-term-array-null?)
          (yices-term-array-free term-array)))))))
@@ -548,7 +606,7 @@
      (begin
        (set! term-array (yices2-api/list->term-array args "update arguments"))
        (let ((term (yices-update-raw fun (length args) term-array new-value)))
-         (yices2-api/check-code term "yices_update")
+         (yices2-api/check-term-id term "yices_update")
          term))
      (when (yices2-api/pointer-live? term-array yices-term-array-null?)
        (yices-term-array-free term-array)))))
@@ -562,7 +620,7 @@
 (define (yices2-api/sub-term left right)
   (yices2-api/check-binary-terms left right "sub")
   (let ((term (yices-sub-raw left right)))
-    (yices2-api/check-code term "yices_sub")
+    (yices2-api/check-term-id term "yices_sub")
     term))
 
 (define (yices2-api/mul-terms terms)
@@ -574,78 +632,107 @@
 (define (yices2-api/division-term left right)
   (yices2-api/check-binary-terms left right "division")
   (let ((term (yices-division-raw left right)))
-    (yices2-api/check-code term "yices_division")
+    (yices2-api/check-term-id term "yices_division")
     term))
 
 (define (yices2-api/idiv-term left right)
   (yices2-api/check-binary-terms left right "idiv")
   (let ((term (yices-idiv-raw left right)))
-    (yices2-api/check-code term "yices_idiv")
+    (yices2-api/check-term-id term "yices_idiv")
     term))
 
 (define (yices2-api/lt-term left right)
   (yices2-api/check-binary-terms left right "lt")
   (let ((term (yices-arith-lt-raw left right)))
-    (yices2-api/check-code term "yices_arith_lt_atom")
+    (yices2-api/check-term-id term "yices_arith_lt_atom")
     term))
 
 (define (yices2-api/le-term left right)
   (yices2-api/check-binary-terms left right "le")
   (let ((term (yices-arith-le-raw left right)))
-    (yices2-api/check-code term "yices_arith_leq_atom")
+    (yices2-api/check-term-id term "yices_arith_leq_atom")
     term))
 
 (define (yices2-api/gt-term left right)
   (yices2-api/check-binary-terms left right "gt")
   (let ((term (yices-arith-gt-raw left right)))
-    (yices2-api/check-code term "yices_arith_gt_atom")
+    (yices2-api/check-term-id term "yices_arith_gt_atom")
     term))
 
 (define (yices2-api/ge-term left right)
   (yices2-api/check-binary-terms left right "ge")
   (let ((term (yices-arith-ge-raw left right)))
-    (yices2-api/check-code term "yices_arith_geq_atom")
+    (yices2-api/check-term-id term "yices_arith_geq_atom")
     term))
 
 (define (yices2-api/lt0-term term)
   (unless (integer? term)
     (sign-error "sal-cdr expected a Yices term id, received ~a." term))
   (let ((atom (yices-arith-lt0-raw term)))
-    (yices2-api/check-code atom "yices_arith_lt0_atom")
+    (yices2-api/check-term-id atom "yices_arith_lt0_atom")
     atom))
 
 (define (yices2-api/le0-term term)
   (unless (integer? term)
     (sign-error "sal-cdr expected a Yices term id, received ~a." term))
   (let ((atom (yices-arith-le0-raw term)))
-    (yices2-api/check-code atom "yices_arith_leq0_atom")
+    (yices2-api/check-term-id atom "yices_arith_leq0_atom")
     atom))
 
 (define (yices2-api/gt0-term term)
   (unless (integer? term)
     (sign-error "sal-cdr expected a Yices term id, received ~a." term))
   (let ((atom (yices-arith-gt0-raw term)))
-    (yices2-api/check-code atom "yices_arith_gt0_atom")
+    (yices2-api/check-term-id atom "yices_arith_gt0_atom")
     atom))
 
 (define (yices2-api/ge0-term term)
   (unless (integer? term)
     (sign-error "sal-cdr expected a Yices term id, received ~a." term))
   (let ((atom (yices-arith-ge0-raw term)))
-    (yices2-api/check-code atom "yices_arith_geq0_atom")
+    (yices2-api/check-term-id atom "yices_arith_geq0_atom")
     atom))
 
 (define (yices2-api/term->string term)
   (unless (integer? term)
     (sign-error "sal-cdr expected a Yices term id, received ~a." term))
+  (yices2-api/check-term-id term "yices_term_to_string")
   (let ((term-str (yices-term->string-raw term)))
     (unless (string? term-str)
-      (sign-error "sal-cdr failed to pretty-print a Yices term."))
+      (sign-error "sal-cdr failed to pretty-print a Yices term.\nTerm id: ~a\nConstructor: ~a\nYices error: ~a"
+                  term
+                  (yices-term-constructor-raw term)
+                  (yices2-api/error-string)))
     term-str))
+
+(define (yices2-api/constructor-variable)
+  (yices-ctor-variable-raw))
+
+(define (yices2-api/constructor-uninterpreted-term)
+  (yices-ctor-uninterpreted-term-raw))
+
+(define (yices2-api/constructor-select-term)
+  (yices-ctor-select-term-raw))
+
+(define (yices2-api/constructor-bit-term)
+  (yices-ctor-bit-term-raw))
+
+(define (yices2-api/constructor-bv-sum)
+  (yices-ctor-bv-sum-raw))
+
+(define (yices2-api/constructor-arith-sum)
+  (yices-ctor-arith-sum-raw))
+
+(define (yices2-api/constructor-arith-ff-sum)
+  (yices-ctor-arith-ff-sum-raw))
+
+(define (yices2-api/constructor-power-product)
+  (yices-ctor-power-product-raw))
 
 (define (yices2-api/term-constructor term)
   (unless (integer? term)
     (sign-error "sal-cdr expected a Yices term id, received ~a." term))
+  (yices2-api/check-term-id term "yices_term_constructor")
   (let ((ctor (yices-term-constructor-raw term)))
     (yices2-api/check-code ctor "yices_term_constructor")
     ctor))
@@ -653,6 +740,7 @@
 (define (yices2-api/term-num-children term)
   (unless (integer? term)
     (sign-error "sal-cdr expected a Yices term id, received ~a." term))
+  (yices2-api/check-term-id term "yices_term_num_children")
   (let ((n (yices-term-num-children-raw term)))
     (yices2-api/check-code n "yices_term_num_children")
     n))
@@ -662,13 +750,32 @@
     (sign-error "sal-cdr expected a Yices term id, received ~a." term))
   (unless (integer? idx)
     (sign-error "sal-cdr expected a Yices child index, received ~a." idx))
+  (yices2-api/check-term-id term "yices_term_child(term)")
   (let ((child (yices-term-child-raw term idx)))
-    (yices2-api/check-code child "yices_term_child")
+    (yices2-api/check-term-id child
+                              (string-append "yices_term_child["
+                                             (object->string idx)
+                                             "]"))
     child))
+
+(define (yices2-api/proj-arg term)
+  (unless (integer? term)
+    (sign-error "sal-cdr expected a Yices projection term id, received ~a." term))
+  (yices2-api/check-term-id term "yices_proj_arg(term)")
+  (let ((arg (yices-proj-arg-raw term)))
+    (cond
+     ((= arg *yices-term-error-sentinel*)
+      (sign-error "sal-cdr failed to query the argument of Yices projection term ~a: ~a"
+                  term
+                  (yices2-api/error-string)))
+     (else
+      (yices2-api/check-term-id arg "yices_proj_arg")
+      arg))))
 
 (define (yices2-api/term-name term)
   (unless (integer? term)
     (sign-error "sal-cdr expected a Yices term id, received ~a." term))
+  (yices2-api/check-term-id term "yices_get_term_name")
   (let ((name (yices-term-name-raw term)))
     (and (string? name)
          name)))
@@ -676,21 +783,86 @@
 (define (yices2-api/term-bool? term)
   (unless (integer? term)
     (sign-error "sal-cdr expected a Yices term id, received ~a." term))
+  (yices2-api/check-term-id term "yices_term_is_bool")
   (= (yices-term-is-bool-raw term) 1))
 
 (define (yices2-api/sum-component-term term idx)
+  (let ((component (yices2-api/try-sum-component-term term idx)))
+    (unless component
+      (sign-error "sal-cdr expected Yices arithmetic sum component ~a of term ~a to be a non-null term."
+                  idx
+                  term))
+    component))
+
+(define (yices2-api/try-sum-component-term term idx)
   (unless (integer? term)
     (sign-error "sal-cdr expected a Yices term id, received ~a." term))
   (unless (integer? idx)
     (sign-error "sal-cdr expected a Yices summand index, received ~a." idx))
-  (yices-sum-component-term-raw term idx))
+  (yices2-api/check-term-id term "yices_sum_component(term)")
+  (let ((component (yices-sum-component-term-raw term idx)))
+    (cond
+     ((= component *yices-term-error-sentinel*)
+      (sign-error "sal-cdr failed to query Yices arithmetic sum component ~a of term ~a: ~a"
+                  idx
+                  term
+                  (yices2-api/error-string)))
+     ((<= component 0)
+      #f)
+     (else
+      component))))
 
 (define (yices2-api/product-component-term term idx)
+  (let ((factor (yices2-api/try-product-component-term term idx)))
+    (unless factor
+      (sign-error "sal-cdr expected Yices product component ~a of term ~a to be a non-null term."
+                  idx
+                  term))
+    factor))
+
+(define (yices2-api/try-product-component-term term idx)
   (unless (integer? term)
     (sign-error "sal-cdr expected a Yices term id, received ~a." term))
   (unless (integer? idx)
     (sign-error "sal-cdr expected a Yices factor index, received ~a." idx))
-  (yices-product-component-term-raw term idx))
+  (yices2-api/check-term-id term "yices_product_component(term)")
+  (let ((factor (yices-product-component-term-raw term idx)))
+    (cond
+     ((= factor *yices-term-error-sentinel*)
+      (sign-error "sal-cdr failed to query Yices product component ~a of term ~a: ~a"
+                  idx
+                  term
+                  (yices2-api/error-string)))
+     ((<= factor 0)
+      #f)
+     (else
+      factor))))
+
+(define (yices2-api/bvsum-component-term term idx)
+  (let ((component (yices2-api/try-bvsum-component-term term idx)))
+    (unless component
+      (sign-error "sal-cdr expected Yices bitvector sum component ~a of term ~a to be a non-null term."
+                  idx
+                  term))
+    component))
+
+(define (yices2-api/try-bvsum-component-term term idx)
+  (unless (integer? term)
+    (sign-error "sal-cdr expected a Yices term id, received ~a." term))
+  (unless (integer? idx)
+    (sign-error "sal-cdr expected a Yices bitvector summand index, received ~a." idx))
+  (yices2-api/check-term-id term "yices_bvsum_component(term)")
+  (let ((component (yices-bvsum-component-term-raw term idx)))
+    (cond
+     ((= component *yices-term-error-sentinel*)
+      (sign-error "sal-cdr failed to query Yices bitvector sum component ~a of term ~a: ~a"
+                  idx
+                  term
+                  (yices2-api/error-string)))
+     ((<= component 0)
+      #f)
+     (else
+      component))))
 
 (define (yices2-api/new-context interpolants?)
   (let ((config #f)

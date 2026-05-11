@@ -2933,7 +2933,7 @@ SUBCLASSES: ()
 CLASS: <cdr-yices2-session>
 FAST SLOT ACCESS: #t
 IDX: 476
-SLOTS: (:name :solver :context :command :logic :interpolants? :process :input-port :output-port :transcript :echo-counter :id->decl-proc :sort->type-proc :place-provider)
+SLOTS: (:name :solver :context :command :logic :interpolants? :process :input-port :output-port :transcript :echo-counter :id->decl-proc :sort->type-proc :active-assumption-model :place-provider)
 SUBCLASSES: ()
 ---------------------------
 CLASS: <cdr-yices2-solver>

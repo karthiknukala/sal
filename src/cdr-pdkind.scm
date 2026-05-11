@@ -277,13 +277,29 @@
   (let loop ((remaining obligations)
              (kept obligations))
     (if (null? remaining)
-      kept
+      (begin
+        (when (>= (verbosity-level) 5)
+          (verbose-message 5 "sal-cdr PDKIND: frame minimization finished with ~a obligation(s)."
+                           (length kept)))
+        kept)
       (let* ((obligation (car remaining))
              (reduced (pdkind/remove-obligation kept obligation)))
+        (when (>= (verbosity-level) 5)
+          (verbose-message 5
+                           "sal-cdr PDKIND: frame minimization checking whether ~a remaining obligation(s) imply one candidate (distance ~a, score ~a)."
+                           (length reduced)
+                           (cdr-pdkind-obligation/distance obligation)
+                           (cdr-pdkind-obligation/score obligation)))
         (if (or (= (cdr-pdkind-obligation/distance obligation) 0)
                 (not (pdkind/frame-implies? solver reduced obligation)))
-          (loop (cdr remaining) kept)
-          (loop (cdr remaining) reduced))))))
+          (begin
+            (when (>= (verbosity-level) 5)
+              (verbose-message 5 "sal-cdr PDKIND: kept candidate obligation in minimized frame."))
+            (loop (cdr remaining) kept))
+          (begin
+            (when (>= (verbosity-level) 5)
+              (verbose-message 5 "sal-cdr PDKIND: removed subsumed obligation from minimized frame."))
+            (loop (cdr remaining) reduced)))))))
 
 (define (pdkind/check-reachable-at frame-store solver level target)
   (cond
@@ -600,10 +616,9 @@
                             (or (cdr-solver/usable-lemma solver
                                                          (cdr-solver/minimize-state-formula
                                                           solver
-                                                          (sal-ast/simplify
-                                                           (make-sal-and* (list (cdr-pdkind-obligation/f-fwd obligation)
-                                                                                learned)
-                                                                          (cdr-solver/flat-module solver)))))
+                                                          (make-sal-and* (list (cdr-pdkind-obligation/f-fwd obligation)
+                                                                               learned)
+                                                                         (cdr-solver/flat-module solver))))
                                 learned))
                            (refined
                             (make-cdr-pdkind-obligation refined-f-fwd
