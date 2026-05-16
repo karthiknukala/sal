@@ -67,17 +67,21 @@
                                    (sal-record-type/sorted-fields type))))
 
 (define-method (scm-value->sal (value <primitive>) (type <sal-data-type>) (ctx <sal-scm-context>))
-  (let ((constructor (list-ref (slot-value type :constructors) (car value))))
+  (let ((constructor (list-ref (slot-value type :constructors) (vector-ref value 0))))
     (if (sal-name-expr/constant-constructor? constructor)
       constructor
       (let ((accessors (sal-name-expr/constructor-accessors constructor)))
         (make-ast-instance <sal-application> type
                            :fun constructor
-                           :arg (apply make-application-argument 
-                                       (map (lambda (child-value accessor)
-                                              (scm-value->sal child-value (sal-name-expr/accessor-type accessor) ctx))
-                                            (cdr value)
-                                            accessors)))))))
+                           :arg (apply make-application-argument
+                                       (let loop ((idx 1)
+                                                  (accessors accessors))
+                                         (if (null? accessors)
+                                           '()
+                                           (cons (scm-value->sal (vector-ref value idx)
+                                                                 (sal-name-expr/accessor-type (car accessors))
+                                                                 ctx)
+                                                 (loop (+ idx 1) (cdr accessors)))))))))))
 
 (define-generic (scm-value->sal-array value index-type type ctx))
 

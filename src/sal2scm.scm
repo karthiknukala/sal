@@ -478,7 +478,7 @@
          (accessor-code `(vector-ref ,arg ,(+fx accessor-idx 1))))
     (if (slot-value ctx :debug?)
       `(begin
-         (sal-scm/check-accessor arg ,(sal-constructor-decl/idx constructor-decl)
+         (sal-scm/check-accessor ,arg ,(sal-constructor-decl/idx constructor-decl)
                                    (quote ,(sal-context/name (sal-ast/context ast)))
                                    ,(sal-place/initial-line (sal-ast/place ast))
                                    ,(sal-place/initial-column (sal-ast/place ast)))
@@ -577,9 +577,11 @@
 
 (define (gen-check-type-predicate-code pred arg ctx env)
   (let* ((pred-type (sal-expr/type pred))
-         (domain (sal-function-type/domain pred-type))
-         (pred-code (sal->scm pred ctx env)))
-    `(vector-ref ,pred-code ,arg)))
+         (domain (sal-function-type/domain pred-type)))
+    (if (sal-scm/encoded-as-lambda? pred)
+      `(,(sal-scm/create-lambda pred ctx env) ,arg)
+      `(vector-ref ,(sal->scm pred ctx env)
+                   ,(sal-type/val->idx domain ctx env arg)))))
 
 (define (mk-bounded-subtype-iterator type ctx env)
   (let* ((aux-var (gen-unique-name 'aux))
@@ -644,14 +646,16 @@
 (define (make-constructor-iterator constructor-name ctx env)
   (let* ((accessor-list (sal-name-expr/constructor-accessors constructor-name))
          (accessor-type-list (map sal-name-expr/accessor-type accessor-list))
+         (max-constructor-size (sal-constructor/max-constructor-size constructor-name))
+         (garbage (generate-list (lambda (_) #f) (- max-constructor-size (length accessor-list))))
          (args (map (lambda (n)
                      (gen-unique-name 'a))
                     accessor-list)))
     (if (null? accessor-list)
-      `(make-singleton-iterator (cons ,(sal-constructor/idx constructor-name) '()))
+      `(make-singleton-iterator (vector ,(sal-constructor/idx constructor-name) ,@garbage))
       `(iterator/product
         (lambda ,args
-          (list ,(sal-constructor/idx constructor-name) ,@args))
+          (vector ,(sal-constructor/idx constructor-name) ,@args ,@garbage))
         ,@(map (cut sal-type->scm-iterator <> ctx env) accessor-type-list)))))
 
 (define-method (sal-type->scm-iterator (type <sal-data-type>) (ctx <sal-scm-context>) (env <primitive>))
@@ -798,17 +802,19 @@
        `(or ,@(map (lambda (constructor)
                      (let* ((accessor-list (sal-name-expr/constructor-accessors constructor))
                             (accessor-type-list (map sal-name-expr/accessor-type accessor-list))
-                            (check-tag `(= (car ,arg) ,tag-idx))
-                            (result   (if (null? accessor-list)
-                                        check-tag
-                                        `(and ,check-tag
-                                              (let ((args (cdr ,arg)))
-                                                ,@(map (lambda (acc-type)
-                                                         `(begin
-                                                            ,(sal-type/gen-check-membership-pred-core 
-                                                              acc-type ctx env '(car args))
-                                                            (set! args (cdr args))))
-                                                       accessor-type-list))))))
+                            (check-tag `(= (vector-ref ,arg 0) ,tag-idx))
+                            (accessor-checks
+                             (let ((idx 1))
+                               (map (lambda (acc-type)
+                                      (let ((result
+                                             (sal-type/gen-check-membership-pred-core
+                                              acc-type ctx env `(vector-ref ,arg ,idx))))
+                                        (set! idx (+ idx 1))
+                                        result))
+                                    accessor-type-list)))
+                            (result (if (null? accessor-list)
+                                      check-tag
+                                      `(and ,check-tag ,@accessor-checks))))
                        (set! tag-idx (+ tag-idx 1))
                        result))
                    (slot-value type :constructors)))))))

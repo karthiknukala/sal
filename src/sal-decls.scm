@@ -293,12 +293,19 @@
                                :local-decls (queue->list current-queue)
                                :expr nested-expr)))))))
                 
-(define (sal-decl-list/num-elements decl-list)      
+(define (sal-decl-list/num-elements decl-list)
   (if (null? decl-list)
     *mpq-zero*
     (fold-left (lambda (curr var-decl)
                  (ensure ((var-decl <sal-var-decl>))
-                   (*mpq curr (sal-type/number-of-elements (slot-value var-decl :type)))))
+                   (let ((num-elements (sal-type/number-of-elements (slot-value var-decl :type))))
+                     (unless (mpq? num-elements)
+                       (error 'sal-decl-list/num-elements
+                              (format "The number of elements in the type of declaration `~a' is ~a."
+                                      (sal-decl/name var-decl)
+                                      num-elements)
+                              var-decl))
+                     (*mpq curr num-elements))))
                *mpq-one*
                decl-list)))
 
@@ -306,5 +313,3 @@
   (sort decl-list
         (lambda (decl1 decl2)
           (symbol<? (sal-decl/name decl1) (sal-decl/name decl2)))))
-
-

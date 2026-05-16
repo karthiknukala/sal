@@ -569,12 +569,20 @@
       ((0) (list-cmp? (cdr val-list1) (cdr val-list2) (cdr layout-list) cmp?))))))
 
 (define-inline (datatype-cmp? val1 val2 layout cmp?)
-  (case (int-cmp? (car val1) (car val2))
+  (case (int-cmp? (vector-ref val1 0) (vector-ref val2 0))
     ((-1) -1)
     ((1)   1)
-    ((0) (let* ((tag-idx (car val1))
+    ((0) (let* ((tag-idx (vector-ref val1 0))
                 (constructor-layout (vector-ref (esm-datatype-layout/constructor-vect layout) tag-idx)))
-           (list-cmp? (cdr val1) (cdr val2) constructor-layout cmp?)))))
+           (let loop ((idx 1)
+                      (layout-list constructor-layout))
+             (cond
+              ((null? layout-list) 0)
+              (else
+               (case (cmp? (vector-ref val1 idx) (vector-ref val2 idx) (car layout-list))
+                 ((-1) -1)
+                 ((1)   1)
+                 ((0)  (loop (+ idx 1) (cdr layout-list)))))))))))
 
 (define (sal-scm/cmp? val1 val2 layout layout-def-vect constraint-vect)
   (let cmp? ((val1 val1)
@@ -779,10 +787,22 @@
       (proc-value value (vector-ref layout-def-vect (esm-ref-layout/definition-idx layout))))
      ;; DATATYPE
      ((esm-datatype-layout? layout)
-      (if (null? (cdr value))
-        value ;; constant constructor
-        (cons (car value)
-              (map proc-value (cdr value) (vector-ref (esm-datatype-layout/constructor-vect layout) (car value))))))
+      (let* ((tag-idx (vector-ref value 0))
+             (constructor-layout (vector-ref (esm-datatype-layout/constructor-vect layout) tag-idx)))
+        (if (null? constructor-layout)
+          value ;; constant constructor
+          (let* ((size (vector-length value))
+                 (new-value (make-vector size)))
+            (let copy-loop ((idx 0))
+              (when (< idx size)
+                (vector-set! new-value idx (vector-ref value idx))
+                (copy-loop (+ idx 1))))
+            (let normalize-loop ((idx 1)
+                                 (layout-list constructor-layout))
+              (unless (null? layout-list)
+                (vector-set! new-value idx (proc-value (vector-ref value idx) (car layout-list)))
+                (normalize-loop (+ idx 1) (cdr layout-list))))
+            new-value))))
      ;; SCALAR SET ARRAY
      ((esm-scalar-set-array-layout? layout)
       (normalize-sym-array value layout layout-def-vect constraint-vect proc-value 

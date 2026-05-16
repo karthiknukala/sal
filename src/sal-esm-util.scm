@@ -24,6 +24,7 @@
                 (esm-datatype-layout? obj)
                 (esm-datatype-layout/tag-num-bits layout)
                 (esm-datatype-layout/constructor-vect layout)
+                (esm-datatype-layout/max-constructor-size layout)
                 (esm-datatype-value->channel! value layout channel proc-vect)
                 (mk-esm-atom-layout num-bits lower)
                 esm-atom-layout?
@@ -74,6 +75,16 @@
   (tag-num-bits esm-datatype-layout/tag-num-bits)
   (constructor-vect esm-datatype-layout/constructor-vect))
 
+(define (esm-datatype-layout/max-constructor-size layout)
+  (let* ((constructor-vect (esm-datatype-layout/constructor-vect layout))
+         (num-constructors (vector-length constructor-vect)))
+    (let loop ((idx 0)
+               (max-size 0))
+      (if (>= idx num-constructors)
+        max-size
+        (loop (+ idx 1)
+              (max max-size (length (vector-ref constructor-vect idx))))))))
+
 (define (esm-datatype-value->channel! value layout channel proc-value)
   (cond
    ((eq? value 'not-assigned)
@@ -85,13 +96,17 @@
                   (proc-value 'not-assigned child-layout))
                 new-layout)))
    (else
-    (let* ((tag-idx (car value))
+    (let* ((tag-idx (vector-ref value 0))
            (new-layout (vector-ref (esm-datatype-layout/constructor-vect layout) tag-idx))
-           (new-value (cdr value)))
+           (num-args (length new-layout)))
       (sec/add-num! channel tag-idx (esm-datatype-layout/tag-num-bits layout))
-      [assert (new-layout new-value) (and (list? new-layout) (list? new-value)
-                                          (= (length new-layout) (length new-value)))]
-      (for-each proc-value new-value new-layout)))))
+      [assert (value new-layout) (and (vector? value) (list? new-layout)
+                                      (<= (+ num-args 1) (vector-length value)))]
+      (let loop ((idx 1)
+                 (layouts new-layout))
+        (unless (null? layouts)
+          (proc-value (vector-ref value idx) (car layouts))
+          (loop (+ idx 1) (cdr layouts))))))))
 
 (define-record-type esm-atom-layout
   (mk-esm-atom-layout num-bits lower)

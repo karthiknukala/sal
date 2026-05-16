@@ -224,6 +224,16 @@
 (define-method (get-type-components (type <sal-type-name>) (num-components <primitive>))
   (get-type-components (sal-type-name/definition type) num-components))
 
+(define-generic (sal-type/esm-composite-size type))
+(define-method (sal-type/esm-composite-size (type <sal-tuple-type>))
+  (length (slot-value type :types)))
+(define-method (sal-type/esm-composite-size (type <sal-record-type>))
+  (length (slot-value type :fields)))
+(define-method (sal-type/esm-composite-size (type <sal-function-type>))
+  (sal-type/number-of-elements-as-integer (slot-value type :domain)))
+(define-method (sal-type/esm-composite-size (type <sal-type-name>))
+  (sal-type/esm-composite-size (sal-type-name/definition type)))
+
 (define (mk-catch-translation-errors-proc var-decl)
   (lambda (escape proc msg obj)
     (if (eq? proc 'sal-to-scm-error)
@@ -265,7 +275,7 @@
                     (mk-catch-translation-errors-proc var-decl)))))))
         (if (= level 0)
           (mk-main-action)
-          (let ((type-vector-size (sal-type/number-of-elements-as-integer type)))
+          (let ((type-vector-size (sal-type/esm-composite-size type)))
             (if (not type-vector-size)
               (mk-main-action)
               (let* ((type-components (get-type-components type type-vector-size))
@@ -329,7 +339,7 @@
                  (mk-catch-translation-errors-proc var-decl)))))
         (if (= level 0)
           (mk-main-action)
-          (let ((type-vector-size (sal-type/number-of-elements-as-integer type)))
+          (let ((type-vector-size (sal-type/esm-composite-size type)))
             (if (not type-vector-size)
               (mk-main-action)
               (let* ((type-components (get-type-components type type-vector-size))
@@ -432,7 +442,7 @@
 (define-method (sal-type/esm-memory-layout (type <sal-function-type>) (ctx <sal-scm-context>))
   (let ((domain (slot-value type :domain)))
     (let* ((range-data (sal-type/esm-memory-layout (slot-value type :range) ctx))
-           (domain-size (sal-type/number-of-elements-as-integer type)))
+           (domain-size (sal-type/number-of-elements-as-integer domain)))
       (make-vector domain-size range-data))))
 
 (define-method (sal-type/esm-memory-layout (type <sal-subtype>) (ctx <sal-scm-context>))
@@ -622,16 +632,18 @@
                            (curr-value (vector-ref value-vector value-idx))
                            (curr-layout (follow-non-recursive-reference (vector-ref layout-vector layout-idx) layout-def-vect)))
                       (cond
-                       ((vector? curr-value)
-                        (cond 
-                         ((vector? curr-layout)
-                          (fill-value-vect curr-value curr-layout 0))
-                         ((esm-scalar-set-array-layout? curr-layout)
-                          (fill-value-vect curr-value (esm-scalar-set-array-layout/body curr-layout) 0))
-                         ((esm-ring-set-array-layout? curr-layout)
-                          (fill-value-vect curr-value (esm-ring-set-array-layout/body curr-layout) 0))
-                         (else
-                          (internal-error))))
+                       ((vector? curr-layout)
+                        (if (vector? curr-value)
+                          (fill-value-vect curr-value curr-layout 0)
+                          (vector-set! value-vector value-idx (read-value curr-layout))))
+                       ((esm-scalar-set-array-layout? curr-layout)
+                        (if (vector? curr-value)
+                          (fill-value-vect curr-value (esm-scalar-set-array-layout/body curr-layout) 0)
+                          (vector-set! value-vector value-idx (read-value curr-layout))))
+                       ((esm-ring-set-array-layout? curr-layout)
+                        (if (vector? curr-value)
+                          (fill-value-vect curr-value (esm-ring-set-array-layout/body curr-layout) 0)
+                          (vector-set! value-vector value-idx (read-value curr-layout))))
                        (else
                         (vector-set! value-vector value-idx (read-value curr-layout))))
                       (loop (+ idx 1)))))))]
@@ -676,10 +688,17 @@
                   (let* ((tag-num-bits (esm-datatype-layout/tag-num-bits layout))
                          (tag-idx (sec/read-num! channel tag-num-bits))
                          (constructor-layouts (esm-datatype-layout/constructor-vect layout))
-                         (new-layout (vector-ref constructor-layouts tag-idx)))
+                         (new-layout (vector-ref constructor-layouts tag-idx))
+                         (new-value (make-vector (+ (esm-datatype-layout/max-constructor-size layout) 1) 'not-assigned)))
                     ;; (print "tag-idx: " tag-idx "new-layout: " new-layout)
                     [assert (new-layout) (list? new-layout)]
-                    (cons tag-idx (map read-value new-layout))))
+                    (vector-set! new-value 0 tag-idx)
+                    (let loop ((idx 1)
+                               (layouts new-layout))
+                      (unless (null? layouts)
+                        (vector-set! new-value idx (read-value (car layouts)))
+                        (loop (+ idx 1) (cdr layouts))))
+                    new-value))
                  ;; BOUNDED GMP NUMBERS
                  ((esm-mpq-layout? layout)
                   (channel->esm-mpq-value! channel layout))
@@ -690,10 +709,6 @@
                   (internal-error)))))])
     (fill-value-vect var-vector layout first-idx)))
             
-
-
-
-
 
 
 

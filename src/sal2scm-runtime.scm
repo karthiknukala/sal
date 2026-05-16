@@ -358,5 +358,5 @@
   (%mpq arg1 arg2))
 
 (define (sal-scm/check-accessor arg expected-tag ctx-name line column)
-  (unless (=fx (car arg) expected-tag)
+  (unless (=fx (vector-ref arg 0) expected-tag)
     (sign-sal-scm-runtime-error ctx-name line column "Invalid use of datatype accessor.")))
