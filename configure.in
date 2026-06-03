@@ -222,11 +222,25 @@ if test -z "$1"; then
    # On ARM Macs (M1/M2/M3), Homebrew installs to /opt/homebrew
    # Add common Homebrew paths for both Intel and ARM Macs
    #
-   if ld --verbose > /dev/null 2>&1; then 
-      search_libs=`ld --verbose | grep SEARCH_DIR | sed -e 's,SEARCH_DIR(\"\?,,g' -e 's,\"\?);,,g'`
+   if ld --verbose > /dev/null 2>&1; then
+      # Strip SEARCH_DIR("..."); wrapper and the leading '=' sysroot token
+      # that modern ld (binutils >= 2.27) emits for multiarch paths.
+      search_libs=`ld --verbose | grep SEARCH_DIR | sed -e 's,SEARCH_DIR(\"\?,,g' -e 's,\"\?);,,g' -e 's, =, ,g' -e 's,^=,,'`
    else
       search_libs=`echo $LD_LIBRARY_PATH | sed -e 's,:, ,g'`
    fi
+   # Add Debian/Ubuntu multiarch paths
+   for multiarch_dir in \
+       /usr/lib/x86_64-linux-gnu \
+       /usr/lib/aarch64-linux-gnu \
+       /usr/lib/arm-linux-gnueabihf \
+       /usr/lib/i386-linux-gnu \
+       /usr/lib64 \
+       /usr/lib; do
+      if test -d "$multiarch_dir"; then
+         search_libs="$search_libs $multiarch_dir"
+      fi
+   done
    # Add Homebrew paths for macOS
    if test -d /opt/homebrew/lib; then
       search_libs="/opt/homebrew/lib $search_libs"
@@ -353,7 +367,6 @@ LIBS=$save_libs
 pwd=`pwd`
 SALENV_BOOTDIR=$pwd
 ARCH=`./config.guess`
-posixos=`./os`
 
 MINGW32="False"
 case "$ARCH" in
@@ -803,7 +816,6 @@ do
 done
 
 AC_SUBST(ARCH)
-AC_SUBST(posixos)
 AC_SUBST(LIBS)
 AC_SUBST(CPPFLAGS)
 AC_SUBST(SALENV_BUILD_MODE)

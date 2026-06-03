@@ -134,5 +134,11 @@ Makefile(s), the header file containing system-dependent definitions
 `configure' created), type `make distclean'.
 
 The file `configure.in' is used as a template to create `configure' by
-a program called `autoconf'.  You will only need it if you want to
-regenerate `configure' using a newer version of `autoconf'.
+a program called `autoconf'.  To regenerate `configure' from `configure.in',
+run the following commands:
+
+  % autoconf configure.in > configure
+  % chmod +x configure
+
+You will need `autoconf' installed on your system.  After regenerating,
+run `./configure' as usual.

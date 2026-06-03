@@ -26,7 +26,7 @@ prefix = @prefix@
 exec_prefix = @exec_prefix@
 bindir = @bindir@
 libdir = @libdir@
-posixos=@posixos@
+posixos := $(shell uname -s | tr '[:upper:]' '[:lower:]' | sed 's/cygwin.*/cygwin/;s/mingw.*/mingw32/')
 sal_scripts = @sal_scripts@
 sal_scripts_template = $(sal_scripts:%=src/%.template)
 sal_scripts_local = $(sal_scripts:%=bin/%)
@@ -164,6 +164,10 @@ endif
 endif
 endif
 
+# Dynamic fallback variants: same flags without -static-bigloo.
+# Used when the static link fails (e.g. missing static runtime libs).
+BIGLOO_UNSAFE_LFLAGS_DYN = $(subst -static-bigloo,,$(BIGLOO_UNSAFE_LFLAGS))
+BIGLOO_SAFE_LFLAGS_DYN   = $(subst -static-bigloo,,$(BIGLOO_SAFE_LFLAGS))
 
 DOC=doc
 
@@ -338,7 +342,9 @@ endif
 
 $(SALENV_BIN) : $(SALENV_BIN_DEPENDENCIES)
 	@mkdir -p $(BIN_DIR)
-	$(BIGLOO) $(BIGLOO_UNSAFE_LFLAGS) $(SALENV_OBJ) -o $(SALENV_BIN)
+	$(BIGLOO) $(BIGLOO_UNSAFE_LFLAGS) $(SALENV_OBJ) -o $(SALENV_BIN) \
+	  || $(BIGLOO) $(BIGLOO_UNSAFE_LFLAGS_DYN) $(SALENV_OBJ) -o $(SALENV_BIN) \
+	  || { echo "ERROR: bigloo link failed (static and dynamic)"; exit 1; }
 else
 $(SALENV) : 
 	make -C src -f ../Makefile $(SALENV) MAKELEVEL=1
@@ -353,7 +359,9 @@ $(SALENV_SAFE) : $(SALENV_SAFE_BIN)
 ifeq ($(SALENV_BUILD_MODE),release)
 $(SALENV_SAFE_BIN) : $(SALENV_SAFE_OBJ)
 	@mkdir -p $(BIN_DIR)
-	$(BIGLOO) $(BIGLOO_SAFE_LFLAGS) $(SALENV_SAFE_OBJ) -o $(SALENV_SAFE_BIN) 
+	$(BIGLOO) $(BIGLOO_SAFE_LFLAGS) $(SALENV_SAFE_OBJ) -o $(SALENV_SAFE_BIN) \
+	  || $(BIGLOO) $(BIGLOO_SAFE_LFLAGS_DYN) $(SALENV_SAFE_OBJ) -o $(SALENV_SAFE_BIN) \
+	  || { echo "ERROR: bigloo link failed (static and dynamic)"; exit 1; }
 else
 # Only in release mode I create a safe executable
 $(SALENV_SAFE_BIN) : $(SALENV_BIN)
@@ -426,7 +434,9 @@ $(SAL_PARSER) : $(SAL_PARSER_BIN)
 
 $(SAL_PARSER_BIN) : $(SAL_PARSER_OBJ)
 	@mkdir -p $(BIN_DIR)
-	$(BIGLOO) $(BIGLOO_UNSAFE_LFLAGS) $(SAL_PARSER_OBJ) -o $(SAL_PARSER_BIN)
+	$(BIGLOO) $(BIGLOO_UNSAFE_LFLAGS) $(SAL_PARSER_OBJ) -o $(SAL_PARSER_BIN) \
+	  || $(BIGLOO) $(BIGLOO_UNSAFE_LFLAGS_DYN) $(SAL_PARSER_OBJ) -o $(SAL_PARSER_BIN) \
+	  || { echo "ERROR: bigloo link failed (static and dynamic)"; exit 1; }
 else
 $(SAL_PARSER) : 
 	make -C src -f ../Makefile $(SAL_PARSER) MAKELEVEL=1

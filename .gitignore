@@ -17,10 +17,7 @@
 /autom4te.cache/
 
 # Generated configure script (keep configure.in as source)
-# /configure
-
-# OS file
-/os
+/configure
 
 # Backup files
 *~
@@ -66,7 +63,21 @@ doc/version.texi
 gui/version.py
 src/sal-version.scm
 
+# configure-generated outputs (sources are the .in files)
 Makefile
+gui/config.py
+src/trace.scm
+src/trace.macros
+distribution/build-binary-distribution.sh
+distribution/build-source-distribution.sh
+install/bin-INSTALL
+install/bin-install.sh
+install/local-install.sh
+install/source-INSTALL
+install/mac/Info.plist
+install/mac/Description.plist
+install/mac/Welcome.txt
+install/mac/postflight
 src/code-analyzer
 src/code-analyzer.out
 src/compilation-support-code.scm
