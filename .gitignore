@@ -19,9 +19,6 @@
 # Generated configure script (keep configure.in as source)
 # /configure
 
-# OS file
-/os
-
 # Backup files
 *~
 *.bak
