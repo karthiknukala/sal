@@ -375,7 +375,8 @@
 (define-method (sal-type/esm-symmetric-memory-layout (type <sal-function-type>) (scm-ctx <sal-scm-context>) (pre-ctx <primitive>))
   (let ((domain (sal-type/expand-if-type-name (slot-value type :domain))))
     (let* ((range-data (sal-type/esm-symmetric-memory-layout (slot-value type :range) scm-ctx pre-ctx))
-           (domain-size (sal-type/number-of-elements-as-integer type))
+           ;; One layout entry per index, not per possible array value.
+           (domain-size (sal-type/number-of-elements-as-integer domain))
            (layout-body (make-vector domain-size range-data)))
       (sal-domain/make-array-layout domain layout-body pre-ctx))))
 
