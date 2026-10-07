@@ -79,7 +79,7 @@
 (define-method (sal-esm/uses-next-operator? (esm <sal-esm-composition-statement>))
   (exists sal-esm/uses-next-operator? (slot-value esm :statements)))
 
-(define-method (sal-esm/uses-next-operator? (esm <sal-esm-composition-statement>))
+(define-method (sal-esm/uses-next-operator? (esm <sal-esm-case>))
   (exists (lambda (entry) 
             (sal-esm/uses-next-operator? (slot-value entry :statement)))
           (slot-value esm :case-entries)))
