@@ -53,13 +53,3 @@ echo
 echo "Running sal-inf-bmc on keymaera_nonlinear1..."
 HOME="$tmp_home" "$ROOT_DIR/bin/sal-inf-bmc" -s yices2 -d 3 \
   "$SUITE_DIR/keymaera_nonlinear1.sal" property
-
-echo
-echo "Running sal-cdr on example_4..."
-HOME="$tmp_home" "$ROOT_DIR/bin/sal-cdr" --solver=yices2 --to=6 \
-  "$SUITE_DIR/example_4.sal" property
-
-echo
-echo "Running sal-cdr -i on keymaera_nonlinear1..."
-HOME="$tmp_home" "$ROOT_DIR/bin/sal-cdr" -i --solver=yices2 --to=6 \
-  "$SUITE_DIR/keymaera_nonlinear1.sal" property

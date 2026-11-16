@@ -46,6 +46,33 @@ MCSAT support. If you need to fall back to the classic solver, add
 
 to your `.salrc' file.
 
+Native Bigloo bindings
+----------------------
 
+Run `make yices2-ffi` after configuring SAL to build the standalone
+`yices2-ffi` module. Run `make test-yices2-ffi` to exercise it against
+Yices2 and GMP. For a custom installation, pass
+`YICES2_PREFIX=/path/to/install`. The
+`YICES2_CPPFLAGS`, `YICES2_LDFLAGS`, and `YICES2_LIBS` variables allow separate
+header and library locations.
 
+The build runs the Scheme program `src/yices2-ffi-generator.scm` on
+`src/yices2_api.spec` to generate the standalone `yices2_ffi.scm` module.
+It writes the module and `yices2_ffi.o` to the `yices2-ffi/` object directory.
+Add that directory to Bigloo's search path and use
+`(import (yices2-ffi "yices2_ffi.scm"))` in the client module. Compile with
+the same Yices2 header paths and link `yices2_ffi.o` with the same native
+libraries. C names map to Scheme names by replacing underscores with
+hyphens. The four build metadata declarations are read-only foreign
+variables.
 
+The bindings expose the C API's argument types, return codes, and ownership
+rules. Pass explicitly allocated foreign buffers for pointer and array
+arguments. `yices-string-copy` and `yices-const-string-copy` copy foreign
+strings into Scheme. Release owned Yices strings with `yices-free-string`.
+For examples of buffer allocation and context, model, and vector lifetimes,
+see `tests/yices2_ffi_test.scm`.
+
+The PVS specification includes some symbols that vary between Yices2 builds.
+`(yices-api-missing-functions)` lists those unavailable with the selected
+headers and libraries. Calling one of those functions raises a Scheme error.

@@ -47,12 +47,6 @@ BDEPEND = @BDEPEND@
 CPPFLAGS += @CPPFLAGS@ -I$(BIGLOOLIBDIR) -DOS_$(posixos)
 LDFLAGS  += @LDFLAGS@
 LIBS     += @LIBS@
-LIBS     += -lyices
-LIBS     += -lpoly
-
-ifneq ($(wildcard /usr/local/lib/libyices.dylib),)
-LDFLAGS += -L/usr/local/lib -Wl,-rpath,/usr/local/lib
-endif
 
 # If configure didn't provide LIBS at all, provide a sensible baseline.
 ifeq ($(strip $(LIBS)),)
@@ -261,9 +255,8 @@ sat-boolean-smt-context sat-boolean-smt-bmc-context                     \
 sat-smtlib2-context smtlib2-interface sat-smtlib2-bmc-context           \
 sal-module-simplifications yices-interface                              \
 sat-boolean-yices-bmc-context sat-yices-context sat-yices-bmc-context   \
-yices2-interface yices2-api sat-boolean-yices2-bmc-context sat-yices2-context      \
-sat-yices2-bmc-context cdr-solver cdr-frames cdr-obligations            \
-cdr-pdkind cdr-yices2-smt2 sal-cdr
+yices2-interface sat-boolean-yices2-bmc-context sat-yices2-context      \
+sat-yices2-bmc-context
 
 
 SAL_SCM_FILE = $(SAL_CORE_SCM_FILE) $(SAL_SPECIFIC_SCM_FILE)
@@ -280,7 +273,7 @@ runtime-support.c
 
 SAL_C_FILE = $(SAL_C_CORE_FILE) state_entry.c state_entry_channel.c \
 state_cache.c jenkins_hash.c bit_array.c random-support.c           \
-cudd_c_utils.c state_to_do_list.c yices2_api_support.c
+cudd_c_utils.c state_to_do_list.c
 
 SALENV_SAFE= $(SALENV)-safe
 SALENV_SCM_FILE = $(SAL_SCM_FILE) $(SALENV_SPECIFIC_SCM_FILE)
@@ -322,6 +315,34 @@ TARGETS = $(SALENV) $(SALENV_SAFE) $(SALHEAP) $(SAL_PARSER) $(SALRUNTIME)
 endif
 
 all: $(TARGETS) local-install
+
+# Standalone native bindings for clients that link with Yices2.
+YICES2_PREFIX ?= $(HOMEBREW_PREFIX)
+YICES2_CPPFLAGS ?= $(if $(YICES2_PREFIX),-I$(YICES2_PREFIX)/include)
+YICES2_LDFLAGS ?= $(if $(YICES2_PREFIX),-L$(YICES2_PREFIX)/lib -Xlinker -rpath -Xlinker $(YICES2_PREFIX)/lib)
+YICES2_LIBS ?= -lyices -lgmp
+YICES2_FFI_DIR = $(abspath $(OBJ_DIR)/yices2-ffi)
+YICES2_FFI_ENV = YICES2_FFI_CC="$(CC) $(YICES2_CPPFLAGS) $(CPPFLAGS)" \
+                YICES2_FFI_LINK="$(YICES2_LDFLAGS) $(LDFLAGS) $(YICES2_LIBS)"
+YICES2_FFI_FLAGS = -copt "$(YICES2_CPPFLAGS) $(CPPFLAGS)"
+
+.PHONY: yices2-ffi test-yices2-ffi
+$(YICES2_FFI_DIR)/yices2-ffi-generator: $(SRC_DIR)/yices2-ffi-generator.scm
+	@mkdir -p "$(YICES2_FFI_DIR)"
+	$(BIGLOO) -c "$<" -o "$(YICES2_FFI_DIR)/yices2-ffi-generator.o"
+	$(BIGLOO) -I "$(abspath $(SRC_DIR))" -ldopt "$(LDFLAGS)" \
+	  "$(YICES2_FFI_DIR)/yices2-ffi-generator.o" -o "$@"
+
+yices2-ffi: $(YICES2_FFI_DIR)/yices2-ffi-generator
+	cd "$(YICES2_FFI_DIR)" && $(YICES2_FFI_ENV) \
+	  ./yices2-ffi-generator "$(abspath $(SRC_DIR)/yices2_api.spec)" && \
+	  $(BIGLOO) $(YICES2_FFI_FLAGS) -c yices2_ffi.scm -o yices2_ffi.o
+
+test-yices2-ffi: yices2-ffi
+	cd "$(YICES2_FFI_DIR)" && $(BIGLOO) $(YICES2_FFI_FLAGS) \
+	  -c "$(abspath tests/yices2_ffi_test.scm)" -o yices2_ffi_test.o && \
+	  $(BIGLOO) -I "$(abspath tests)" -w -ldopt "$(YICES2_LDFLAGS) $(LDFLAGS) $(YICES2_LIBS)" \
+	  yices2_ffi_test.o yices2_ffi.o -o yices2_ffi_test && ./yices2_ffi_test
 
 local-install: $(TARGETS)
 	@ chmod +x install/local-install.sh
@@ -566,6 +587,7 @@ source-distribution:
 .PHONY: clean global-clean common-clean
 
 clean: common-clean
+	rm -rf "$(OBJ_DIR)/yices2-ffi"
 	rm -f $(SALENV_BIN)
 	rm -f $(SALENV_SAFE_BIN)
 	rm -f $(OBJ_DIR)/*

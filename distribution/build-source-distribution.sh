@@ -91,6 +91,9 @@ cp src/*.in $SALENVDIR/src
 
 echo "Copying source code..."
 cp src/*.scm $SALENVDIR/src
+cp src/yices2_api.spec $SALENVDIR/src
+mkdir -p $SALENVDIR/tests
+cp tests/yices2_ffi_test.scm $SALENVDIR/tests
 cp src/*.sch $SALENVDIR/src
 cp src/*.c $SALENVDIR/src
 cp src/*.h $SALENVDIR/src
