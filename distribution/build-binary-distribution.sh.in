@@ -150,6 +150,8 @@ echo "Copying executables..."
 safe_cp $bindir/@salenv_exec@@EXEEXT@ $SALENVDIR/bin
 safe_cp $bindir/@salenv_exec@-safe@EXEEXT@ $SALENVDIR/bin
 
+safe_cp $bindir/sal-cdr-exec@EXEEXT@ $SALENVDIR/bin
+
 echo "Copying macros..."
 cp src/*.macros $SALENVDIR/src
 

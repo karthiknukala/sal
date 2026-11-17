@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Native SAL counterexample-directed reachability front end.
+case "$0" in
+  */*) bindir=${0%/*} ;;
+  *) bindir=. ;;
+esac
+SALENV_DIR=$(CDPATH= cd -- "$bindir/.." && pwd) || exit $?
+export SALENV_DIR
+BIGLOOLIB="__SAL_CDR_BIGLOO_LIB_DIR__"
+export BIGLOOLIB
+# Reserve space for SAL's syntax trees before Bigloo starts collecting.
+if [ -z "${GC_INITIAL_HEAP_SIZE+x}${GC_MAXIMUM_HEAP_SIZE+x}" ]; then
+  export GC_INITIAL_HEAP_SIZE=25165824
+fi
+exec "$SALENV_DIR/bin/__SAL_CDR_EXEC__" "$@"

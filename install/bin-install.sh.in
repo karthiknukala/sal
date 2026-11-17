@@ -27,7 +27,7 @@ gen_script ()
 {
   template=src/$1.template
   script=$salenv_dir/bin/$1
-  if sed -e "s|__SALENV_DIR__|$runtime_salenv_dir_escaped|g;s|__BIGLOO_LIB_DIR__|$runtime_bigloolib_escaped|g;s|__DOT_A_LIBS__|$DOT_A_LIBS|g" $template > $script
+  if sed -e "s|__SALENV_DIR__|$runtime_salenv_dir_escaped|g;s|__BIGLOO_LIB_DIR__|$runtime_bigloolib_escaped|g;s|__DOT_A_LIBS__|$DOT_A_LIBS|g;s|__SAL_CDR_EXEC__|sal-cdr-exec|g;s|__SAL_CDR_BIGLOO_LIB_DIR__|\${SALENV_DIR}/lib|g" $template > $script
   then
     chmod +x $script
   else

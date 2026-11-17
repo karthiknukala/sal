@@ -54,6 +54,19 @@ LIBS = -lcudd -lgmp -lgc -lm
 endif
 ###
 
+# SAL's GMP adapter installs Boehm allocation hooks. Keep its configured
+# static GMP private: Yices/libpoly must retain their shared GMP allocators.
+SAL_GMP_ARCHIVES = $(filter %/libgmp.a libgmp.a,$(LIBS))
+ifeq ($(posixos),darwin)
+SAL_LINK_LIBS = $(filter-out $(SAL_GMP_ARCHIVES),$(LIBS)) $(foreach archive,$(SAL_GMP_ARCHIVES),-Xlinker -load_hidden -Xlinker $(archive))
+else
+ifeq ($(posixos),linux)
+SAL_LINK_LIBS = $(LIBS) -Wl,--exclude-libs,libgmp.a
+else
+SAL_LINK_LIBS = $(LIBS)
+endif
+endif
+
 .PHONY: documentation
 
 ifeq ($(SALENV_ENABLE_DYNAMIC),yes)
@@ -306,6 +319,11 @@ SAL_PARSER_SCM_OBJ=$(SAL_PARSER_SCM_FILE:%=$(OBJ_DIR)/%.o)
 SAL_PARSER_C_OBJ=$(SAL_C_CORE_FILE:%.c=$(OBJ_DIR)/%.o)
 SAL_PARSER_OBJ=$(SAL_PARSER_SCM_OBJ) $(SAL_PARSER_C_OBJ)
 
+SAL_CDR=sal-cdr-exec
+SAL_CDR_BIN=$(BIN_DIR)/$(SAL_CDR)
+SAL_CDR_SCM_OBJ=$(OBJ_DIR)/sal-cdr-front-end.o $(OBJ_DIR)/sal-cdr.o
+SAL_CDR_OBJ=$(SAL_CDR_SCM_OBJ) $(YICES2_FFI_OBJ)
+
 .PHONY: all install-local
 
 ifeq ($(SALENV_BUILD_MODE),release)
@@ -314,14 +332,26 @@ else
 TARGETS = $(SALENV) $(SALENV_SAFE) $(SALHEAP) $(SAL_PARSER) $(SALRUNTIME)
 endif
 
+TARGETS += $(SAL_CDR)
+
 all: $(TARGETS) local-install
 
-# Standalone native bindings for clients that link with Yices2.
+# Native Yices2 bindings, shared by sal-cdr and standalone FFI clients.
+# After changing the Yices installation/flags, refresh optional API detection:
+#   make -B YICES2_PREFIX=/new/prefix yices2-ffi
+# Then rebuild sal-cdr-exec with the same prefix.
 YICES2_PREFIX ?= $(HOMEBREW_PREFIX)
 YICES2_CPPFLAGS ?= $(if $(YICES2_PREFIX),-I$(YICES2_PREFIX)/include)
 YICES2_LDFLAGS ?= $(if $(YICES2_PREFIX),-L$(YICES2_PREFIX)/lib -Xlinker -rpath -Xlinker $(YICES2_PREFIX)/lib)
-YICES2_LIBS ?= -lyices -lgmp
+# Bind an explicit prefix to its library even when Bigloo adds other -L paths.
+YICES2_LIBRARY = $(if $(YICES2_PREFIX),$(firstword $(wildcard $(YICES2_PREFIX)/lib/libyices.dylib $(YICES2_PREFIX)/lib/libyices.so)))
+YICES2_LIBS ?= $(if $(YICES2_LIBRARY),$(YICES2_LIBRARY),-lyices) -lgmp
+# SAL already links its private static GMP; adding -lgmp here would override it.
+YICES2_SAL_LIBS = $(filter-out -lgmp,$(YICES2_LIBS))
 YICES2_FFI_DIR = $(abspath $(OBJ_DIR)/yices2-ffi)
+YICES2_FFI_SRC = $(YICES2_FFI_DIR)/yices2_ffi.scm
+YICES2_FFI_OBJ = $(YICES2_FFI_DIR)/yices2_ffi.o
+YICES2_FFI_MCO = $(YICES2_FFI_DIR)/yices2_ffi.mco
 YICES2_FFI_ENV = YICES2_FFI_CC="$(CC) $(YICES2_CPPFLAGS) $(CPPFLAGS)" \
                 YICES2_FFI_LINK="$(YICES2_LDFLAGS) $(LDFLAGS) $(YICES2_LIBS)"
 YICES2_FFI_FLAGS = -copt "$(YICES2_CPPFLAGS) $(CPPFLAGS)"
@@ -333,10 +363,33 @@ $(YICES2_FFI_DIR)/yices2-ffi-generator: $(SRC_DIR)/yices2-ffi-generator.scm
 	$(BIGLOO) -I "$(abspath $(SRC_DIR))" -ldopt "$(LDFLAGS)" \
 	  "$(YICES2_FFI_DIR)/yices2-ffi-generator.o" -o "$@"
 
-yices2-ffi: $(YICES2_FFI_DIR)/yices2-ffi-generator
+yices2-ffi: $(YICES2_FFI_OBJ) $(YICES2_FFI_MCO)
+
+$(YICES2_FFI_SRC): $(YICES2_FFI_DIR)/yices2-ffi-generator $(SRC_DIR)/yices2_api.spec
 	cd "$(YICES2_FFI_DIR)" && $(YICES2_FFI_ENV) \
-	  ./yices2-ffi-generator "$(abspath $(SRC_DIR)/yices2_api.spec)" && \
-	  $(BIGLOO) $(YICES2_FFI_FLAGS) -c yices2_ffi.scm -o yices2_ffi.o
+	  ./yices2-ffi-generator "$(abspath $(SRC_DIR)/yices2_api.spec)"
+
+$(YICES2_FFI_OBJ): $(YICES2_FFI_SRC)
+	cd "$(YICES2_FFI_DIR)" && $(BIGLOO) $(OPT) $(YICES2_FFI_FLAGS) \
+	  -c yices2_ffi.scm -o yices2_ffi.o
+
+$(YICES2_FFI_MCO): $(YICES2_FFI_SRC)
+	cd "$(YICES2_FFI_DIR)" && $(BIGLOO) -fmco -mco yices2_ffi.scm -o yices2_ffi.mco
+
+# Complete the shared generated files before launching recursive builds.
+ifeq ($(MAKELEVEL),0)
+$(SAL_CDR): yices2-ffi
+# Recursive builds share object/dependency files. Build each object tree once,
+# then allow the independent archives and heap to finish in parallel.
+ifeq ($(SALENV_BUILD_MODE),release)
+$(SALENV): $(SALENV_SAFE)
+else
+$(SALENV_SAFE): $(SALENV)
+endif
+$(SALHEAP) $(SALRUNTIME) $(SAL_PARSER): $(SALENV)
+$(SALRUNTIME_SAFE): $(SALENV_SAFE)
+$(SAL_CDR): $(SALRUNTIME)
+endif
 
 test-yices2-ffi: yices2-ffi
 	cd "$(YICES2_FFI_DIR)" && $(BIGLOO) $(YICES2_FFI_FLAGS) \
@@ -356,6 +409,25 @@ local-install: $(TARGETS)
 # SALENV
 #
 ifeq ($(MAKELEVEL),1)
+# This is a correctness precondition, not just a linker preference: sharing
+# SAL's GC-backed GMP allocator with native solver heaps corrupts ownership.
+.PHONY: check-sal-private-gmp
+check-sal-private-gmp:
+	@case "$(posixos)" in darwin|linux) ;; *) echo "sal-cdr native GMP isolation is supported on Darwin and Linux only." >&2; exit 1 ;; esac
+	@test -n "$(YICES2_LIBRARY)" && test -f "$(YICES2_LIBRARY)" || { echo "sal-cdr requires a shared Yices2 library; set YICES2_PREFIX or YICES2_LIBRARY to its installation." >&2; exit 1; }
+	@case "$(YICES2_LIBRARY)" in *.so|*.so.*|*.dylib) ;; *) echo "sal-cdr requires a shared Yices2 library, not $(YICES2_LIBRARY)." >&2; exit 1 ;; esac
+	@test -n "$(SAL_GMP_ARCHIVES)" || { echo "SAL native solver links require the configured static libgmp.a; do not replace LIBS with -lgmp." >&2; exit 1; }
+	@for library in $(LIBS) $(YICES2_SAL_LIBS) $(LDFLAGS) $(YICES2_LDFLAGS); do \
+	  case "$${library##*/}" in \
+	    libyices*.a|libpoly*.a|-l:libyices*.a|-l:libpoly*.a) \
+	      echo "sal-cdr requires shared Yices2/libpoly libraries, not $$library." >&2; exit 1 ;; \
+	    -lgmp|libgmp.so|libgmp.so.*|libgmp.dylib|libgmp.*.dylib) \
+	      echo "SAL native solver links require private static GMP, not $$library." >&2; exit 1 ;; \
+	  esac; \
+	done
+
+$(SAL_CDR_BIN): LIBS := $(SAL_LINK_LIBS)
+$(SAL_CDR_BIN): | check-sal-private-gmp
 $(SALENV) : $(SALENV_BIN)
 
 ifeq ($(SALENV_BUILD_MODE),release)
@@ -372,6 +444,18 @@ $(SALENV) :
 	make -C src -f ../Makefile $(SALENV) MAKELEVEL=1
 endif
 
+# Native sal-cdr uses the same SAL runtime, parser, and command-line options.
+ifeq ($(MAKELEVEL),1)
+$(SAL_CDR): $(SAL_CDR_BIN)
+
+$(SAL_CDR_BIN): $(SAL_CDR_OBJ) $(SALRUNTIME_LIB)
+	@mkdir -p $(BIN_DIR)
+	$(BIGLOO) -ldopt "$(YICES2_LDFLAGS)" $(BIGLOO_UNSAFE_LFLAGS) -I "$(YICES2_FFI_DIR)" -ldopt "$(YICES2_SAL_LIBS)" $(SAL_CDR_OBJ) $(SALRUNTIME_LIB) -o $@
+else
+$(SAL_CDR):
+	make -C src -f ../Makefile $(SAL_CDR) MAKELEVEL=1
+endif
+
 #
 # SALENV SAFE
 #
@@ -381,7 +465,7 @@ $(SALENV_SAFE) : $(SALENV_SAFE_BIN)
 ifeq ($(SALENV_BUILD_MODE),release)
 $(SALENV_SAFE_BIN) : $(SALENV_SAFE_OBJ)
 	@mkdir -p $(BIN_DIR)
-	$(BIGLOO) $(BIGLOO_SAFE_LFLAGS) $(SALENV_SAFE_OBJ) -o $(SALENV_SAFE_BIN) 
+	$(BIGLOO) $(BIGLOO_SAFE_LFLAGS) $(SALENV_SAFE_OBJ) -o $(SALENV_SAFE_BIN)
 else
 # Only in release mode I create a safe executable
 $(SALENV_SAFE_BIN) : $(SALENV_BIN)
@@ -493,6 +577,20 @@ endif
 #*---------------------------------------------------------------------*/
 #*    .scm.o                                                           */
 #*---------------------------------------------------------------------*/
+# Native sources are deliberately outside ALL_SCM_SRC: building a legacy
+# SAL executable must not generate or link Yices2. The runtime archive supplies
+# its module checksums before native compilation, including a clean build.
+$(SAL_CDR_SCM_OBJ): $(SALRUNTIME_LIB) $(YICES2_FFI_MCO)
+$(SAL_CDR_SCM_OBJ): CPPFLAGS := $(YICES2_CPPFLAGS) $(CPPFLAGS)
+$(SAL_CDR_SCM_OBJ): BIGLOO_FLAGS_DEFAULT += -I "$(YICES2_FFI_DIR)"
+$(OBJ_DIR)/sal-cdr-front-end.o: $(OBJ_DIR)/sal-cdr.o $(SRC_DIR)/sal-script-util.scm $(SRC_DIR)/front-end.macros
+
+# Yices2 term/status values are int32 objects, not Bigloo fixnums.
+# Keep generic arithmetic and checked foreign conversions in the FFI client.
+$(OBJ_DIR)/sal-cdr.o: $(SRC_DIR)/sal-cdr.scm
+	@mkdir -p $(OBJ_DIR)
+	$(BIGLOO) $(filter-out -farithmetic -unsafe,$(BIGLOO_UNSAFE_FLAGS)) -eval '(define-macro (FILE-NAME) "sal-cdr.scm")' $< -o $@
+
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.scm
 	@mkdir -p $(OBJ_DIR)
 	$(BIGLOO) $(BIGLOO_UNSAFE_FLAGS) -eval '(define-macro (FILE-NAME) "$*.scm")' $(SRC_DIR)/$*.scm -o $(OBJ_DIR)/$*.o
@@ -521,7 +619,7 @@ $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
 #* Dependencies                                                        */
 #*---------------------------------------------------------------------*/
 
-$(OBJ_DIR)/Makefile.dependencies: $(ALL_SCM_SRC)
+$(OBJ_DIR)/Makefile.dependencies: $(ALL_SCM_SRC) $(SRC_DIR)/../Makefile
 	@echo Making Scheme dependency file...
 	@mkdir -p $(OBJ_DIR)
 	@$(SHELL) -ec '(LD_LIBRARY_PATH=$(BIGLOOLIBDIR); export LD_LIBRARY_PATH; $(BDEPEND) -fno-jvm $(ALL_SCM_SRC) > $(OBJ_DIR)/Makefile.dependencies.tmp)'
@@ -587,6 +685,7 @@ source-distribution:
 .PHONY: clean global-clean common-clean
 
 clean: common-clean
+	rm -f $(SAL_CDR_BIN)
 	rm -rf "$(OBJ_DIR)/yices2-ffi"
 	rm -f $(SALENV_BIN)
 	rm -f $(SALENV_SAFE_BIN)

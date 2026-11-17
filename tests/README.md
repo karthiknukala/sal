@@ -42,6 +42,63 @@ Tests all available SAT and SMT solvers:
 - Yices, Kissat, MiniSat, Lingeling, etc.
 - ICS, Yices2, CVC Lite, etc.
 
+### Native PDKIND Regression Tests
+
+Build and run the checker from the repository root:
+
+```bash
+make YICES2_PREFIX=/path/to/mcsat-enabled-yices
+bin/sal-cdr --statistics model.sal theorem
+bin/sal-cdr --max-depth=10 model.sal theorem
+```
+
+When switching the configured Yices2 installation, rebuild its interface before
+rebuilding SAL:
+
+```bash
+make -B YICES2_PREFIX=/path/to/mcsat-enabled-yices yices2-ffi
+make YICES2_PREFIX=/path/to/mcsat-enabled-yices
+```
+
+The native build supports Darwin and Linux and isolates SAL's GMP allocation
+hooks from Yices2. It requires shared MCSAT-enabled Yices2 and libpoly libraries;
+static-only solver libraries and dynamic GMP overrides are rejected. Installed
+`sal-cdr` needs those configured shared runtimes. Portability of the generated
+installation archive is unverified.
+
+`--max-depth` bounds the induction depth; exhausting the bound reports
+`unknown`. The default, zero, leaves the depth unlimited.
+
+Run the regression mode from this directory:
+
+```bash
+./run_tests.sh --cdr
+```
+
+Requires `sal-cdr` built against an MCSAT-enabled Yices2 library. This mode
+generates 93 SAL models in a temporary directory, checks their well-formedness,
+and compares `sal-cdr`'s semantic results with independently specified answers.
+Forty finite transition graphs use breadth-first reachability as an oracle;
+their counterexamples are also checked against the actual graph edges.
+
+The remaining cases cover induction strengthening, nonlinear Cauchy-Schwarz,
+deadlocks and empty initial sets, scalar and dependent types, signed integer
+division/modulo, nested `LET` scope, array/record flattening, and inputs used in
+initialization, properties, or primed transition constraints. Trace checks
+require exact rational/algebraic values and consistent global constants. A
+solver error or timeout fails the regression. `unknown` is accepted only
+for the deliberately bounded `limited_strengthen` case (`--max-depth=1`); it
+never counts as a proof.
+
+Each invocation preserves the generated models, commands, checker output, and
+full traces. The final line prints their directory. Set `SAL_CDR_LOG_DIR` to
+choose a destination and `SAL_CDR_TIMEOUT` to change the per-command timeout
+(20 seconds by default):
+
+```bash
+SAL_CDR_LOG_DIR=/tmp/sal-cdr-checks SAL_CDR_TIMEOUT=30 ./run_tests.sh --cdr
+```
+
 ### Nonlinear Yices2/MCSAT Smoke Test
 ```bash
 YICES2_MCSAT_COMMAND=/path/to/yices ./run_nonlinear_mcsat_smoke.sh

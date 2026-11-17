@@ -27,7 +27,7 @@ gen_script ()
 {
   template=src/$1.template
   script=$salenv_dir/bin/$1
-  if sed -e "s|__SALENV_DIR__|$runtime_salenv_dir_escaped|g;s|__BIGLOO_LIB_DIR__|$runtime_bigloolib_escaped|g;s|__DOT_A_LIBS__|$DOT_A_LIBS|g" $template > $script
+  if sed -e "s|__SALENV_DIR__|$runtime_salenv_dir_escaped|g;s|__BIGLOO_LIB_DIR__|$runtime_bigloolib_escaped|g;s|__DOT_A_LIBS__|$DOT_A_LIBS|g;s|__SAL_CDR_EXEC__|sal-cdr-exec|g;s|__SAL_CDR_BIGLOO_LIB_DIR__|\${SALENV_DIR}/lib|g" $template > $script
   then
     chmod +x $script
   else
@@ -37,7 +37,7 @@ gen_script ()
 }
 
 echo "Generating auxiliary scripts..."
-for name in salenv salenv-safe sal-wfc lsal2xml sal2bool sal-smc sal-bmc sal-inf-bmc sal-path-finder sal-deadlock-checker sal-sim sal-wmc ltl2buchi sal-emc sal-path-explorer sal-atg sal-atg2 sal-sld sal-sc; do gen_script $name; done
+for name in salenv salenv-safe sal-wfc lsal2xml sal2bool sal-smc sal-bmc sal-inf-bmc sal-cdr sal-path-finder sal-deadlock-checker sal-sim sal-wmc ltl2buchi sal-emc sal-path-explorer sal-atg sal-atg2 sal-sld sal-sc; do gen_script $name; done
 
 if bin/sal-smc --version 2>&1 | grep GLIBC; then
     echo "Your system contains an incompatible version of GLIBC. SAL requires GLIBC version >= 2.3. You should upgrade your system, or download the SAL static distribution package for your plataform."
