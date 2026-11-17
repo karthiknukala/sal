@@ -23,134 +23,423 @@
           (sal-cdr/display-invariant))
   (eval (export-exports)))
 
-;; These are storage adapters for the existing FFI's opaque array/record
-;; types, following tests/yices2_ffi_test.scm. All solver operations below
-;; are calls to that interface, not additional foreign entry points.
-(define-macro (cdr-allocate kind spelling count)
-  (let ((size (gensym 'cdr-size)))
+;; Engine data
+
+(define-struct cdr-solver native assertions interpolator mcsat? fallback incomplete?)
+(define-struct cdr-step variables mapping cache transition buffer projection)
+(define-struct cdr-projection variables elimination-buffer count formulas)
+(define-struct cdr-successor mapping goals)
+(define-struct cdr-system module declarations decl-map type-map globals
+  steps native-types base-count base-buffer initial transition domain nonlinear?
+  solvers models initial-solver frames interpolation-b interpolation-record expression-cache transient-inputs
+  minimization-solver graph roots word-encoding successor integrality? definitions trace-declarations smt2-output
+  projection-result)
+
+(define-struct cdr-word-encoding reject requirements constants)
+
+(define-struct cdr-frame solver excluded facts)
+
+(define-struct cdr-obligation forward backward distance score)
+
+(define-struct cdr-heap data size)
+
+;; Property-directed k-induction
+
+(define (sal-cdr/invariant assertion max-depth)
+  (unless (sal-module-models/invariant? assertion)
+    (sign-error "sal-cdr supports safety invariants only."))
+  (unless (and (integer? max-depth) (>= max-depth 0))
+    (sign-error "sal-cdr requires a nonnegative maximum induction depth."))
+  (unless *cdr-initialized?*
+    (yices-init)
+    (set! *cdr-initialized?* #t))
+  (unless (= (yices-has-mcsat) 1)
+    (sign-error "sal-cdr requires a Yices2 library with MCSAT and interpolation support. Rebuild with YICES2_PREFIX pointing to that installation."))
+  (vector-fill! *cdr-statistics* 0)
+  (set! *cdr-invariant* #f)
+  (set! *cdr-query-id* (+ *cdr-query-id* 1))
+  (let ((sys #f))
+    (unwind-protect
+      (bind-exit (abort)
+        (set! *cdr-abort* (lambda (status)
+                          (when (and sys (cdr-option 'cex-graph))
+                            (cdr-write-graph! sys (cdr-option 'cex-graph)))
+                          (abort (values status #unspecified))))
+        (let* ((definitions (cdr-state-definitions (slot-value assertion :module)))
+               (packed
+                 (and (cdr-word-candidate? assertion definitions)
+                      (bind-exit (fallback)
+                        (set! sys (cdr-empty-system (make-cdr-word-encoding fallback '() (make-hashtable)) definitions))
+                        (cdr-setup! sys assertion))))
+               (property
+                 (or packed
+                     (begin
+                       (when sys (cdr-cleanup! sys))
+                       (set! sys (cdr-empty-system #f definitions))
+                       (cdr-setup! sys assertion))))
+               (result (cdr-search sys property max-depth)))
+          (when (cdr-option 'cex-graph)
+            (cdr-write-graph! sys (cdr-option 'cex-graph)))
+          (cond ((eq? result 'valid) (values 'valid #unspecified))
+                ((number? result)
+                 (vector-set! *cdr-statistics* cdr-stat-max-cex-depth result)
+                 (values 'invalid (cdr-counterexample sys property result)))
+                (else (values 'unknown #unspecified)))))
+      (begin (when sys (cdr-cleanup! sys)) (set! *cdr-abort* #f)))))
+
+;; Return 'valid, 'unknown, or the length of a counterexample.
+(define (cdr-search sys property limit)
+  (let ((bad (cdr-not property)))
+    (cdr-record-edge! sys bad bad 0)
+    (if (cdr-initial-reachable? sys bad)
+      (begin (cdr-mark-root! sys bad) 0)
+      (let rounds ((n 0) (k 1) (frame (list (make-cdr-obligation property bad 0 1.0))))
+        (vector-set! *cdr-statistics* 4 n)
+        (vector-set! *cdr-statistics* 5 k)
+        (vector-set! *cdr-statistics* cdr-stat-frame-size (length frame))
+        (vector-set! *cdr-statistics* cdr-stat-frame-pushed 0)
+        (verbose-message 2 "  PDKIND frame ~a, induction depth ~a, ~a obligations"
+                         n k (vector-ref *cdr-statistics* cdr-stat-frame-size))
+        (if (and (> limit 0) (> k limit)) 'unknown
+          (let* ((transitions (let loop ((i 0) (result '()))
+                                (if (= i k) (reverse! result)
+                                    (loop (+ i 1) (cons (cdr-transition-at sys i) result)))))
+                 (solver (cdr-new-solver sys transitions)))
+            (multiple-value-bind (result pushed next-index)
+                (cdr-push-frame sys solver frame n k)
+              (if (number? result) result
+                (begin
+                  (cdr-retire-solver! sys solver)
+                  (cond
+                    ((eq? result 'valid)
+                     (cdr-save-invariant! sys pushed k)
+                     'valid)
+                    ((and (> (cdr-option 'max-frame) 0) (>= n (cdr-option 'max-frame)))
+                     'unknown)
+                    (else
+                     (let ((next (cdr-minimize-frame sys (reverse! pushed)))
+                           (cap (cdr-option 'induction-max)))
+                       (for-each (lambda (o)
+                                   (cdr-obligation-score-set! o (+ (/ (cdr-obligation-score o) 2) 0.5))) next)
+                       ;; The SALLY induction cap keeps searching at fixed k.
+                       (rounds next-index (if (> cap 0) (min (+ k 1) cap) (+ k 1)) next)))))))))))))
+
+;; Push each forward obligation under k-step induction. A counterexample to
+;; induction either leads backward to the bad states or tells us where the
+;; forward frame needs strengthening.
+(define (cdr-push-frame sys solver frame n k)
+  ;; A holds through frame n. A region projected k steps back from a
+  ;; violation cannot be reached before n-k+1 in this search.
+  (let ((earliest (max 0 (+ n 1 (- k))))
+        (heap (make-cdr-heap (make-vector (max 8 (vector-ref *cdr-statistics* cdr-stat-frame-size))) 0)))
+    (for-each (lambda (o)
+                (cdr-add-assumption! sys solver (cdr-obligation-forward o) k)
+                (cdr-enqueue! heap o)) frame)
+    (let push ((pushed '()) (failed? #f) (next-index (+ n k)))
+      (if (= (cdr-heap-size heap) 0)
+        (values (if failed? 'advance 'valid) pushed next-index)
+        (let* ((o (cdr-dequeue! heap)) (a (cdr-obligation-forward o))
+               (c (cdr-obligation-backward o)) (d (cdr-obligation-distance o))
+               (not-a (cdr-not a))
+               (cti (cdr-query sys solver (cdr-successor-goal sys not-a k))))
+          (cond
+            ((not cti)
+             (cdr-count! cdr-stat-frame-pushed)
+             (push (cons o pushed) failed? next-index))
+            (else
+             (let* ((already-bad? (or (= c not-a)
+                                     (= 1 (cdr-ok (yices-formula-true-in-model cti (cdr-at sys c k))))))
+                    (cex (if already-bad? cti (cdr-query sys solver (cdr-successor-goal sys c k)))))
+               (if cex
+                 (let* ((g (cdr-project sys cex c k))
+                        (reach (cdr-reachable sys n g #t earliest)))
+                   (cdr-record-edge! sys g c k)
+                   (unless already-bad? (cdr-release-model! sys cex))
+                   (cdr-release-model! sys cti)
+                   (if reach (values (+ reach k d) #f #f)
+                     (let* ((h (cdr-explain sys n g))
+                            (new (make-cdr-obligation h g (+ d k) 1.0)))
+                       (cdr-add-assumption! sys solver h k)
+                       (cdr-obligation-score-set! o (* 0.9 (cdr-obligation-score o)))
+                       (cdr-enqueue! heap new)
+                       (cdr-enqueue! heap o)
+                       (push pushed failed? next-index))))
+                 (let* ((g (cdr-project sys cti not-a k))
+                        (reach (cdr-reachable sys n g #f earliest)))
+                   (cdr-release-model! sys cti)
+                   (if reach
+                     ;; The model gives an upper bound. Find the first
+                     ;; reachable violation before advancing the frame.
+                     (let ((first
+                             (let bisect ((lo (+ n 1)) (hi (min next-index (+ reach k))))
+                               (if (>= lo hi) lo
+                                 (let* ((mid (quotient (+ lo hi) 2))
+                                        (r (cdr-reachable sys mid not-a)))
+                                   (if r (bisect lo mid) (bisect (+ mid 1) hi)))))))
+                       (cdr-count! cdr-stat-frame-pushed)
+                       (push (cons (make-cdr-obligation (cdr-not c) c d (exact->inexact d)) pushed)
+                             #t (min next-index first)))
+                     (let* ((h (cdr-explain sys n g))
+                            (stronger (cdr-and (list a h))))
+                       (cdr-add-assumption! sys solver h k)
+                       (cdr-obligation-forward-set! o stronger)
+                       (cdr-obligation-score-set! o (* 0.9 (cdr-obligation-score o)))
+                       (cdr-enqueue! heap o)
+                       (push pushed failed? next-index)))))))))))))
+
+;; Reachability in AT MOST n transitions. Checking initial states explicitly
+;; avoids the earliest-unreachable precondition of the paper's exact-depth
+;; subroutine and handles deadlocks without adding artificial stuttering.
+;; Return an actual witness length, or #f. An explicit work stack keeps long
+;; counterexamples from consuming the Scheme/C call stack.
+(define (cdr-reachable sys n goal #!optional (record? #f) (minimum 0))
+  (let loop ((pending (list (cons n goal))))
+    (if (null? pending)
+      (begin (when (> n 0) (cdr-count! cdr-stat-unreachable)) #f)
+      (let* ((obligation (car pending)) (level (car obligation)) (target (cdr obligation))
+             (frame (cdr-frame-at sys level))
+             (cache (cdr-frame-excluded frame))
+             (distance (- n level)))
+        (cond
+          ((cdr-term-table-ref cache target) (loop (cdr pending)))
+          ((and (>= distance minimum) (cdr-initial-reachable? sys target))
+           (when (> n 0) (cdr-count! cdr-stat-reachable))
+           (when record? (cdr-mark-root! sys target))
+           distance)
+          ((= level 0)
+           (cdr-term-table-set! cache target #t)
+           (loop (cdr pending)))
+          (else
+           (cdr-count! cdr-stat-reachability-queries)
+           (let ((model (cdr-query sys (cdr-reach-solver sys (- level 1))
+                                  (cdr-successor-goal sys target 1))))
+             (if model
+               (let ((predecessor (cdr-project sys model target 1)))
+                 (cdr-release-model! sys model)
+                 (when record? (cdr-record-edge! sys predecessor target 1))
+                 (loop (cons (cons (- level 1) predecessor) pending)))
+               (begin
+                 (cdr-explain sys level target)
+                 (loop (cdr pending)))))))))))
+
+(define (cdr-frame-at sys n)
+  (let ((frames (cdr-system-frames sys)))
+    (when (>= n (vector-length frames))
+      (set! frames (copy-vector frames (max (+ n 2) (* 2 (vector-length frames)))))
+      (cdr-system-frames-set! sys frames))
+    (when (eq? (vector-ref frames n) #unspecified)
+      (vector-set! frames n
+        (make-cdr-frame #f (make-eq-hash-table 17) '())))
+    (vector-ref frames n)))
+
+(define (cdr-reach-solver sys n)
+  (let ((frame (cdr-frame-at sys n)))
+    (unless (cdr-frame-solver frame)
+      (cdr-frame-solver-set! frame
+        (cdr-new-solver sys
+          (append (list (cdr-system-transition sys))
+                  (if (= n 0) (list (cdr-system-initial sys)) '())
+                  (reverse (cdr-frame-facts frame))))))
+    (cdr-frame-solver frame)))
+
+(define (cdr-check-consistency! sys solver where)
+  (when (and (cdr-option 'check-deadlock)
+             (cdr-unsat? sys solver (yices-true)))
+    ;; Like SALLY's diagnostic this checks the current abstraction/transition
+    ;; context. It is not a complete reachable-deadlock verification query.
+    (sign-error "sal-cdr: deadlock diagnostic: inconsistent ~a context." where)))
+
+(define (cdr-learn! sys n goal learned)
+  ;; Reachability here is up-to-depth, so a fact valid through n is valid at
+  ;; every earlier frame. Installing it there cannot remove a reachable state.
+  (let loop ((level n))
+    (let* ((frame (cdr-frame-at sys level)) (cache (cdr-frame-excluded frame)))
+      (unless (number? (cdr-term-table-ref cache goal))
+        (cdr-term-table-set! cache goal learned)
+        (when (> level 0)
+          (cdr-frame-facts-set! frame (cons learned (cdr-frame-facts frame)))
+          (when (cdr-frame-solver frame) (cdr-assert! (cdr-frame-solver frame) learned))
+          (when (cdr-option 'check-deadlock)
+            (cdr-check-consistency! sys (cdr-reach-solver sys level) "reachability")))))
+    (when (and (cdr-option 'add-backward) (> level 0)) (loop (- level 1)))))
+
+(define (cdr-initial-reachable? sys goal)
+  (let ((cache (cdr-frame-excluded (cdr-frame-at sys 0))))
+    (cond ((cdr-term-table-ref cache goal) #f)
+          ((cdr-unsat? sys (cdr-system-initial-solver sys) goal)
+           (cdr-term-table-set! cache goal #t)
+           #f)
+          (else #t))))
+
+;; Explain the exclusion of G through n, including initial states even when
+;; the system deadlocks. Each disjunct refutes G; together they cover I and
+;; every successor of R[n-1]. Frames need not imply one another.
+(define (cdr-explain sys n goal)
+  (let* ((frame (cdr-frame-at sys n))
+         (cache (cdr-frame-excluded frame))
+         (known (cdr-term-table-ref cache goal)))
+    (if (number? known) known
+      (let* ((minimize? (cdr-option 'minimize-interpolants))
+             (target (if minimize? (cdr-minimize-interpolant sys n goal #f) goal))
+             (initial (if (= n 0)
+                       (cdr-interpolate sys (cdr-system-initial-solver sys) target)
+                       ;; I is independent of the reachability level. Keep
+                       ;; its explanation in the level-zero cache as well.
+                       (cdr-explain sys 0 target)))
+             (explanation
+               (if (= n 0) initial
+                 (cdr-or (list initial
+                   (cdr-back sys
+                     (cdr-interpolate sys (cdr-reach-solver sys (- n 1))
+                                      (cdr-at sys target 1)) 1)))))
+             (learned (if minimize? (cdr-minimize-interpolant sys n explanation #t) explanation)))
+        (cdr-learn! sys n goal learned)
+        (cdr-count! 3)
+        learned))))
+
+;; The same ordering as SALLY: favor shallow backward regions relative to
+;; their score, then larger scores, with native term identity breaking ties.
+(define (cdr-obligation-better? a b)
+  (let ((left (* (cdr-obligation-distance a) (cdr-obligation-score b)))
+        (right (* (cdr-obligation-distance b) (cdr-obligation-score a))))
+    (cond ((not (= left right)) (< left right))
+          ((not (= (cdr-obligation-score a) (cdr-obligation-score b)))
+           (> (cdr-obligation-score a) (cdr-obligation-score b)))
+          ((not (= (cdr-obligation-backward a) (cdr-obligation-backward b)))
+           (< (cdr-obligation-backward a) (cdr-obligation-backward b)))
+          (else (< (cdr-obligation-forward a) (cdr-obligation-forward b))))))
+
+;; Only the removed obligation is rescored. Queued keys never change.
+;; The heap can keep its entries in an array.
+(define (cdr-enqueue! heap obligation)
+  (let ((data (cdr-heap-data heap)) (size (cdr-heap-size heap)))
+    (when (= size (vector-length data))
+      (set! data (copy-vector data (* 2 (vector-length data))))
+      (cdr-heap-data-set! heap data))
+    (cdr-heap-size-set! heap (+ size 1))
+    (vector-set! *cdr-statistics* cdr-stat-queue-size (+ size 1))
+    (let rise ((i size))
+      (let ((parent (quotient (- i 1) 2)))
+        (if (and (> i 0) (cdr-obligation-better? obligation (vector-ref data parent)))
+          (begin (vector-set! data i (vector-ref data parent)) (rise parent))
+          (vector-set! data i obligation))))))
+
+(define (cdr-dequeue! heap)
+  (let* ((data (cdr-heap-data heap)) (size (- (cdr-heap-size heap) 1))
+         (result (vector-ref data 0)) (last (vector-ref data size)))
+    (cdr-heap-size-set! heap size)
+    (vector-set! *cdr-statistics* cdr-stat-queue-size size)
+    (vector-set! data size #unspecified)
+    (when (> size 0)
+      (let sink ((i 0))
+        (let ((left (+ (* 2 i) 1)))
+          (if (>= left size) (vector-set! data i last)
+            (let* ((right (+ left 1))
+                   (child (if (and (< right size)
+                                   (cdr-obligation-better? (vector-ref data right) (vector-ref data left)))
+                            right left)))
+              (if (cdr-obligation-better? (vector-ref data child) last)
+                (begin (vector-set! data i (vector-ref data child)) (sink child))
+                (vector-set! data i last)))))))
+    result))
+
+(define (cdr-add-assumption! sys solver formula depth)
+  (let loop ((i 0))
+    (when (< i depth)
+      (cdr-assert! solver (cdr-at sys formula i))
+      (loop (+ i 1))))
+  (cdr-check-consistency! sys solver "induction"))
+
+;; Yices2 storage and marshalling
+
+;; The generated FFI binds the Yices2 calls and exposes their pointer types
+;; as opaque. This section supplies storage and access for those arguments.
+(define-macro (yices-enum name)
+  `(pragma::int ,(symbol->string name)))
+
+(define-macro (yices-allocate kind c-type count)
+  (let ((size (gensym 'size)))
     `(let ((,(symbol-append size '::long) ,count))
        (,(symbol-append 'pragma:: kind)
-        ,(string-append "(" spelling " *) GC_MALLOC(sizeof(" spelling ") * $1)") ,size))))
-(define-macro (cdr-present? pointer) `(pragma::bool "$1 != NULL" ,pointer))
-(define-macro (cdr-null kind) `(,(symbol-append 'pragma:: kind) "NULL"))
+        ,(string-append "(" c-type " *) GC_MALLOC(sizeof(" c-type ") * $1)") ,size))))
 
-(define (cdr-config-present? pointer::yices-ctx-config-pointer)
-  (pragma::bool "$1 != NULL" pointer))
+(define-macro (yices-pointer-present? pointer)
+  `(pragma::bool "$1 != NULL" ,pointer))
 
-(define *cdr-initialized?* #f)
-(define *cdr-statistic-fields*
-  '(("checks" . "checks") ("projections" . "projections")
-    ("interpolations" . "interpolations") ("refinements" . "refinements")
-    ("frames" . "pdkfi") ("induction-depth" . "pdkid")
-    ("contexts" . "contexts") ("projection-substitutions" . "projection-substitutions")
-    ("frame-size" . "pdkfs") ("frame-pushed" . "pdkfp")
-    ("queue-size" . "pdkqs") ("max-cex-depth" . "pdkmcd")
-    ("reachable" . "pdkrr") ("unreachable" . "pdkru") ("reachability-queries" . "pdkrq")))
-(define *cdr-statistics* (make-vector (length *cdr-statistic-fields*) 0))
-(define cdr-stat-frame-size 8)
-(define cdr-stat-frame-pushed 9)
-(define cdr-stat-queue-size 10)
-(define cdr-stat-max-cex-depth 11)
-(define cdr-stat-reachable 12)
-(define cdr-stat-unreachable 13)
-(define cdr-stat-reachability-queries 14)
-(define *cdr-statistics-observer* #f)
-(define *cdr-abort* #f)
-(define *cdr-options*
-  (map (lambda (entry) (cons (car entry) (cdr entry)))
-  '((max-frame . 0) (induction-max . 0) (solver-mode . auto)
-    (solver-logic . #f) (solver-trace-tags . #f) (smt2-output . #f)
-    (add-backward . #f) (check-deadlock . #f)
-    (minimize-interpolants . #f) (minimize-generalizations . #f)
-    (minimize-frames . #f) (cex-graph . #f))))
-(define *cdr-invariant* #f)
-(define *cdr-query-id* 0)
-(define *cdr-smt2-query-index* 0)
+(define-macro (yices-default-config) '(pragma::yices-ctx-config-pointer "NULL"))
+(define-macro (yices-default-parameters) '(pragma::yices-param-pointer "NULL"))
 
-(define (cdr-option key) (cdr (assq key *cdr-options*)))
+(define-inline (yices-config-present? config::yices-ctx-config-pointer)
+  (yices-pointer-present? config))
 
-(define (cdr-solver-logic)
-  (and (not (eq? (cdr-option 'solver-mode) 'mcsat))
-       (cdr-option 'solver-logic)))
+(define-inline (yices-context-unsat? context::yices-context-pointer)
+  (= (yices-context-status context) (yices-enum YICES_STATUS_UNSAT)))
 
-(define (sal-cdr/set-option! key value)
-  (let ((entry (assq key *cdr-options*)))
-    (unless entry (sign-error "Unknown sal-cdr option: ~a" key))
-    (cond
-      ((memq key '(max-frame induction-max))
-       (unless (and (integer? value) (>= value 0))
-         (sign-error "sal-cdr option ~a requires a nonnegative integer." key)))
-      ((eq? key 'solver-mode)
-       (when (string? value) (set! value (string->symbol value)))
-       (unless (memq value '(auto dpllt mcsat hybrid))
-         (sign-error "sal-cdr solver mode must be auto, dpllt, mcsat, or hybrid.")))
-      ((memq key '(cex-graph solver-logic solver-trace-tags smt2-output))
-       (unless (or (not value) (and (string? value) (> (string-length value) 0)))
-         (sign-error "sal-cdr option ~a requires a nonempty string." key)))
-      (else
-       (unless (boolean? value) (sign-error "sal-cdr option ~a requires a Boolean." key))))
-    (set-cdr! entry value)))
+(define-inline (yices-arithmetic-constant? term::int32)
+  (= (yices-term-constructor term) (yices-enum YICES_ARITH_CONSTANT)))
 
-(define (sal-cdr/display-invariant)
-  (unless *cdr-invariant* (sign-error "No proved sal-cdr invariant is available."))
-  ;; Give the native symbols stable, unambiguous names and retain their SAL
-  ;; origin. Naming affects printing only, never terms or solver semantics.
-  (let loop ((bindings (vector-ref *cdr-invariant* 2)) (i 0))
-    (unless (null? bindings)
-      (let* ((binding (car bindings))
-             (name (string-append "cdr" (number->string (vector-ref *cdr-invariant* 3))
-                                 "_" (number->string i))))
-        (cdr-ok (yices-set-term-name (cdr binding) name))
-        (print "; " name " = " (sal-decl/name (car binding)))
-        (when (= (yices-term-is-bitvector (cdr binding)) 1)
-          (print "; " name " has a signed " (cdr-word-width (cdr binding)) "-bit encoding.")))
-      (loop (cdr bindings) (+ i 1))))
-  (print "(invariant " (vector-ref *cdr-invariant* 0) " "
-         (cdr-take-string (yices-term-to-string (vector-ref *cdr-invariant* 1)
-                                               4294967295 4294967295 0)) ")"))
+(define-inline (make-yices-term-array::yices-term-pointer size::long)
+  (yices-allocate yices-term-pointer "term_t" size))
 
-(define (cdr-save-invariant! sys obligations depth)
-  (set! *cdr-invariant*
-    ;; Native integer sorts do not intrinsically encode SAL subranges. Keep
-    ;; their domain in the exported certificate, including when arithmetic
-    ;; has been lowered using those bounds. T guarantees it at every step.
-    (vector depth (cdr-and (cons (cdr-system-domain sys)
-                                (map cdr-obligation-forward obligations)))
-      (append (map cons (cdr-system-declarations sys)
-                        (cdr-step-variables (cdr-step-at sys 0)))
-              (map (lambda (decl) (cons decl (cdr-variable sys decl #f)))
-                   (cdr-system-globals sys)))
-      *cdr-query-id*)))
+(define-inline (make-yices-int32-array::yices-int32-pointer size::long)
+  (yices-allocate yices-int32-pointer "int32_t" size))
 
-(define (cdr-count! index)
-  (vector-set! *cdr-statistics* index (+ 1 (vector-ref *cdr-statistics* index))))
+(define-inline (make-yices-uint32-cell::yices-uint32-pointer)
+  (yices-allocate yices-uint32-pointer "uint32_t" 1))
 
-(define (sal-cdr/statistics)
-  (map (lambda (field value) (list (car field) (cdr field) value))
-       *cdr-statistic-fields* (vector->list *cdr-statistics*)))
+(define-inline (yices-term-array-ref::int32 array::yices-term-pointer i::long)
+  (pragma::int32 "$1[$2]" array i))
 
-(define (sal-cdr/display-statistics)
-  (for-each (lambda (field) (print "cdr::" (car field) " = " (caddr field)))
-            (sal-cdr/statistics)))
+(define-inline (yices-term-array-set! array::yices-term-pointer i::long term::int32)
+  (pragma::void "$1[$2] = $3" array i term))
 
-(define (sal-cdr/with-statistics-observer observer thunk)
-  (let ((previous *cdr-statistics-observer*))
-    (unwind-protect
-      (begin (set! *cdr-statistics-observer* observer) (thunk))
-      (set! *cdr-statistics-observer* previous))))
+(define-inline (yices-int32-array-ref::int32 array::yices-int32-pointer i::long)
+  (pragma::int32 "$1[$2]" array i))
 
-(define (sal-cdr/reset!)
-  ;; The native front end owns the Yices instance and calls this between
-  ;; batch queries, after printing the previous result and its invariant.
-  (set! *cdr-invariant* #f)
-  (vector-fill! *cdr-statistics* 0)
-  (when *cdr-initialized?* (yices-reset)))
+(define-inline (yices-uint32-cell-ref::uint32 cell::yices-uint32-pointer)
+  (pragma::uint32 "$1[0]" cell))
+
+(define (list->yices-term-array values)
+  (let ((array::yices-term-pointer (make-yices-term-array (max 1 (length values)))))
+    (let loop ((rest values) (i::long 0))
+      (unless (null? rest)
+        (yices-term-array-set! array i (car rest))
+        (loop (cdr rest) (+ i 1))))
+    array))
+
+(define-inline (make-yices-term-vector::yices-term-vector-pointer)
+  (let ((vector::yices-term-vector-pointer (yices-allocate yices-term-vector-pointer "term_vector_t" 1)))
+    (yices-init-term-vector vector)
+    vector))
+
+(define (yices-term-vector-conjunction vector::yices-term-vector-pointer)
+  (cdr-ok (yices-and (pragma::uint32 "$1->size" vector)
+                    (pragma::yices-term-pointer "$1->data" vector))))
+
+(define-inline (make-yices-interpolation-record::yices-interpolation-context-pointer)
+  (yices-allocate yices-interpolation-context-pointer "interpolation_context_t" 1))
+
+(define-inline (yices-set-interpolation-partitions! record::yices-interpolation-context-pointer
+                                                   a::yices-context-pointer b::yices-context-pointer)
+  (pragma::void "$1->ctx_A = $2; $1->ctx_B = $3" record a b))
+
+(define-inline (yices-interpolant::int32 record::yices-interpolation-context-pointer)
+  (pragma::int32 "$1->interpolant" record))
+
+;; A native model can have different Scheme boxes at different call sites.
+(define-inline (yices-same-model? a::yices-model-pointer b::yices-model-pointer)
+  (pragma::bool "$1 == $2" a b))
+
+(define (yices-take-string pointer::yices-string)
+  (let ((result (yices-string-copy pointer)))
+    (yices-free-string pointer)
+    result))
+
+(define (yices-term-text term #!optional (width 4294967295))
+  (yices-take-string (yices-term-to-string term width 4294967295 0)))
 
 (define (cdr-fail operation)
-  (let* ((pointer (yices-error-string))
-         (message (yices-string-copy pointer)))
-    (yices-free-string pointer)
-    (sign-error "sal-cdr: ~a: ~a" operation message)))
+  (sign-error "sal-cdr: ~a: ~a" operation (yices-take-string (yices-error-string))))
 
 (define (cdr-ok value)
   (when (< value 0) (cdr-fail "Yices2 operation failed"))
@@ -165,44 +454,21 @@
 (define-inline (cdr-term-table-set! table term value)
   (eq-hash-table/put! table (int32->fixnum term) value))
 
-(define (cdr-terms values)
-  (let ((buffer::yices-term-pointer (cdr-allocate yices-term-pointer "term_t" (max 1 (length values)))))
-    (let loop ((values values) (i::long 0))
-      (unless (null? values)
-        (let ((value::int32 (car values)))
-          (pragma::void "$1[$2] = $3" buffer i value))
-        (loop (cdr values) (+ i 1))))
-    buffer))
-
 (define (cdr-and values)
   (cond ((null? values) (yices-true))
         ((null? (cdr values)) (car values))
         ((null? (cddr values)) (cdr-ok (yices-and2 (car values) (cadr values))))
-        (else (cdr-ok (yices-and (length values) (cdr-terms values))))))
+        (else (cdr-ok (yices-and (length values) (list->yices-term-array values))))))
 
 (define (cdr-or values)
   (cond ((null? values) (yices-false))
         ((null? (cdr values)) (car values))
         ((null? (cddr values)) (cdr-ok (yices-or2 (car values) (cadr values))))
-        (else (cdr-ok (yices-or (length values) (cdr-terms values))))))
+        (else (cdr-ok (yices-or (length values) (list->yices-term-array values))))))
 
 (define (cdr-not t) (cdr-ok (yices-not t)))
 
-(define (cdr-term-vector-conjunction buffer::yices-term-vector-pointer)
-  (cdr-ok (yices-and (pragma::uint32 "$1->size" buffer)
-                    (pragma::yices-term-pointer "$1->data" buffer))))
-
-(define-struct cdr-solver native assertions interpolator mcsat? fallback incomplete?)
-(define-struct cdr-step variables mapping cache transition buffer projection)
-(define-struct cdr-projection variables elimination-buffer count formulas)
-(define-struct cdr-successor mapping goals)
-(define-struct cdr-system module declarations decl-map type-map globals
-  steps native-types base-count base-buffer initial transition domain nonlinear?
-  solvers models initial-solver frames interpolation-b interpolation-record expression-cache transient-inputs
-  minimization-solver graph roots word-encoding successor integrality? definitions trace-declarations smt2-output
-  projection-result)
-
-(define-struct cdr-word-encoding reject requirements constants)
+;; Solver contexts and queries
 
 ;; A logical solver owns one native context. An interpolation-capable copy
 ;; is allocated only if it is needed. Models never leave the Yices heap.
@@ -211,7 +477,7 @@
          (ctx
           (if (or mcsat? logic tags)
             (let ((config (yices-new-config)))
-              (unless (cdr-config-present? config) (cdr-fail "creating solver configuration"))
+              (unless (yices-config-present? config) (cdr-fail "creating solver configuration"))
               (unwind-protect
                 (begin
                   (when logic
@@ -225,8 +491,8 @@
                   (yices-new-context config))
                 (yices-free-config config)))
             ;; Yices' default configuration already supports push/pop.
-            (yices-new-context (cdr-null yices-ctx-config-pointer)))))
-    (unless (cdr-present? ctx) (cdr-fail "creating solver"))
+            (yices-new-context (yices-default-config)))))
+    (unless (yices-pointer-present? ctx) (cdr-fail "creating solver"))
     (cdr-count! 6)
     ctx))
 
@@ -245,13 +511,13 @@
     solver))
 
 (define (cdr-assert-native! solver formula)
-  (unless (= (yices-context-status (cdr-solver-native solver)) 4)
+  (unless (yices-context-unsat? (cdr-solver-native solver))
     (when (< (yices-assert-formula (cdr-solver-native solver) formula) 0)
       ;; A partial theory solver may still refute its supported subset. It
       ;; must never establish SAT after dropping an unsupported assertion.
       (let ((code (yices-error-code)))
-        (if (or (= code (pragma::int "CTX_NONLINEAR_ARITH_NOT_SUPPORTED"))
-                (= code (pragma::int "MCSAT_ERROR_UNSUPPORTED_THEORY")))
+        (if (or (= code (yices-enum CTX_NONLINEAR_ARITH_NOT_SUPPORTED))
+                (= code (yices-enum MCSAT_ERROR_UNSUPPORTED_THEORY)))
           (begin
             (cdr-solver-incomplete?-set! solver #t)
             (yices-clear-error))
@@ -262,405 +528,52 @@
   (when (cdr-solver-fallback solver)
     (cdr-assert! (cdr-solver-fallback solver) formula))
   (when (cdr-solver-interpolator solver)
-    (unless (= (yices-context-status (cdr-solver-interpolator solver)) 4)
+    (unless (yices-context-unsat? (cdr-solver-interpolator solver))
       (cdr-ok (yices-assert-formula (cdr-solver-interpolator solver) formula))))
   (cdr-solver-assertions-set! solver (cons formula (cdr-solver-assertions solver))))
 
-(define (cdr-status status)
-  (case status
-    ((3 4) status)                       ; YICES_STATUS_SAT / UNSAT
-    ((2 5) (*cdr-abort* 'unknown))        ; UNKNOWN / INTERRUPTED
-    (else (cdr-fail "solver check"))))
-
 (define (cdr-model sys ctx)
   (let ((model (yices-get-model ctx 1)))
-    (unless (cdr-present? model) (cdr-fail "getting model"))
+    (unless (yices-pointer-present? model) (cdr-fail "getting model"))
     (cdr-system-models-set! sys (cons model (cdr-system-models sys)))
     model))
 
-(define (cdr-same-model? a::yices-model-pointer b::yices-model-pointer)
-  (pragma::bool "$1 == $2" a b))
-
 (define (cdr-release-model! sys model)
-  ;; Foreign-pointer boxing is not identity preserving across compiled
-  ;; procedure boundaries; Scheme eq?/remq would leave stale model handles.
   (cdr-system-models-set! sys
-    (filter (lambda (other) (not (cdr-same-model? other model))) (cdr-system-models sys)))
+    (filter (lambda (other) (not (yices-same-model? other model))) (cdr-system-models sys)))
   (yices-free-model model)
   #unspecified)
 
-;; Yices prints canonical terms as S-expressions, including exact rationals
-;; and polynomial coefficients. Translate that notation for query replay.
-(define (cdr-smt2-protect-integers text)
-  ;; SAL's GMP setup can change how Bigloo reads bignums. Read long decimal
-  ;; literals as strings and write their original digits into the replay.
-  (let ((length (string-length text)))
-    (define (separator? i)
-      (or (< i 0) (= i length)
-          (let ((ch (string-ref text i)))
-            (or (char-whitespace? ch) (char=? ch #\() (char=? ch #\))))))
-    (let loop ((i 0) (start 0) (port #f))
-      (cond
-        ((= i length)
-         (if port
-           (begin (display (substring text start length) port) (close-output-port port))
-           text))
-        ((separator? (- i 1))
-         (let* ((digits (if (char=? (string-ref text i) #\-) (+ i 1) i))
-                (end (let scan ((j digits))
-                       (if (and (< j length) (char-numeric? (string-ref text j))) (scan (+ j 1)) j))))
-           (if (and (>= (- end digits) 10) (separator? end))
-             (let ((output (or port (open-output-string))))
-               (display (substring text start i) output)
-               (write (substring text i end) output)
-               (loop end end output))
-             (loop (max (+ i 1) end) start port))))
-        (else (loop (+ i 1) start port))))))
+(define (cdr-close-solver! solver)
+  (when (cdr-solver-native solver)
+    (yices-free-context (cdr-solver-native solver))
+    (cdr-solver-native-set! solver #f))
+  (when (cdr-solver-interpolator solver)
+    (yices-free-context (cdr-solver-interpolator solver))
+    (cdr-solver-interpolator-set! solver #f))
+  (when (cdr-solver-fallback solver) (cdr-close-solver! (cdr-solver-fallback solver))))
 
-(define (cdr-smt2-read term)
-  (with-input-from-string
-    (cdr-smt2-protect-integers
-      (cdr-take-string (yices-term-to-string term 4294967295 4294967295 0))) read))
+(define (cdr-retire-solver! sys solver)
+  (when (cdr-solver-fallback solver) (cdr-retire-solver! sys (cdr-solver-fallback solver)))
+  (cdr-close-solver! solver)
+  (cdr-system-solvers-set! sys (remq solver (cdr-system-solvers sys))))
 
-(define (cdr-smt2-identifiers sys)
-  (let ((ids (make-hashtable)))
-    (define (register term value)
-      (hashtable-put! ids (cdr-smt2-read term)
-        (cons (cdr-ok (yices-type-of-term term)) value)))
-    (vector/for-each
-      (lambda (step)
-        (unless (eq? step #unspecified)
-          (for-each (lambda (term) (register term #f)) (cdr-step-variables step))))
-      (cdr-system-steps sys))
-    (for-each (lambda (decl) (register (cdr-variable sys decl #f) #f)) (cdr-system-globals sys))
-    (sal-ast-table/for-each
-      (lambda (decl type)
-        (let ((card (uint32->fixnum (yices-scalar-type-card type))))
-          (let loop ((i 0))
-            (when (< i card)
-              (register (cdr-ok (yices-constant type (fixnum->int32 i))) i)
-              (loop (+ i 1))))))
-      (cdr-system-type-map sys))
-    ids))
-
-(define (cdr-smt2-sort type)
-  (cond
-    ((= (yices-type-is-bool type) 1) 'Bool)
-    ((or (= (yices-type-is-int type) 1) (= (yices-type-is-scalar type) 1)) 'Int)
-    ((= (yices-type-is-real type) 1) 'Real)
-    ((= (yices-type-is-bitvector type) 1) (list '_ 'BitVec (uint32->fixnum (yices-bvtype-size type))))
-    (else (sign-error "sal-cdr: cannot export native sort ~a to SMT-LIB." type))))
-
-(define (cdr-smt2-integer value)
-  (if (< value 0) (list '- (- value)) value))
-
-(define (cdr-smt2-decimal text)
-  (if (char=? (string-ref text 0) #\-)
-    (list '- (substring text 1 (string-length text)))
-    text))
-
-(define (cdr-smt2-real operand)
-  (if (eq? (cdr operand) 'Int) (list 'to_real (car operand)) (car operand)))
-
-(define (cdr-smt2-atom atom resolve)
-  (cond
-    ((and (integer? atom) (exact? atom)) (cons (cdr-smt2-integer atom) 'Int))
-    ((string? atom) (cons (cdr-smt2-decimal atom) 'Int))
-    ((memq atom '(true false)) (cons atom 'Bool))
-    ((symbol? atom)
-     (let ((text (symbol->string atom)))
-       (cond
-         ((or (substring=? text "0b" 2) (substring=? text "0x" 2))
-          (cons (string-append "#" (substring text 1 (string-length text))) 'BitVec))
-         ((sal-string-index text #\/) =>
-          (lambda (i)
-            (let ((a (substring text 0 i))
-                  (b (substring text (+ i 1) (string-length text))))
-              (unless (and (> i 0) (> (string-length b) 0)
-                           (or (char-numeric? (string-ref a 0)) (char=? (string-ref a 0) #\-))
-                           (char-numeric? (string-ref b 0)))
-                (sign-error "sal-cdr: malformed native rational ~a." atom))
-              (cons (list '/ (list 'to_real (cdr-smt2-decimal a)) (list 'to_real b)) 'Real))))
-         ((resolve atom) => identity)
-         (else (sign-error "sal-cdr: cannot export native term ~a to SMT-LIB." atom)))))
-    (else (sign-error "sal-cdr: cannot export native term ~a to SMT-LIB." atom))))
-
-(define (cdr-smt2-fold op values)
-  (let loop ((form (car values)) (rest (cdr values)))
-    (if (null? rest) form (loop (list op form (car rest)) (cdr rest)))))
-
-(define (cdr-smt2-power op value degree)
-  (let ((base (gensym 'base!))
-        (degree (if (string? degree) (string->integer degree) degree)))
-    (define (power n)
-      (if (= n 1) base
-        (let* ((half (gensym 'half!))
-               (square (list op half half)))
-          (list 'let (list (list half (power (quotient n 2))))
-                (if (odd? n) (list op base square) square)))))
-    (list 'let (list (list base value)) (power degree))))
-
-(define (cdr-smt2-indexed-root operands resolve)
-  (let* ((op (if (eq? (car operands) '!=) 'distinct (car operands)))
-         (rank (cadr operands))
-         (index (if (string? rank) (string->integer rank) rank))
-         (x (caddr operands))
-         (polynomial (cadddr operands)))
-    (unless (and (integer? index) (>= index 0) (symbol? x))
-      (sign-error "sal-cdr: malformed native root atom ~a." operands))
-    ;; Yices counts distinct real roots from zero. Select index + 1 ordered
-    ;; zeros and require every zero below the last one to appear in the list.
-    (let* ((earlier (generate-list (lambda (i) (gensym 'root!)) index))
-           (last-root (gensym 'root!))
-           (probe (gensym 'root!))
-           (roots (append earlier (list last-root))))
-      (define (zero-at var)
-        (list '= (car (cdr-smt2-form polynomial
-                       (lambda (name) (if (eq? name x) (cons var 'Real) (resolve name))))) 0))
-      (let ((preceding (map (lambda (root) (list '= probe root)) earlier)))
-        (cons
-          (list 'exists (map (lambda (root) (list root 'Real)) roots)
-                (cons 'and
-                      (append (map zero-at roots)
-                        (list (if (null? earlier) 'true (cons '< roots))
-                              (list 'forall (list (list probe 'Real))
-                                    (list '=> (list 'and (list '< probe last-root) (zero-at probe))
-                                          (cond ((null? preceding) 'false)
-                                                ((null? (cdr preceding)) (car preceding))
-                                                (else (cons 'or preceding)))))
-                              (list op (cdr-smt2-real (cdr-smt2-form x resolve)) last-root)))))
-          'Bool)))))
-
-(define (cdr-smt2-apply op args)
-  (let ((terms (map car args))
-        (real? (exists (lambda (arg) (eq? (cdr arg) 'Real)) args)))
-    (case op
-      ((not or and xor =>) (cons (cons op terms) 'Bool))
-      ((= /= distinct < <= >= >)
-       (cons (cons (if (eq? op '/=) 'distinct op)
-                   (if real? (map cdr-smt2-real args) terms)) 'Bool))
-      ((+ - *) (if real?
-                 (cons (cons op (map cdr-smt2-real args)) 'Real)
-                 (cons (cons op terms) 'Int)))
-      ((/) (cons (cons '/ (map cdr-smt2-real args)) 'Real))
-      ((div mod) (cons (cons op terms) 'Int))
-      ((is-int) (cons (list 'is_int (cdr-smt2-real (car args))) 'Bool))
-      ((floor) (cons (list 'to_int (cdr-smt2-real (car args))) 'Int))
-      ((ceil) (cons (list '- (list 'to_int (list '- (cdr-smt2-real (car args))))) 'Int))
-      ((abs)
-       (let ((name (gensym 'abs!)))
-         (cons (list 'let (list (list name (car terms)))
-                     (list 'ite (list '< name 0) (list '- name) name))
-               (cdar args))))
-      ((divides)
-       (cons (list 'is_int (list '/ (cdr-smt2-real (cadr args)) (cdr-smt2-real (car args)))) 'Bool))
-      ((ite)
-       (cons (cons 'ite (if real? (cons (car terms) (map cdr-smt2-real (cdr args))) terms))
-             (if real? 'Real (cdadr args))))
-      ((^ bv-pow)
-       (cons (cdr-smt2-power (if (eq? op '^) '* 'bvmul) (car terms) (cadr terms))
-             (cdar args)))
-      ((bit)
-       (cons (list '= (list (list '_ 'extract (cadr terms) (cadr terms)) (car terms)) "#b1")
-             'Bool))
-      ((bool-to-bv)
-       (cons (cdr-smt2-fold 'concat
-               (map (lambda (value) (list 'ite value "#b1" "#b0")) (reverse terms))) 'BitVec))
-      ((bv-extract)
-       (cons (list (list '_ 'extract (car terms) (cadr terms)) (caddr terms)) 'BitVec))
-      ((bv-sign-extend bv-zero-extend)
-       (cons (list (list '_ (if (eq? op 'bv-sign-extend) 'sign_extend 'zero_extend)
-                         (cadr terms)) (car terms)) 'BitVec))
-      (else
-       (let ((word-op (assq op '((bv-add . bvadd) (bv-mul . bvmul) (bv-concat . concat)
-                                 (bv-div . bvudiv) (bv-rem . bvurem)
-                                 (bv-sdiv . bvsdiv) (bv-srem . bvsrem) (bv-smod . bvsmod)
-                                 (bv-shl . bvshl) (bv-lshr . bvlshr) (bv-ashr . bvashr)
-                                 (bv-ge . bvuge) (bv-lt . bvult) (bv-sge . bvsge) (bv-slt . bvslt)))))
-         (unless word-op (sign-error "sal-cdr: cannot export native operator ~a to SMT-LIB." op))
-         (cons (cdr-smt2-fold (cdr word-op) terms)
-               (if (memq op '(bv-ge bv-lt bv-sge bv-slt)) 'Bool 'BitVec)))))))
-
-(define (cdr-smt2-form form resolve)
-  (cond
-    ((not (pair? form)) (cdr-smt2-atom form resolve))
-    ((eq? (car form) 'arith-root-atom) (cdr-smt2-indexed-root (cdr form) resolve))
-    (else (cdr-smt2-apply (car form) (map (lambda (arg) (cdr-smt2-form arg resolve)) (cdr form))))))
-
-(define (cdr-smt2-native-operators)
-  (list (cons (pragma::int "YICES_NOT_TERM") 'not)
-        (cons (pragma::int "YICES_OR_TERM") 'or)
-        (cons (pragma::int "YICES_XOR_TERM") 'xor)
-        (cons (pragma::int "YICES_EQ_TERM") '=)
-        (cons (pragma::int "YICES_DISTINCT_TERM") 'distinct)
-        (cons (pragma::int "YICES_ITE_TERM") 'ite)
-        (cons (pragma::int "YICES_ARITH_GE_ATOM") '>=)
-        (cons (pragma::int "YICES_RDIV") '/)
-        (cons (pragma::int "YICES_IDIV") 'div)
-        (cons (pragma::int "YICES_IMOD") 'mod)
-        (cons (pragma::int "YICES_ABS") 'abs)
-        (cons (pragma::int "YICES_FLOOR") 'floor)
-        (cons (pragma::int "YICES_CEIL") 'ceil)
-        (cons (pragma::int "YICES_IS_INT_ATOM") 'is-int)
-        (cons (pragma::int "YICES_DIVIDES_ATOM") 'divides)
-        (cons (pragma::int "YICES_BV_ARRAY") 'bool-to-bv)
-        (cons (pragma::int "YICES_BV_DIV") 'bv-div)
-        (cons (pragma::int "YICES_BV_REM") 'bv-rem)
-        (cons (pragma::int "YICES_BV_SDIV") 'bv-sdiv)
-        (cons (pragma::int "YICES_BV_SREM") 'bv-srem)
-        (cons (pragma::int "YICES_BV_SMOD") 'bv-smod)
-        (cons (pragma::int "YICES_BV_SHL") 'bv-shl)
-        (cons (pragma::int "YICES_BV_LSHR") 'bv-lshr)
-        (cons (pragma::int "YICES_BV_ASHR") 'bv-ashr)
-        (cons (pragma::int "YICES_BV_GE_ATOM") 'bv-ge)
-        (cons (pragma::int "YICES_BV_SGE_ATOM") 'bv-sge)))
-
-(define (cdr-smt2-bv-literal bits::yices-int32-pointer width)
-  (let ((text (make-string (+ width 2) #\0)))
-    (string-set! text 0 #\#)
-    (string-set! text 1 #\b)
-    (let loop ((i::long 0))
-      (when (< i width)
-        (unless (= (pragma::int32 "$1[$2]" bits i) 0)
-          (string-set! text (- (+ width 1) i) #\1))
-        (loop (+ i 1))))
-    text))
-
-(define (cdr-smt2-bv-sum term encode)
-  (let* ((width (cdr-word-width term))
-         (n (cdr-ok (yices-term-num-children term)))
-         (bits::yices-int32-pointer (cdr-allocate yices-int32-pointer "int32_t" width))
-         (component::yices-term-pointer (cdr-allocate yices-term-pointer "term_t" 1)))
-    (let loop ((i 0) (monomials '()))
-      (if (= i n)
-        (cons (cdr-smt2-fold 'bvadd (reverse! monomials)) 'BitVec)
-        (begin
-          (cdr-ok (yices-bvsum-component term (fixnum->int32 i) bits component))
-          (let ((a (cdr-smt2-bv-literal bits width))
-                (x (pragma::int32 "$1[0]" component)))
-            (loop (+ i 1) (cons (if (< x 0) a (list 'bvmul a (car (encode x)))) monomials))))))))
-
-(define (cdr-smt2-product term sort encode)
-  (let* ((op (if (pair? sort) 'bvmul '*))
-         (n (cdr-ok (yices-term-num-children term)))
-         (component::yices-term-pointer (cdr-allocate yices-term-pointer "term_t" 1))
-         (exponent::yices-uint32-pointer (cdr-allocate yices-uint32-pointer "uint32_t" 1)))
-    (let loop ((i 0) (factors '()))
-      (if (= i n)
-        (cons (cdr-smt2-fold op (reverse! factors)) sort)
-        (begin
-          (cdr-ok (yices-product-component term (fixnum->int32 i) component exponent))
-          (let* ((degree (uint32->fixnum (pragma::uint32 "$1[0]" exponent)))
-                 (factor (encode (pragma::int32 "$1[0]" component)))
-                 (value (if (eq? sort 'Real) (cdr-smt2-real factor) (car factor))))
-            (loop (+ i 1)
-              (cons (if (= degree 1) value (cdr-smt2-power op value degree)) factors))))))))
-
-(define (cdr-smt2-write form port)
-  (if (not (pair? form)) (display form port)
-    (begin
-      (display "(" port)
-      (cdr-smt2-write (car form) port)
-      (for-each (lambda (item) (display " " port) (cdr-smt2-write item port)) (cdr form))
-      (display ")" port))))
-
-(define (cdr-open-query-log sys solver goal interpolate?)
-  (let ((ids #f) (used (make-hashtable)) (encoded (make-eq-hash-table))
-        (operators (cdr-smt2-native-operators)) (declarations '()) (definitions '()))
-    (define (declare name type sort)
-      (unless (hashtable-get used name)
-        (hashtable-put! used name #t)
-        (set! declarations (cons (list name type sort) declarations)))
-      (cons name sort))
-    (define (resolve name)
-      (unless ids (set! ids (cdr-smt2-identifiers sys)))
-      (cond
-        ((hashtable-get ids name) =>
-         (lambda (binding)
-           (let ((type (car binding)) (value (cdr binding)))
-             (if value (cons value 'Int)
-               (declare name type (cdr-smt2-sort type))))))
-        (else #f)))
-    (define (encode-arguments term)
-      (generate-list
-        (lambda (i) (encode (cdr-ok (yices-term-child term (fixnum->int32 i)))))
-        (int32->fixnum (cdr-ok (yices-term-num-children term)))))
-    (define (encode-form term kind sort)
-      (cond
-        ((assv kind operators) => (lambda (entry) (cdr-smt2-apply (cdr entry) (encode-arguments term))))
-        ((= kind (pragma::int "YICES_BIT_TERM"))
-         (cdr-smt2-apply 'bit (list (encode (cdr-ok (yices-proj-arg term)))
-                               (cons (int32->fixnum (cdr-ok (yices-proj-index term))) 'Int))))
-        ((= kind (pragma::int "YICES_BV_SUM")) (cdr-smt2-bv-sum term encode))
-        ((= kind (pragma::int "YICES_POWER_PRODUCT")) (cdr-smt2-product term sort encode))
-        ;; Use the printed form where the API does not provide the root
-        ;; relation/index or expose rational coefficients as native terms.
-        (else (cdr-smt2-form (cdr-smt2-read term) resolve))))
-    (define (encode term)
-      (or (cdr-term-table-ref encoded term)
-          (let* ((kind (cdr-ok (yices-term-constructor term)))
-                 (type (cdr-ok (yices-type-of-term term)))
-                 (sort (cdr-smt2-sort type))
-                 (result
-                   (cond
-                     ((= kind (pragma::int "YICES_UNINTERPRETED_TERM"))
-                      (declare (cdr-smt2-read term) type sort))
-                     ((= kind (pragma::int "YICES_SCALAR_CONSTANT"))
-                      (let ((index::yices-int32-pointer (cdr-allocate yices-int32-pointer "int32_t" 1)))
-                        (cdr-ok (yices-scalar-const-value term index))
-                        (cons (int32->fixnum (pragma::int32 "$1[0]" index)) 'Int)))
-                     (else
-                      (let* ((form (encode-form term kind sort))
-                             (body (if (eq? sort 'Real) (cdr-smt2-real form) (car form))))
-                        (if (= (yices-term-is-atomic term) 1) (cons body sort)
-                          ;; Definitions are emitted in dependency order. A
-                          ;; shared subterm is serialized once per query.
-                          (let ((name (gensym 'term!)))
-                            (set! definitions (cons (list 'define-fun name '() sort body) definitions))
-                            (cons name sort))))))))
-            (cdr-term-table-set! encoded term result)
-            result)))
-    (let ((background (map (lambda (term) (car (encode term))) (reverse (cdr-solver-assertions solver))))
-          (target (car (encode goal))))
-      (set! *cdr-smt2-query-index* (+ *cdr-smt2-query-index* 1))
-      (let* ((path (string-append (cdr-system-smt2-output sys) "."
-                                  (number->string *cdr-smt2-query-index*) ".smt2"))
-             (port (open-output-file path))
-             (ready? #f))
-        (define (command form)
-          (cdr-smt2-write form port)
-          (newline port))
-        (unless (output-port? port) (sign-error "sal-cdr: cannot write SMT-LIB query to ~a." path))
-        (unwind-protect
-          (begin
-            (fprint port "(set-option :produce-models true)")
-            (fprint port "(set-logic ALL)")
-            (for-each
-              (lambda (binding)
-                (let ((name (car binding)) (type (cadr binding)) (sort (caddr binding)))
-                  (command (list 'declare-const name sort))
-                  (when (= (yices-type-is-scalar type) 1)
-                    (command (list 'assert
-                                   (list 'and (list '<= 0 name)
-                                         (list '< name (uint32->fixnum (yices-scalar-type-card type)))))))))
-              (reverse declarations))
-            (for-each command (reverse definitions))
-            (fprint port (if interpolate? "; Interpolation partition A" "; Solver assertions"))
-            (for-each (lambda (form) (command (list 'assert form))) background)
-            (fprint port (if interpolate? "; Interpolation partition B" "; Query goal"))
-            (command (list 'assert target))
-            (fprint port "(check-sat)")
-            (flush-output-port port)
-            (set! ready? #t)
-            port)
-          (unless ready? (close-output-port port)))))))
+(define (cdr-cleanup! sys)
+  (for-each yices-free-model (cdr-system-models sys))
+  (for-each cdr-close-solver! (cdr-system-solvers sys))
+  (when (cdr-system-projection-result sys)
+    (yices-delete-term-vector (cdr-system-projection-result sys))
+    (cdr-system-projection-result-set! sys #f))
+  (when (cdr-system-interpolation-b sys) (yices-free-context (cdr-system-interpolation-b sys))))
 
 (define (cdr-log-check-status! port solver status)
-  (fprint port "; yices2 " (case status
-                            ((3) (if (cdr-solver-incomplete? solver) 'unknown 'sat))
-                            ((4) 'unsat)
-                            ((2 5) 'unknown)
-                            (else 'error))))
+  (fprint port "; yices2 "
+    (cond ((= status (yices-enum YICES_STATUS_SAT))
+           (if (cdr-solver-incomplete? solver) 'unknown 'sat))
+          ((= status (yices-enum YICES_STATUS_UNSAT)) 'unsat)
+          ((or (= status (yices-enum YICES_STATUS_UNKNOWN))
+               (= status (yices-enum YICES_STATUS_INTERRUPTED))) 'unknown)
+          (else 'error))))
 
 (define-macro (cdr-logged-check sys solver goal interpolate? check)
   (let ((port (gensym 'port)) (status (gensym 'status)))
@@ -678,7 +591,7 @@
 ;; Return a native model on SAT, #f on UNSAT. The caller owns the model.
 (define (cdr-query-native sys solver formula model?)
   (let ((ctx::yices-context-pointer (cdr-solver-native solver)))
-    (if (= (yices-context-status ctx) 4) #f
+    (if (yices-context-unsat? ctx) #f
       (let ((incomplete? (cdr-solver-incomplete? solver)))
         (cdr-ok (yices-push ctx))
         (unwind-protect
@@ -686,14 +599,15 @@
             (cdr-assert-native! solver formula)
             (cdr-count! 0)
             (verbose-message 5 "  check ~a" (vector-ref *cdr-statistics* 0))
-            (case (cdr-logged-check sys solver formula #f
-                    (yices-check-context ctx (cdr-null yices-param-pointer)))
-              ((3) (if (cdr-solver-incomplete? solver) 'unknown
-                     (if model? (cdr-model sys ctx) #t)))
-              ((4) #f)
-              ((2) 'unknown)
-              ((5) (*cdr-abort* 'unknown))
-              (else (cdr-fail "solver check"))))
+            (let ((status (cdr-logged-check sys solver formula #f
+                             (yices-check-context ctx (yices-default-parameters)))))
+              (cond ((= status (yices-enum YICES_STATUS_SAT))
+                     (if (cdr-solver-incomplete? solver) 'unknown
+                       (if model? (cdr-model sys ctx) #t)))
+                    ((= status (yices-enum YICES_STATUS_UNSAT)) #f)
+                    ((= status (yices-enum YICES_STATUS_UNKNOWN)) 'unknown)
+                    ((= status (yices-enum YICES_STATUS_INTERRUPTED)) (*cdr-abort* 'unknown))
+                    (else (cdr-fail "solver check")))))
           (begin
             (cdr-ok (yices-pop ctx))
             (cdr-solver-incomplete?-set! solver incomplete?)))))))
@@ -726,14 +640,14 @@
        (let ((ctx (cdr-new-native #t #f)))
          (cdr-solver-interpolator-set! solver ctx)
          (for-each (lambda (f)
-                     (unless (= (yices-context-status ctx) 4)
+                     (unless (yices-context-unsat? ctx)
                        (cdr-ok (yices-assert-formula ctx f))))
                    (reverse (cdr-solver-assertions solver)))
          ctx)))))
 
 (define (cdr-interpolate sys solver goal)
   (bind-exit (done)
-    (when (= (yices-context-status (cdr-solver-native solver)) 4)
+    (when (yices-context-unsat? (cdr-solver-native solver))
       (done (yices-false)))
     ;; Native model interpolation can turn scalar equalities into arithmetic
     ;; atoms. The reachability check has already proved A AND goal unsatisfiable,
@@ -749,17 +663,21 @@
           (record::yices-interpolation-context-pointer (cdr-system-interpolation-record sys)))
       (yices-reset-context b)
       (cdr-ok (yices-assert-formula b goal))
-      (when (= (yices-context-status a) 4) (done (yices-false)))
-      (when (= (yices-context-status b) 4) (done (yices-true)))
-      (pragma::void "$1->ctx_A = $2; $1->ctx_B = $3" record a b)
+      (when (yices-context-unsat? a) (done (yices-false)))
+      (when (yices-context-unsat? b) (done (yices-true)))
+      (yices-set-interpolation-partitions! record a b)
       (cdr-count! 2)
       (cdr-count! 0)
       (verbose-message 5 "  interpolate ~a" (vector-ref *cdr-statistics* 2))
-      (unless (= (cdr-status (cdr-logged-check sys solver goal #t
-                              (yices-check-context-with-interpolation
-                                record (cdr-null yices-param-pointer) 0))) 4)
-        (sign-error "sal-cdr: inconsistent reachability explanation."))
-      (let ((lemma (cdr-ok (pragma::int32 "$1->interpolant" record))))
+      (let ((status (cdr-logged-check sys solver goal #t
+                      (yices-check-context-with-interpolation record (yices-default-parameters) 0))))
+        (cond ((= status (yices-enum YICES_STATUS_UNSAT)) #unspecified)
+              ((= status (yices-enum YICES_STATUS_SAT))
+               (sign-error "sal-cdr: inconsistent reachability explanation."))
+              ((or (= status (yices-enum YICES_STATUS_UNKNOWN))
+                   (= status (yices-enum YICES_STATUS_INTERRUPTED))) (*cdr-abort* 'unknown))
+              (else (cdr-fail "solver check"))))
+      (let ((lemma (cdr-ok (yices-interpolant record))))
         (if (and (cdr-solver-logic) (not (cdr-solver-mcsat? solver)))
           ;; MCSAT can express a lemma using a theory unavailable in the
           ;; configured logic. A implies NOT goal, which uses the goal's logic.
@@ -770,6 +688,188 @@
                 (begin (yices-clear-error) (cdr-not goal)))
               (cdr-ok (yices-pop ctx))))
           lemma)))))
+
+;; Time shifts and model projection
+
+;; Step variables and substitutions are allocated once and shared by every
+;; reachability, induction, interpolation, and trace query.
+(define (cdr-step-at sys n)
+  (let ((steps (cdr-system-steps sys)))
+    (when (>= n (vector-length steps))
+      (set! steps (copy-vector steps (max (+ n 2) (* 2 (vector-length steps)))))
+      (cdr-system-steps-set! sys steps))
+    (when (eq? (vector-ref steps n) #unspecified)
+      (vector-set! steps n
+        (make-cdr-step
+          (map (lambda (type) (cdr-ok (yices-new-uninterpreted-term type)))
+               (cdr-system-native-types sys))
+          #f (make-eq-hash-table 17) #f #f #f)))
+    (vector-ref steps n)))
+
+(define (cdr-at sys term n)
+  (if (= n 0) term
+      (let* ((step (cdr-step-at sys n)) (cache (cdr-step-cache step)))
+        (or (cdr-term-table-ref cache term)
+            (begin
+              (unless (cdr-step-mapping step)
+                (cdr-step-mapping-set! step
+                  (list->yices-term-array (append (cdr-step-variables step)
+                                     (cdr-step-variables (cdr-step-at sys (+ n 1)))))))
+              (let ((result (cdr-ok (yices-subst-term
+                                     (fixnum->uint32 (cdr-system-base-count sys))
+                                     (cdr-system-base-buffer sys) (cdr-step-mapping step) term))))
+                (cdr-term-table-set! cache term result)
+                result))))))
+
+(define (cdr-step-buffer! step)
+  (or (cdr-step-buffer step)
+      (let ((buffer (list->yices-term-array (cdr-step-variables step))))
+        (cdr-step-buffer-set! step buffer)
+        buffer)))
+
+(define (cdr-back sys term n)
+  (if (= n 0) term
+      (cdr-ok (yices-subst-term
+               (fixnum->uint32 (quotient (cdr-system-base-count sys) 2))
+               (cdr-step-buffer! (cdr-step-at sys n))
+               (cdr-step-buffer! (cdr-step-at sys 0)) term))))
+
+(define (cdr-transition-at sys n)
+  (let ((step (cdr-step-at sys n)))
+    (or (cdr-step-transition step)
+        (let ((term (cdr-at sys (cdr-system-transition sys) n)))
+          (cdr-step-transition-set! step term)
+          term))))
+
+(define (cdr-transition-substitution sys transition)
+  (let ((assignments (make-eq-hash-table)) (integral-facts '()))
+    (define (record left right)
+      (when (instance-of? left <sal-next-operator>)
+        (let* ((decl (slot-value (slot-value left :name-expr) :decl))
+               (entry (eq-hash-table/get (cdr-system-decl-map sys) decl)))
+          (when entry
+            (let* ((next (cddr entry)) (value (cdr-encode sys right '() #f))
+                   (replacement
+                    (if (= (yices-term-is-bitvector next) 1)
+                      (cdr-word-resize value (cdr-word-width next)) value)))
+              (when (and (not (= replacement next))
+                         (= (yices-test-subtype (yices-type-of-term replacement)
+                                               (yices-type-of-term next)) 1))
+                (if (and (cdr-system-integrality? sys) (= (yices-term-is-real next) 1)
+                         (not (= (yices-term-is-int next) 1)))
+                  (let ((operand (cdr-integral-shift-core right)))
+                    (unless (and (eq? operand right) (not (= (yices-term-is-int value) 1)))
+                      ;; Preserve the original atoms so the solver can use
+                      ;; this congruence without an unbounded integer search.
+                      (set! integral-facts
+                        (cons (cdr-ok (yices-iff (yices-is-int-atom next)
+                                        (yices-is-int-atom (cdr-encode sys operand '() #f))))
+                              integral-facts))))
+                  (eq-hash-table/put! assignments decl replacement))))))))
+    (define (scan expression)
+      (cond
+        ((instance-of? expression <sal-and>)
+         (for-each scan (sal-application/argument-list expression)))
+        ((instance-of? expression <sal-definition-expression>)
+         (scan (slot-value expression :expr)))
+        ((instance-of? expression <sal-eq>)
+         (let ((args (sal-application/argument-list expression)))
+           (record (car args) (cadr args))
+           (record (cadr args) (car args))))))
+    (scan transition)
+    (when (> (eq-hash-table/size assignments) 0)
+      (cdr-system-successor-set! sys
+        (make-cdr-successor
+          (list->yices-term-array
+            (map (lambda (decl next)
+                   (cond ((eq-hash-table/get assignments decl) => cdr) (else next)))
+                 (cdr-system-declarations sys) (cdr-step-variables (cdr-step-at sys 1))))
+          (make-eq-hash-table 17))))
+    integral-facts))
+
+(define (cdr-successor-goal sys goal depth)
+  (let ((successor (cdr-system-successor sys)))
+    (if (not successor) (cdr-at sys goal depth)
+      ;; T entails each of these unconditional equations. Replace only
+      ;; the last state's occurrence in ordinary SAT queries. Projection
+      ;; and interpolation still see the original state partition.
+      (let* ((goals (cdr-successor-goals successor))
+             (substituted
+               (or (cdr-term-table-ref goals goal)
+                   (let ((result
+                           (cdr-ok (yices-subst-term (fixnum->uint32 (quotient (cdr-system-base-count sys) 2))
+                                     (cdr-step-buffer! (cdr-step-at sys 0))
+                                     (cdr-successor-mapping successor) goal))))
+                     (cdr-term-table-set! goals goal result)
+                     result))))
+        (cdr-at sys substituted (- depth 1))))))
+
+;; Project T^k /\ goal[k], never the induction assumptions. Including the
+;; latter would destroy the existential path guarantee on the resulting G.
+(define (cdr-projection-data sys depth)
+  (let ((step (cdr-step-at sys depth)))
+    (or (cdr-step-projection step)
+        (let* ((inputs (cdr-system-transient-inputs sys))
+               (variables (cdr-step-variables (cdr-step-at sys 0)))
+               (state (if (null? inputs) variables
+                        (filter (lambda (var) (not (exists (lambda (input) (= var input)) inputs))) variables)))
+               (reversed '()))
+          (define (collect-at vars time)
+            (for-each (lambda (var) (set! reversed (cons (cdr-at sys var time) reversed))) vars))
+          ;; Eliminate intermediate states and transition inputs before the
+          ;; final state. Keep the same order for all projections at this k.
+          (let loop ((i 1))
+            (when (<= i depth)
+              (when (< i depth) (collect-at state i))
+              (collect-at inputs (- i 1))
+              (loop (+ i 1))))
+          (collect-at state depth)
+          (let* ((vars (reverse! reversed))
+                 (formulas::yices-term-pointer (make-yices-term-array (+ depth 1)))
+                 (result (make-cdr-projection vars (list->yices-term-array vars) (length vars) formulas)))
+            ;; The transition prefix is fixed at this depth. Only the last
+            ;; slot changes from one blocking obligation to the next.
+            (let loop ((i::long 0))
+              (when (< i depth)
+                (yices-term-array-set! formulas i (cdr-transition-at sys i))
+                (loop (+ i 1))))
+            (cdr-step-projection-set! step result)
+            result)))))
+
+(define (cdr-projection-result!::yices-term-vector-pointer sys)
+  (or (cdr-system-projection-result sys)
+      (let ((buffer::yices-term-vector-pointer (make-yices-term-vector)))
+        (cdr-system-projection-result-set! sys buffer)
+        buffer)))
+
+(define (cdr-project sys model goal depth::long)
+  (let* ((target::int32 (cdr-at sys goal depth))
+         (projection (cdr-projection-data sys depth))
+         (count (cdr-projection-count projection))
+         (eliminate (cdr-projection-elimination-buffer projection))
+         (formulas::yices-term-pointer (cdr-projection-formulas projection))
+         (size (fixnum->uint32 (+ depth 1)))
+         (buffer::yices-term-vector-pointer (cdr-projection-result! sys)))
+    (yices-term-array-set! formulas depth target)
+    (yices-reset-term-vector buffer)
+    (cdr-count! 1)
+    (verbose-message 5 "  project ~a: ~a variables" (vector-ref *cdr-statistics* 1) count)
+    (cdr-minimize-generalization sys
+      (if (= (yices-generalize-model-array model size formulas (fixnum->uint32 count) eliminate
+                    (yices-enum YICES_GEN_DEFAULT) buffer) 0)
+        (yices-term-vector-conjunction buffer)
+        ;; Some theories require exact witness substitution in place of
+        ;; the native projection. Either result guarantees a predecessor.
+        (let ((values (map (lambda (var) (yices-get-value-as-term model var))
+                           (cdr-projection-variables projection))))
+          (when (exists (lambda (v) (< v 0)) values)
+            (cdr-fail "exact model projection is unavailable for this theory"))
+          (yices-clear-error)
+          (cdr-count! 7)
+          (cdr-ok (yices-subst-term (fixnum->uint32 count) eliminate
+                                   (list->yices-term-array values) (cdr-ok (yices-and size formulas)))))))))
+
+;; Obligation minimization
 
 ;; Native Yices represents conjunction by De Morgan's law. Traverse only
 ;; Boolean AND/OR structure, retaining every other expression as an atom.
@@ -782,10 +882,10 @@
         (let* ((entry (car pending)) (node (car entry)) (negative? (cdr entry))
                (kind (cdr-ok (yices-term-constructor node))))
           (cond
-            ((= kind (pragma::int "YICES_NOT_TERM"))
+            ((= kind (yices-enum YICES_NOT_TERM))
              (walk (cons (cons (cdr-ok (yices-term-child node 0)) (not negative?))
                          (cdr pending)) result))
-            ((and (= kind (pragma::int "YICES_OR_TERM"))
+            ((and (= kind (yices-enum YICES_OR_TERM))
                   (eq? negative? conjunction?))
              (let children ((i 0) (n (cdr-ok (yices-term-num-children node)))
                             (rest (cdr pending)))
@@ -877,8 +977,8 @@
                    (cdr-and (append background (map cdr-obligation-forward subset))))))))
       (sort (append properties kept) cdr-obligation-better?))))
 
-;; SAL has already expanded/flattened the language. This is only a native
-;; term encoder for that AST, not another parser or language frontend.
+;; Encoding a flattened SAL assertion
+
 (define (cdr-word-reject sys)
   ((cdr-word-encoding-reject (cdr-system-word-encoding sys)) #f))
 
@@ -1057,8 +1157,8 @@
     (let ((terms (map car operands)))
       (cdr-ok (if (and (pair? terms) (pair? (cdr terms)) (null? (cddr terms)))
                  (yices-mul (car terms) (cadr terms))
-                 (yices-product (length terms) (cdr-terms terms))))))
-  (let ((dynamic (filter (lambda (entry) (not (= (yices-term-constructor (car entry)) 1))) operands)))
+                 (yices-product (length terms) (list->yices-term-array terms))))))
+  (let ((dynamic (filter (lambda (entry) (not (yices-arithmetic-constant? (car entry)))) operands)))
     (if (< (length dynamic) 2) (native-product)
       (let ((selected
               (let choose ((entries dynamic) (best #f))
@@ -1135,7 +1235,7 @@
             (width (if product? (apply + widths)
                      (+ (apply max widths) (mpq/num-bits (integer->mpq count))))))
        (when (> width 1024) (cdr-word-reject sys))
-       (let ((buffer (cdr-terms (map (lambda (term) (cdr-word-resize term width)) terms))))
+       (let ((buffer (list->yices-term-array (map (lambda (term) (cdr-word-resize term width)) terms))))
          (cdr-ok ((if product? yices-bvproduct yices-bvsum) (fixnum->uint32 count) buffer)))))))
 
 (define (cdr-positive-power-of-two number)
@@ -1177,7 +1277,7 @@
   (let* ((left (car terms)) (divisor (cadr terms))
          (left-range (and (not modulo?) (cdr-integer-interval (car arguments))))
          (nonnegative? (and left-range (>=mpq (car left-range) *mpq-zero*))))
-    (unless (= (yices-term-constructor divisor) (pragma::int "YICES_ARITH_CONSTANT"))
+    (unless (yices-arithmetic-constant? divisor)
       (cdr-system-nonlinear?-set! sys #t))
     (if modulo?
       (cdr-ok (yices-imod left divisor))
@@ -1283,7 +1383,7 @@
        (cond (encoding (cdr-word-arithmetic sys a #f))
              ((and (pair? a) (pair? (cdr a)) (null? (cddr a)))
               (cdr-ok (yices-add (car a) (cadr a))))
-             (else (cdr-ok (yices-sum (length a) (cdr-terms a)))))))
+             (else (cdr-ok (yices-sum (length a) (list->yices-term-array a)))))))
     ((instance-of? ast <sal-sub>)
      (let ((a (args)))
        (if encoding
@@ -1298,7 +1398,7 @@
     ((instance-of? ast <sal-div>)
      (when encoding (cdr-word-reject sys))
      (let ((a (args)))
-       (unless (= (yices-term-constructor (cadr a)) 1) (cdr-system-nonlinear?-set! sys #t))
+       (unless (yices-arithmetic-constant? (cadr a)) (cdr-system-nonlinear?-set! sys #t))
        (cdr-ok (yices-division (car a) (cadr a)))))
     ((or (instance-of? ast <sal-idiv>) (instance-of? ast <sal-mod>))
      (let ((arguments (sal-application/argument-list ast)) (terms (args))
@@ -1336,619 +1436,6 @@
     (and expr
          (let ((term (cdr-encode sys expr '() #f)))
            (and (not (= term (yices-true))) term)))))
-
-;; Step variables and substitutions are allocated once and shared by every
-;; reachability, induction, interpolation, and trace query.
-(define (cdr-step-at sys n)
-  (let ((steps (cdr-system-steps sys)))
-    (when (>= n (vector-length steps))
-      (set! steps (copy-vector steps (max (+ n 2) (* 2 (vector-length steps)))))
-      (cdr-system-steps-set! sys steps))
-    (when (eq? (vector-ref steps n) #unspecified)
-      (vector-set! steps n
-        (make-cdr-step
-          (map (lambda (type) (cdr-ok (yices-new-uninterpreted-term type)))
-               (cdr-system-native-types sys))
-          #f (make-eq-hash-table 17) #f #f #f)))
-    (vector-ref steps n)))
-
-(define (cdr-at sys term n)
-  (if (= n 0) term
-      (let* ((step (cdr-step-at sys n)) (cache (cdr-step-cache step)))
-        (or (cdr-term-table-ref cache term)
-            (begin
-              (unless (cdr-step-mapping step)
-                (cdr-step-mapping-set! step
-                  (cdr-terms (append (cdr-step-variables step)
-                                     (cdr-step-variables (cdr-step-at sys (+ n 1)))))))
-              (let ((result (cdr-ok (yices-subst-term
-                                     (fixnum->uint32 (cdr-system-base-count sys))
-                                     (cdr-system-base-buffer sys) (cdr-step-mapping step) term))))
-                (cdr-term-table-set! cache term result)
-                result))))))
-
-(define (cdr-step-buffer! step)
-  (or (cdr-step-buffer step)
-      (let ((buffer (cdr-terms (cdr-step-variables step))))
-        (cdr-step-buffer-set! step buffer)
-        buffer)))
-
-(define (cdr-back sys term n)
-  (if (= n 0) term
-      (cdr-ok (yices-subst-term
-               (fixnum->uint32 (quotient (cdr-system-base-count sys) 2))
-               (cdr-step-buffer! (cdr-step-at sys n))
-               (cdr-step-buffer! (cdr-step-at sys 0)) term))))
-
-(define (cdr-transition-at sys n)
-  (let ((step (cdr-step-at sys n)))
-    (or (cdr-step-transition step)
-        (let ((term (cdr-at sys (cdr-system-transition sys) n)))
-          (cdr-step-transition-set! step term)
-          term))))
-
-(define (cdr-transition-substitution sys transition)
-  (let ((assignments (make-eq-hash-table)) (integral-facts '()))
-    (define (record left right)
-      (when (instance-of? left <sal-next-operator>)
-        (let* ((decl (slot-value (slot-value left :name-expr) :decl))
-               (entry (eq-hash-table/get (cdr-system-decl-map sys) decl)))
-          (when entry
-            (let* ((next (cddr entry)) (value (cdr-encode sys right '() #f))
-                   (replacement
-                    (if (= (yices-term-is-bitvector next) 1)
-                      (cdr-word-resize value (cdr-word-width next)) value)))
-              (when (and (not (= replacement next))
-                         (= (yices-test-subtype (yices-type-of-term replacement)
-                                               (yices-type-of-term next)) 1))
-                (if (and (cdr-system-integrality? sys) (= (yices-term-is-real next) 1)
-                         (not (= (yices-term-is-int next) 1)))
-                  (let ((operand (cdr-integral-shift-core right)))
-                    (unless (and (eq? operand right) (not (= (yices-term-is-int value) 1)))
-                      ;; Preserve the original atoms so the solver can use
-                      ;; this congruence without an unbounded integer search.
-                      (set! integral-facts
-                        (cons (cdr-ok (yices-iff (yices-is-int-atom next)
-                                        (yices-is-int-atom (cdr-encode sys operand '() #f))))
-                              integral-facts))))
-                  (eq-hash-table/put! assignments decl replacement))))))))
-    (define (scan expression)
-      (cond
-        ((instance-of? expression <sal-and>)
-         (for-each scan (sal-application/argument-list expression)))
-        ((instance-of? expression <sal-definition-expression>)
-         (scan (slot-value expression :expr)))
-        ((instance-of? expression <sal-eq>)
-         (let ((args (sal-application/argument-list expression)))
-           (record (car args) (cadr args))
-           (record (cadr args) (car args))))))
-    (scan transition)
-    (when (> (eq-hash-table/size assignments) 0)
-      (cdr-system-successor-set! sys
-        (make-cdr-successor
-          (cdr-terms
-            (map (lambda (decl next)
-                   (cond ((eq-hash-table/get assignments decl) => cdr) (else next)))
-                 (cdr-system-declarations sys) (cdr-step-variables (cdr-step-at sys 1))))
-          (make-eq-hash-table 17))))
-    integral-facts))
-
-(define (cdr-successor-goal sys goal depth)
-  (let ((successor (cdr-system-successor sys)))
-    (if (not successor) (cdr-at sys goal depth)
-      ;; T entails each of these unconditional equations. Replace only
-      ;; the last state's occurrence in ordinary SAT queries. Projection
-      ;; and interpolation still see the original state partition.
-      (let* ((goals (cdr-successor-goals successor))
-             (substituted
-               (or (cdr-term-table-ref goals goal)
-                   (let ((result
-                           (cdr-ok (yices-subst-term (fixnum->uint32 (quotient (cdr-system-base-count sys) 2))
-                                     (cdr-step-buffer! (cdr-step-at sys 0))
-                                     (cdr-successor-mapping successor) goal))))
-                     (cdr-term-table-set! goals goal result)
-                     result))))
-        (cdr-at sys substituted (- depth 1))))))
-
-;; Project T^k /\ goal[k], never the induction assumptions. Including the
-;; latter would destroy the existential path guarantee on the resulting G.
-(define (cdr-projection-data sys depth)
-  (let ((step (cdr-step-at sys depth)))
-    (or (cdr-step-projection step)
-        (let* ((inputs (cdr-system-transient-inputs sys))
-               (variables (cdr-step-variables (cdr-step-at sys 0)))
-               (state (if (null? inputs) variables
-                        (filter (lambda (var) (not (exists (lambda (input) (= var input)) inputs))) variables)))
-               (reversed '()))
-          (define (collect-at vars time)
-            (for-each (lambda (var) (set! reversed (cons (cdr-at sys var time) reversed))) vars))
-          ;; Eliminate intermediate states and transition inputs before the
-          ;; final state. Keep the same order for all projections at this k.
-          (let loop ((i 1))
-            (when (<= i depth)
-              (when (< i depth) (collect-at state i))
-              (collect-at inputs (- i 1))
-              (loop (+ i 1))))
-          (collect-at state depth)
-          (let* ((vars (reverse! reversed))
-                 (formulas::yices-term-pointer (cdr-allocate yices-term-pointer "term_t" (+ depth 1)))
-                 (result (make-cdr-projection vars (cdr-terms vars) (length vars) formulas)))
-            ;; The transition prefix is fixed at this depth. Only the last
-            ;; slot changes from one blocking obligation to the next.
-            (let loop ((i::long 0))
-              (when (< i depth)
-                (let ((transition::int32 (cdr-transition-at sys i)))
-                  (pragma::void "$1[$2] = $3" formulas i transition))
-                (loop (+ i 1))))
-            (cdr-step-projection-set! step result)
-            result)))))
-
-(define (cdr-projection-result!::yices-term-vector-pointer sys)
-  (or (cdr-system-projection-result sys)
-      (let ((buffer::yices-term-vector-pointer (cdr-allocate yices-term-vector-pointer "term_vector_t" 1)))
-        (yices-init-term-vector buffer)
-        (cdr-system-projection-result-set! sys buffer)
-        buffer)))
-
-(define (cdr-project sys model goal depth::long)
-  (let* ((target::int32 (cdr-at sys goal depth))
-         (projection (cdr-projection-data sys depth))
-         (count (cdr-projection-count projection))
-         (eliminate (cdr-projection-elimination-buffer projection))
-         (formulas::yices-term-pointer (cdr-projection-formulas projection))
-         (size (fixnum->uint32 (+ depth 1)))
-         (buffer::yices-term-vector-pointer (cdr-projection-result! sys)))
-    (pragma::void "$1[$2] = $3" formulas depth target)
-    (yices-reset-term-vector buffer)
-    (cdr-count! 1)
-    (verbose-message 5 "  project ~a: ~a variables" (vector-ref *cdr-statistics* 1) count)
-    (cdr-minimize-generalization sys
-      (if (= (yices-generalize-model-array model size formulas (fixnum->uint32 count) eliminate 0 buffer) 0)
-        (cdr-term-vector-conjunction buffer)
-        ;; Some theories require exact witness substitution in place of
-        ;; the native projection. Either result guarantees a predecessor.
-        (let ((values (map (lambda (var) (yices-get-value-as-term model var))
-                           (cdr-projection-variables projection))))
-          (when (exists (lambda (v) (< v 0)) values)
-            (cdr-fail "exact model projection is unavailable for this theory"))
-          (yices-clear-error)
-          (cdr-count! 7)
-          (cdr-ok (yices-subst-term (fixnum->uint32 count) eliminate
-                                   (cdr-terms values) (cdr-ok (yices-and size formulas)))))))))
-
-(define-struct cdr-frame solver excluded facts)
-
-(define (cdr-frame-at sys n)
-  (let ((frames (cdr-system-frames sys)))
-    (when (>= n (vector-length frames))
-      (set! frames (copy-vector frames (max (+ n 2) (* 2 (vector-length frames)))))
-      (cdr-system-frames-set! sys frames))
-    (when (eq? (vector-ref frames n) #unspecified)
-      (vector-set! frames n
-        (make-cdr-frame #f (make-eq-hash-table 17) '())))
-    (vector-ref frames n)))
-
-(define (cdr-reach-solver sys n)
-  (let ((frame (cdr-frame-at sys n)))
-    (unless (cdr-frame-solver frame)
-      (cdr-frame-solver-set! frame
-        (cdr-new-solver sys
-          (append (list (cdr-system-transition sys))
-                  (if (= n 0) (list (cdr-system-initial sys)) '())
-                  (reverse (cdr-frame-facts frame))))))
-    (cdr-frame-solver frame)))
-
-(define (cdr-check-consistency! sys solver where)
-  (when (and (cdr-option 'check-deadlock)
-             (cdr-unsat? sys solver (yices-true)))
-    ;; Like SALLY's diagnostic this checks the current abstraction/transition
-    ;; context. It is not a complete reachable-deadlock verification query.
-    (sign-error "sal-cdr: deadlock diagnostic: inconsistent ~a context." where)))
-
-(define (cdr-learn! sys n goal learned)
-  ;; Reachability here is up-to-depth, so a fact valid through n is valid at
-  ;; every earlier frame. Installing it there cannot remove a reachable state.
-  (let loop ((level n))
-    (let* ((frame (cdr-frame-at sys level)) (cache (cdr-frame-excluded frame)))
-      (unless (number? (cdr-term-table-ref cache goal))
-        (cdr-term-table-set! cache goal learned)
-        (when (> level 0)
-          (cdr-frame-facts-set! frame (cons learned (cdr-frame-facts frame)))
-          (when (cdr-frame-solver frame) (cdr-assert! (cdr-frame-solver frame) learned))
-          (when (cdr-option 'check-deadlock)
-            (cdr-check-consistency! sys (cdr-reach-solver sys level) "reachability")))))
-    (when (and (cdr-option 'add-backward) (> level 0)) (loop (- level 1)))))
-
-(define (cdr-initial-reachable? sys goal)
-  (let ((cache (cdr-frame-excluded (cdr-frame-at sys 0))))
-    (cond ((cdr-term-table-ref cache goal) #f)
-          ((cdr-unsat? sys (cdr-system-initial-solver sys) goal)
-           (cdr-term-table-set! cache goal #t)
-           #f)
-          (else #t))))
-
-;; Explain the exclusion of G through n, including initial states even when
-;; the system deadlocks. Each disjunct refutes G; together they cover I and
-;; every successor of R[n-1]. Frames need not imply one another.
-(define (cdr-explain sys n goal)
-  (let* ((frame (cdr-frame-at sys n))
-         (cache (cdr-frame-excluded frame))
-         (known (cdr-term-table-ref cache goal)))
-    (if (number? known) known
-      (let* ((minimize? (cdr-option 'minimize-interpolants))
-             (target (if minimize? (cdr-minimize-interpolant sys n goal #f) goal))
-             (initial (if (= n 0)
-                       (cdr-interpolate sys (cdr-system-initial-solver sys) target)
-                       ;; I is independent of the reachability level. Keep
-                       ;; its explanation in the level-zero cache as well.
-                       (cdr-explain sys 0 target)))
-             (explanation
-               (if (= n 0) initial
-                 (cdr-or (list initial
-                   (cdr-back sys
-                     (cdr-interpolate sys (cdr-reach-solver sys (- n 1))
-                                      (cdr-at sys target 1)) 1)))))
-             (learned (if minimize? (cdr-minimize-interpolant sys n explanation #t) explanation)))
-        (cdr-learn! sys n goal learned)
-        (cdr-count! 3)
-        learned))))
-
-;; An edge records a symbolic guarantee: every source state has some path
-;; of the given length to the target region. It is not a shortest concrete
-;; witness. Multiple guarantees between the same regions retain the shortest
-;; recorded length; this does not alter the proof search or its witnesses.
-(define (cdr-record-edge! sys from to depth)
-  (when (cdr-option 'cex-graph)
-    (let* ((graph (cdr-system-graph sys))
-           (edges (or (cdr-term-table-ref graph from) '())))
-      (unless (cdr-term-table-ref graph to) (cdr-term-table-set! graph to '()))
-      (let find ((rest edges))
-        (cond
-          ((null? rest) (cdr-term-table-set! graph from (cons (cons to depth) edges)))
-          ((= (caar rest) to)
-           (when (< depth (cdar rest)) (set-cdr! (car rest) depth)))
-          (else (find (cdr rest))))))))
-
-(define (cdr-mark-root! sys region)
-  (when (cdr-option 'cex-graph)
-    (cdr-term-table-set! (cdr-system-roots sys) region #t)
-    (unless (cdr-term-table-ref (cdr-system-graph sys) region)
-      (cdr-term-table-set! (cdr-system-graph sys) region '()))))
-
-(define (cdr-dot-escape text)
-  (let ((port (open-output-string)))
-    (let loop ((i 0))
-      (when (< i (string-length text))
-        (let ((ch (string-ref text i)))
-          (case ch
-            ((#\\) (display "\\\\" port))
-            ((#\") (display "\\\"" port))
-            ((#\newline) (display "\\n" port))
-            ((#\return) (display "\\r" port))
-            ;; DOT accepts literal tabs; \t is not a DOT label escape.
-            (else (write-char ch port))))
-        (loop (+ i 1))))
-    (close-output-port port)))
-
-(define (cdr-write-graph! sys path)
-  (when (cdr-option 'cex-graph)
-    (let* ((graph (cdr-system-graph sys))
-           (nodes (sort (eq-hash-table/fold-keys (lambda (ids id) (cons id ids)) '() graph) <)))
-      (call-with-output-file path
-        (lambda (port)
-          (fprint port "digraph sal_cdr {")
-          (fprint port "  rankdir=LR;")
-          (for-each
-            (lambda (id)
-              (let ((term (fixnum->int32 id)))
-                (fprint port "  n" id
-                  " [shape=" (if (cdr-term-table-ref (cdr-system-roots sys) term) "doublecircle" "box")
-                  ", label=\""
-                  (cdr-dot-escape (cdr-take-string (yices-term-to-string term 120 4294967295 0)))
-                  "\"];")
-                (for-each
-                  (lambda (edge)
-                    (fprint port "  n" id " -> n" (int32->fixnum (car edge))
-                      " [label=\"" (cdr edge) "\"];"))
-                  (sort (append (cdr-term-table-ref graph term) '())
-                        (lambda (a b) (< (car a) (car b)))))))
-            nodes)
-          (fprint port "}"))))))
-
-;; Reachability in AT MOST n transitions. Checking initial states explicitly
-;; avoids the earliest-unreachable precondition of the paper's exact-depth
-;; subroutine and handles deadlocks without adding artificial stuttering.
-;; Return an actual witness length, or #f. An explicit work stack keeps long
-;; counterexamples from consuming the Scheme/C call stack.
-(define (cdr-reachable sys n goal #!optional (record? #f) (minimum 0))
-  (let loop ((pending (list (cons n goal))))
-    (if (null? pending)
-      (begin (when (> n 0) (cdr-count! cdr-stat-unreachable)) #f)
-      (let* ((obligation (car pending)) (level (car obligation)) (target (cdr obligation))
-             (frame (cdr-frame-at sys level))
-             (cache (cdr-frame-excluded frame))
-             (distance (- n level)))
-        (cond
-          ((cdr-term-table-ref cache target) (loop (cdr pending)))
-          ((and (>= distance minimum) (cdr-initial-reachable? sys target))
-           (when (> n 0) (cdr-count! cdr-stat-reachable))
-           (when record? (cdr-mark-root! sys target))
-           distance)
-          ((= level 0)
-           (cdr-term-table-set! cache target #t)
-           (loop (cdr pending)))
-          (else
-           (cdr-count! cdr-stat-reachability-queries)
-           (let ((model (cdr-query sys (cdr-reach-solver sys (- level 1))
-                                  (cdr-successor-goal sys target 1))))
-             (if model
-               (let ((predecessor (cdr-project sys model target 1)))
-                 (cdr-release-model! sys model)
-                 (when record? (cdr-record-edge! sys predecessor target 1))
-                 (loop (cons (cons (- level 1) predecessor) pending)))
-               (begin
-                 (cdr-explain sys level target)
-                 (loop (cdr pending)))))))))))
-
-(define-struct cdr-obligation forward backward distance score refined)
-
-;; The same ordering as SALLY: favor shallow backward regions relative to
-;; their score, then larger scores, with native term identity breaking ties.
-(define (cdr-obligation-better? a b)
-  (let ((left (* (cdr-obligation-distance a) (cdr-obligation-score b)))
-        (right (* (cdr-obligation-distance b) (cdr-obligation-score a))))
-    (cond ((not (= left right)) (< left right))
-          ((not (= (cdr-obligation-score a) (cdr-obligation-score b)))
-           (> (cdr-obligation-score a) (cdr-obligation-score b)))
-          ((not (= (cdr-obligation-backward a) (cdr-obligation-backward b)))
-           (< (cdr-obligation-backward a) (cdr-obligation-backward b)))
-          (else (< (cdr-obligation-forward a) (cdr-obligation-forward b))))))
-
-;; Only the removed obligation is rescored; queued keys never change. An
-;; array heap therefore needs neither handles nor lazy duplicate entries.
-(define-struct cdr-heap data size)
-
-(define (cdr-enqueue! heap obligation)
-  (let ((data (cdr-heap-data heap)) (size (cdr-heap-size heap)))
-    (when (= size (vector-length data))
-      (set! data (copy-vector data (* 2 (vector-length data))))
-      (cdr-heap-data-set! heap data))
-    (cdr-heap-size-set! heap (+ size 1))
-    (vector-set! *cdr-statistics* cdr-stat-queue-size (+ size 1))
-    (let rise ((i size))
-      (let ((parent (quotient (- i 1) 2)))
-        (if (and (> i 0) (cdr-obligation-better? obligation (vector-ref data parent)))
-          (begin (vector-set! data i (vector-ref data parent)) (rise parent))
-          (vector-set! data i obligation))))))
-
-(define (cdr-dequeue! heap)
-  (let* ((data (cdr-heap-data heap)) (size (- (cdr-heap-size heap) 1))
-         (result (vector-ref data 0)) (last (vector-ref data size)))
-    (cdr-heap-size-set! heap size)
-    (vector-set! *cdr-statistics* cdr-stat-queue-size size)
-    (vector-set! data size #unspecified)
-    (when (> size 0)
-      (let sink ((i 0))
-        (let ((left (+ (* 2 i) 1)))
-          (if (>= left size) (vector-set! data i last)
-            (let* ((right (+ left 1))
-                   (child (if (and (< right size)
-                                   (cdr-obligation-better? (vector-ref data right) (vector-ref data left)))
-                            right left)))
-              (if (cdr-obligation-better? (vector-ref data child) last)
-                (begin (vector-set! data i (vector-ref data child)) (sink child))
-                (vector-set! data i last)))))))
-    result))
-
-(define (cdr-add-assumption! sys solver formula depth)
-  (let loop ((i 0))
-    (when (< i depth)
-      (cdr-assert! solver (cdr-at sys formula i))
-      (loop (+ i 1))))
-  (cdr-check-consistency! sys solver "induction"))
-
-(define (cdr-close-solver! solver)
-  (when (cdr-solver-native solver)
-    (yices-free-context (cdr-solver-native solver))
-    (cdr-solver-native-set! solver #f))
-  (when (cdr-solver-interpolator solver)
-    (yices-free-context (cdr-solver-interpolator solver))
-    (cdr-solver-interpolator-set! solver #f))
-  (when (cdr-solver-fallback solver) (cdr-close-solver! (cdr-solver-fallback solver))))
-
-(define (cdr-retire-solver! sys solver)
-  (when (cdr-solver-fallback solver) (cdr-retire-solver! sys (cdr-solver-fallback solver)))
-  (cdr-close-solver! solver)
-  (cdr-system-solvers-set! sys (remq solver (cdr-system-solvers sys))))
-
-;; Return #f for a proof, a counterexample length, or 'unknown. The optional
-;; SALLY induction cap keeps searching at fixed k; the older max-depth option
-;; is a separate termination budget and deliberately returns unknown.
-(define (cdr-search sys property limit)
-  (let ((bad (cdr-not property)))
-    (cdr-record-edge! sys bad bad 0)
-    (if (cdr-initial-reachable? sys bad)
-      (begin (cdr-mark-root! sys bad) 0)
-      (let rounds ((n 0) (k 1) (frame (list (make-cdr-obligation property bad 0 1.0 0))))
-        (vector-set! *cdr-statistics* 4 n)
-        (vector-set! *cdr-statistics* 5 k)
-        (vector-set! *cdr-statistics* cdr-stat-frame-size (length frame))
-        (vector-set! *cdr-statistics* cdr-stat-frame-pushed 0)
-        (verbose-message 2 "  PDKIND frame ~a, induction depth ~a, ~a obligations"
-                         n k (vector-ref *cdr-statistics* cdr-stat-frame-size))
-        (if (and (> limit 0) (> k limit)) 'unknown
-          (let* (;; Each backward projection leads to a violation in k steps.
-                 ;; A holds through frame n, so initial matches earlier than
-                 ;; n-k+1 cannot occur on this reachability search.
-                 (earliest (max 0 (+ n 1 (- k))))
-                 (transitions (let loop ((i 0) (result '()))
-                                (if (= i k) (reverse! result)
-                                    (loop (+ i 1) (cons (cdr-transition-at sys i) result)))))
-                 (solver (cdr-new-solver sys transitions))
-                 (heap (make-cdr-heap (make-vector (max 8 (vector-ref *cdr-statistics* cdr-stat-frame-size))) 0)))
-            (for-each (lambda (o)
-                        (cdr-add-assumption! sys solver (cdr-obligation-forward o) k)
-                        (cdr-enqueue! heap o)) frame)
-            (let push ((pushed '()) (failed? #f) (next-index (+ n k)))
-              (if (= (cdr-heap-size heap) 0)
-                (begin
-                  (cdr-retire-solver! sys solver)
-                  (if (not failed?)
-                    (begin (cdr-save-invariant! sys pushed k) #f)
-                    (if (and (> (cdr-option 'max-frame) 0) (>= n (cdr-option 'max-frame)))
-                      'unknown
-                      (let ((next (cdr-minimize-frame sys (reverse! pushed)))
-                            (cap (cdr-option 'induction-max)))
-                        (for-each (lambda (o)
-                                    (cdr-obligation-score-set! o (+ (/ (cdr-obligation-score o) 2) 0.5))) next)
-                        (rounds next-index (if (> cap 0) (min (+ k 1) cap) (+ k 1)) next)))))
-                (let* ((o (cdr-dequeue! heap)) (a (cdr-obligation-forward o))
-                       (c (cdr-obligation-backward o)) (d (cdr-obligation-distance o))
-                       (not-a (cdr-not a))
-                       (cti (cdr-query sys solver (cdr-successor-goal sys not-a k))))
-                  (if (not cti)
-                    (begin
-                      (cdr-count! cdr-stat-frame-pushed)
-                      (push (cons o pushed) failed? next-index))
-                    (let* ((already-bad? (or (= c not-a)
-                                            (= 1 (cdr-ok (yices-formula-true-in-model cti (cdr-at sys c k))))))
-                           (cex (if already-bad? cti (cdr-query sys solver (cdr-successor-goal sys c k)))))
-                      (if cex
-                        (let* ((g (cdr-project sys cex c k))
-                               (reach (cdr-reachable sys n g #t earliest)))
-                          (cdr-record-edge! sys g c k)
-                          (unless already-bad? (cdr-release-model! sys cex))
-                          (cdr-release-model! sys cti)
-                          (if reach (+ reach k d)
-                            (let* ((h (cdr-explain sys n g))
-                                   (new (make-cdr-obligation h g (+ d k) 1.0 0)))
-                              (cdr-add-assumption! sys solver h k)
-                              (cdr-count! cdr-stat-frame-size)
-                              (cdr-obligation-score-set! o (* 0.9 (cdr-obligation-score o)))
-                              (cdr-enqueue! heap new)
-                              (cdr-enqueue! heap o)
-                              (push pushed failed? next-index))))
-                        (let* ((g (cdr-project sys cti not-a k))
-                               (reach (cdr-reachable sys n g #f earliest)))
-                          (cdr-release-model! sys cti)
-                          (if reach
-                            ;; Advance only to the first reachable violation.
-                            ;; An arbitrary model's depth could skip one.
-                            (let ((first
-                              (let bisect ((lo (+ n 1)) (hi (min next-index (+ reach k))))
-                                (if (>= lo hi) lo
-                                  (let* ((mid (quotient (+ lo hi) 2))
-                                         (r (cdr-reachable sys mid not-a)))
-                                    (if r (bisect lo mid) (bisect (+ mid 1) hi)))))))
-                              (cdr-count! cdr-stat-frame-pushed)
-                              (push (cons (make-cdr-obligation (cdr-not c) c d (exact->inexact d) 0) pushed)
-                                    #t (min next-index first)))
-                            (let* ((h (cdr-explain sys n g))
-                                   (stronger (cdr-and (list a h))))
-                              (cdr-add-assumption! sys solver h k)
-                              (cdr-obligation-forward-set! o stronger)
-                              (cdr-obligation-score-set! o (* 0.9 (cdr-obligation-score o)))
-                              (cdr-obligation-refined-set! o (+ 1 (cdr-obligation-refined o)))
-                              (cdr-enqueue! heap o)
-                              (push pushed failed? next-index))))))))))))))))
-
-(define (cdr-take-string pointer::yices-string)
-  (let ((result (yices-string-copy pointer)))
-    (yices-free-string pointer)
-    result))
-
-(define (cdr-value sys model decl term)
-  (let* ((type (slot-value decl :type)) (value (yices-get-value-as-term model term)))
-    (cond
-      ((< value 0) #f)                    ; e.g., an algebraic irrational
-      ((sal-type/boolean? type)
-       (if (= value (yices-true)) (make-sal-true decl) (make-sal-false decl)))
-      ((= (yices-term-is-bitvector term) 1)
-       (make-sal-numeral (cdr-word-value model term) decl))
-      ((sal-type/number? type)
-       (make-sal-numeral (make-mpq (cdr-take-string (yices-term-to-string value 4294967295 4294967295 0))) decl))
-      ((and (sal-type/scalar? type) (sal-type/cast type <sal-scalar-type>)) =>
-       (lambda (scalar)
-         (let ((index (cdr-allocate yices-int32-pointer "int32_t" 1)))
-           (cdr-ok (yices-get-scalar-value model term index))
-           (list-ref (sal-scalar-type/elements scalar)
-                     (int32->fixnum (pragma::int32 "$1[0]" index))))))
-      (else #f))))
-
-(define (cdr-word-value model term)
-  (let* ((width (cdr-word-width term))
-         (bits::yices-int32-pointer (cdr-allocate yices-int32-pointer "int32_t" width)))
-    (cdr-ok (yices-get-bv-value model term bits))
-    (let ((sign::long (- width 1)))
-      (let loop ((i::long (- sign 1))
-                 (number (if (= (pragma::int32 "$1[$2]" bits sign) 0) *mpq-zero*
-                            (-mpq *mpq-zero* *mpq-one*))))
-        (if (< i 0) number
-          (let ((shifted (*mpq number *mpq-two*)))
-            (loop (- i 1)
-              (if (= (pragma::int32 "$1[$2]" bits i) 0) shifted (+mpq shifted *mpq-one*)))))))))
-
-;; Re-solve the complete witness against I,T,!P before reporting INVALID.
-;; This also checks the composition of all existential generalizations.
-(define (cdr-counterexample sys property depth)
-  (let ((solver (cdr-new-solver sys (list (cdr-system-initial sys)))))
-    (let loop ((i 0))
-      (when (< i depth)
-        (cdr-assert! solver (cdr-transition-at sys i))
-        (loop (+ i 1))))
-    (let ((model (cdr-query sys solver (cdr-at sys (cdr-not property) depth))))
-      (unless model (sign-error "sal-cdr: counterexample reconstruction failed."))
-      (let* ((exact-sal? #t)
-             (declarations (cdr-system-trace-declarations sys))
-             (base-terms (map (lambda (decl) (cdr-variable sys decl #f)) declarations))
-             (steps
-              (let loop ((i 0) (result '()))
-                (if (> i depth) (reverse! result)
-                  (let ((table (make-eq-hash-table)))
-                    (for-each
-                      (lambda (decl term)
-                        (let ((value (cdr-value sys model decl (cdr-at sys term i))))
-                          (if value (eq-hash-table/put! table decl value) (set! exact-sal? #f))))
-                      declarations base-terms)
-                    (loop (+ i 1)
-                      (cons (make-instance <sal-step> :assignment-table table
-                                :constraint-list '() :transition-step #f) result))))))
-             (global-constraints
-               (map-and-filter
-                 (lambda (decl)
-                   (let ((value (cdr-value sys model decl (cdr-variable sys decl #f))))
-                     (if value (make-sal-equality (make-sal-name-expr decl) value)
-                       (begin (set! exact-sal? #f) #f))))
-                 (cdr-system-globals sys))))
-        (let ((result
-          (if exact-sal?
-            (make-instance <sal-concrete-path> :flat-module (cdr-system-module sys)
-              :step-info-list steps :auxiliary-decls '() :global-constraint-list global-constraints)
-            (begin
-              ;; The normal Yices pretty-printer rounds algebraics to doubles.
-              ;; The non-pretty FFI printer preserves defining polynomials and
-              ;; isolating intervals. Keep the solver's exact witness here.
-              (print "Counterexample (exact Yices2 values):")
-              (for-each (lambda (decl)
-                          (display* "Constant " (sal-decl/name decl) " = ")
-                          (flush-output-port (current-output-port))
-                          (cdr-ok (yices-print-term-values-fd 1 model 1
-                                   (cdr-terms (list (cdr-variable sys decl #f)))))
-                          (newline))
-                        (cdr-system-globals sys))
-              (let loop ((i 0))
-                (when (<= i depth)
-                  (print "Step " i ":")
-                  (for-each (lambda (decl term)
-                              (display* "  " (sal-decl/name decl) " = ")
-                              (flush-output-port (current-output-port))
-                              (cdr-ok (yices-print-term-values-fd 1 model 1 (cdr-terms (list (cdr-at sys term i)))))
-                              (newline))
-                            declarations base-terms)
-                  (loop (+ i 1))))
-              #unspecified))))
-          (cdr-release-model! sys model)
-          result)))))
 
 (define (cdr-find-transient-inputs sys assertion)
   ;; Quotient away only transition-local, freely chosen current inputs.
@@ -2122,7 +1609,7 @@
       (for-each (lambda (decl a b) (eq-hash-table/put! (cdr-system-decl-map sys) decl (cons a b)))
                 decls current next)
       (cdr-system-base-count-set! sys (* 2 (length decls)))
-      (cdr-system-base-buffer-set! sys (cdr-terms (append current next))))
+      (cdr-system-base-buffer-set! sys (list->yices-term-array (append current next))))
     (when (exists (lambda (decl) (instance-of? decl <sal-input-state-var-decl>)) decls)
       (cdr-system-transient-inputs-set! sys (cdr-find-transient-inputs sys assertion)))
     (let* ((property (cdr-encode sys (sal-module-models/invariant-body assertion) '() #f))
@@ -2157,61 +1644,648 @@
                   (list (cdr-system-initial sys) (cdr-system-transition sys) property)))
       property)))
 
-(define (cdr-cleanup! sys)
-  (for-each yices-free-model (cdr-system-models sys))
-  (for-each cdr-close-solver! (cdr-system-solvers sys))
-  (when (cdr-system-projection-result sys)
-    (yices-delete-term-vector (cdr-system-projection-result sys))
-    (cdr-system-projection-result-set! sys #f))
-  (when (cdr-system-interpolation-b sys) (yices-free-context (cdr-system-interpolation-b sys))))
-
 (define (cdr-empty-system encoding definitions)
   (make-cdr-system #f '() (make-eq-hash-table) (make-sal-ast-table) '()
     (make-vector 8) '() 0 #f #f #f #f #f '() '() #f (make-vector 8) #f
-    (cdr-allocate yices-interpolation-context-pointer "interpolation_context_t" 1)
+    (make-yices-interpolation-record)
     (cons (make-eq-hash-table) (make-eq-hash-table)) '()
     #f (and (cdr-option 'cex-graph) (make-eq-hash-table 17))
     (and (cdr-option 'cex-graph) (make-eq-hash-table 17))
     encoding #f #f definitions '() (cdr-option 'smt2-output) #f))
 
-(define (sal-cdr/invariant assertion max-depth)
-  (unless (sal-module-models/invariant? assertion)
-    (sign-error "sal-cdr supports safety invariants only."))
-  (unless (and (integer? max-depth) (>= max-depth 0))
-    (sign-error "sal-cdr requires a nonnegative maximum induction depth."))
-  (unless *cdr-initialized?*
-    (yices-init)
-    (set! *cdr-initialized?* #t))
-  (unless (= (yices-has-mcsat) 1)
-    (sign-error "sal-cdr requires a Yices2 library with MCSAT and interpolation support. Rebuild with YICES2_PREFIX pointing to that installation."))
-  (vector-fill! *cdr-statistics* 0)
-  (set! *cdr-invariant* #f)
-  (set! *cdr-query-id* (+ *cdr-query-id* 1))
-  (let ((sys #f))
+;; Invariants and counterexamples
+
+(define (sal-cdr/display-invariant)
+  (unless *cdr-invariant* (sign-error "No proved sal-cdr invariant is available."))
+  ;; Give the native symbols stable, unambiguous names and retain their SAL
+  ;; origin. Naming affects printing only, never terms or solver semantics.
+  (let loop ((bindings (vector-ref *cdr-invariant* 2)) (i 0))
+    (unless (null? bindings)
+      (let* ((binding (car bindings))
+             (name (string-append "cdr" (number->string (vector-ref *cdr-invariant* 3))
+                                 "_" (number->string i))))
+        (cdr-ok (yices-set-term-name (cdr binding) name))
+        (print "; " name " = " (sal-decl/name (car binding)))
+        (when (= (yices-term-is-bitvector (cdr binding)) 1)
+          (print "; " name " has a signed " (cdr-word-width (cdr binding)) "-bit encoding.")))
+      (loop (cdr bindings) (+ i 1))))
+  (print "(invariant " (vector-ref *cdr-invariant* 0) " "
+         (yices-term-text (vector-ref *cdr-invariant* 1)) ")"))
+
+(define (cdr-save-invariant! sys obligations depth)
+  (set! *cdr-invariant*
+    ;; Native integer sorts do not intrinsically encode SAL subranges. Keep
+    ;; their domain in the exported certificate, including when arithmetic
+    ;; has been lowered using those bounds. T guarantees it at every step.
+    (vector depth (cdr-and (cons (cdr-system-domain sys)
+                                (map cdr-obligation-forward obligations)))
+      (append (map cons (cdr-system-declarations sys)
+                        (cdr-step-variables (cdr-step-at sys 0)))
+              (map (lambda (decl) (cons decl (cdr-variable sys decl #f)))
+                   (cdr-system-globals sys)))
+      *cdr-query-id*)))
+
+(define (cdr-value model decl term)
+  (let* ((type (slot-value decl :type)) (value (yices-get-value-as-term model term)))
+    (cond
+      ((< value 0) #f)                    ; e.g., an algebraic irrational
+      ((sal-type/boolean? type)
+       (if (= value (yices-true)) (make-sal-true decl) (make-sal-false decl)))
+      ((= (yices-term-is-bitvector term) 1)
+       (make-sal-numeral (cdr-word-value model term) decl))
+      ((sal-type/number? type)
+       (make-sal-numeral (make-mpq (yices-term-text value)) decl))
+      ((and (sal-type/scalar? type) (sal-type/cast type <sal-scalar-type>)) =>
+       (lambda (scalar)
+         (let ((index (make-yices-int32-array 1)))
+           (cdr-ok (yices-get-scalar-value model term index))
+           (list-ref (sal-scalar-type/elements scalar)
+                     (int32->fixnum (yices-int32-array-ref index 0))))))
+      (else #f))))
+
+(define (cdr-word-value model term)
+  (let* ((width (cdr-word-width term))
+         (bits::yices-int32-pointer (make-yices-int32-array width)))
+    (cdr-ok (yices-get-bv-value model term bits))
+    (let ((sign::long (- width 1)))
+      (let loop ((i::long (- sign 1))
+                 (number (if (= (yices-int32-array-ref bits sign) 0) *mpq-zero*
+                            (-mpq *mpq-zero* *mpq-one*))))
+        (if (< i 0) number
+          (let ((shifted (*mpq number *mpq-two*)))
+            (loop (- i 1)
+              (if (= (yices-int32-array-ref bits i) 0) shifted (+mpq shifted *mpq-one*)))))))))
+
+;; Re-solve the complete witness against I,T,!P before reporting INVALID.
+;; This also checks the composition of all existential generalizations.
+(define (cdr-counterexample sys property depth)
+  (let ((solver (cdr-new-solver sys (list (cdr-system-initial sys)))))
+    (let loop ((i 0))
+      (when (< i depth)
+        (cdr-assert! solver (cdr-transition-at sys i))
+        (loop (+ i 1))))
+    (let ((model (cdr-query sys solver (cdr-at sys (cdr-not property) depth))))
+      (unless model (sign-error "sal-cdr: counterexample reconstruction failed."))
+      (let* ((exact-sal? #t)
+             (declarations (cdr-system-trace-declarations sys))
+             (base-terms (map (lambda (decl) (cdr-variable sys decl #f)) declarations))
+             (steps
+              (let loop ((i 0) (result '()))
+                (if (> i depth) (reverse! result)
+                  (let ((table (make-eq-hash-table)))
+                    (for-each
+                      (lambda (decl term)
+                        (let ((value (cdr-value model decl (cdr-at sys term i))))
+                          (if value (eq-hash-table/put! table decl value) (set! exact-sal? #f))))
+                      declarations base-terms)
+                    (loop (+ i 1)
+                      (cons (make-instance <sal-step> :assignment-table table
+                                :constraint-list '() :transition-step #f) result))))))
+             (global-constraints
+               (map-and-filter
+                 (lambda (decl)
+                   (let ((value (cdr-value model decl (cdr-variable sys decl #f))))
+                     (if value (make-sal-equality (make-sal-name-expr decl) value)
+                       (begin (set! exact-sal? #f) #f))))
+                 (cdr-system-globals sys))))
+        (let ((result
+          (if exact-sal?
+            (make-instance <sal-concrete-path> :flat-module (cdr-system-module sys)
+              :step-info-list steps :auxiliary-decls '() :global-constraint-list global-constraints)
+            (begin
+              ;; The normal Yices pretty-printer rounds algebraics to doubles.
+              ;; The non-pretty FFI printer preserves defining polynomials and
+              ;; isolating intervals. Keep the solver's exact witness here.
+              (print "Counterexample (exact Yices2 values):")
+              (for-each (lambda (decl)
+                          (display* "Constant " (sal-decl/name decl) " = ")
+                          (flush-output-port (current-output-port))
+                          (cdr-ok (yices-print-term-values-fd 1 model 1
+                                   (list->yices-term-array (list (cdr-variable sys decl #f)))))
+                          (newline))
+                        (cdr-system-globals sys))
+              (let loop ((i 0))
+                (when (<= i depth)
+                  (print "Step " i ":")
+                  (for-each (lambda (decl term)
+                              (display* "  " (sal-decl/name decl) " = ")
+                              (flush-output-port (current-output-port))
+                              (cdr-ok (yices-print-term-values-fd 1 model 1 (list->yices-term-array (list (cdr-at sys term i)))))
+                              (newline))
+                            declarations base-terms)
+                  (loop (+ i 1))))
+              #unspecified))))
+          (cdr-release-model! sys model)
+          result)))))
+
+;; Options and statistics
+
+(define *cdr-initialized?* #f)
+(define *cdr-statistic-fields*
+  '(("checks" . "checks") ("projections" . "projections")
+    ("interpolations" . "interpolations") ("refinements" . "refinements")
+    ("frames" . "pdkfi") ("induction-depth" . "pdkid")
+    ("contexts" . "contexts") ("projection-substitutions" . "projection-substitutions")
+    ("frame-size" . "pdkfs") ("frame-pushed" . "pdkfp")
+    ("queue-size" . "pdkqs") ("max-cex-depth" . "pdkmcd")
+    ("reachable" . "pdkrr") ("unreachable" . "pdkru") ("reachability-queries" . "pdkrq")))
+(define *cdr-statistics* (make-vector (length *cdr-statistic-fields*) 0))
+(define cdr-stat-frame-size 8)
+(define cdr-stat-frame-pushed 9)
+(define cdr-stat-queue-size 10)
+(define cdr-stat-max-cex-depth 11)
+(define cdr-stat-reachable 12)
+(define cdr-stat-unreachable 13)
+(define cdr-stat-reachability-queries 14)
+(define *cdr-statistics-observer* #f)
+(define *cdr-abort* #f)
+(define *cdr-options*
+  (map (lambda (entry) (cons (car entry) (cdr entry)))
+  '((max-frame . 0) (induction-max . 0) (solver-mode . auto)
+    (solver-logic . #f) (solver-trace-tags . #f) (smt2-output . #f)
+    (add-backward . #f) (check-deadlock . #f)
+    (minimize-interpolants . #f) (minimize-generalizations . #f)
+    (minimize-frames . #f) (cex-graph . #f))))
+(define *cdr-invariant* #f)
+(define *cdr-query-id* 0)
+(define *cdr-smt2-query-index* 0)
+
+(define (cdr-option key) (cdr (assq key *cdr-options*)))
+
+(define (cdr-solver-logic)
+  (and (not (eq? (cdr-option 'solver-mode) 'mcsat))
+       (cdr-option 'solver-logic)))
+
+(define (sal-cdr/set-option! key value)
+  (let ((entry (assq key *cdr-options*)))
+    (unless entry (sign-error "Unknown sal-cdr option: ~a" key))
+    (cond
+      ((memq key '(max-frame induction-max))
+       (unless (and (integer? value) (>= value 0))
+         (sign-error "sal-cdr option ~a requires a nonnegative integer." key)))
+      ((eq? key 'solver-mode)
+       (when (string? value) (set! value (string->symbol value)))
+       (unless (memq value '(auto dpllt mcsat hybrid))
+         (sign-error "sal-cdr solver mode must be auto, dpllt, mcsat, or hybrid.")))
+      ((memq key '(cex-graph solver-logic solver-trace-tags smt2-output))
+       (unless (or (not value) (and (string? value) (> (string-length value) 0)))
+         (sign-error "sal-cdr option ~a requires a nonempty string." key)))
+      (else
+       (unless (boolean? value) (sign-error "sal-cdr option ~a requires a Boolean." key))))
+    (set-cdr! entry value)))
+
+(define (cdr-count! index)
+  (vector-set! *cdr-statistics* index (+ 1 (vector-ref *cdr-statistics* index))))
+
+(define (sal-cdr/statistics)
+  (map (lambda (field value) (list (car field) (cdr field) value))
+       *cdr-statistic-fields* (vector->list *cdr-statistics*)))
+
+(define (sal-cdr/display-statistics)
+  (for-each (lambda (field) (print "cdr::" (car field) " = " (caddr field)))
+            (sal-cdr/statistics)))
+
+(define (sal-cdr/with-statistics-observer observer thunk)
+  (let ((previous *cdr-statistics-observer*))
     (unwind-protect
-      (bind-exit (abort)
-        (set! *cdr-abort* (lambda (status)
-                          (when (and sys (cdr-option 'cex-graph))
-                            (cdr-write-graph! sys (cdr-option 'cex-graph)))
-                          (abort (values status #unspecified))))
-        (let* ((definitions (cdr-state-definitions (slot-value assertion :module)))
-               (packed
-                 (and (cdr-word-candidate? assertion definitions)
-                      (bind-exit (fallback)
-                        (set! sys (cdr-empty-system (make-cdr-word-encoding fallback '() (make-hashtable)) definitions))
-                        (cdr-setup! sys assertion))))
-               (property
-                 (or packed
-                     (begin
-                       (when sys (cdr-cleanup! sys))
-                       (set! sys (cdr-empty-system #f definitions))
-                       (cdr-setup! sys assertion))))
-               (result (cdr-search sys property max-depth)))
-          (when (cdr-option 'cex-graph)
-            (cdr-write-graph! sys (cdr-option 'cex-graph)))
-          (cond ((not result) (values 'valid #unspecified))
-                ((number? result)
-                 (vector-set! *cdr-statistics* cdr-stat-max-cex-depth result)
-                 (values 'invalid (cdr-counterexample sys property result)))
-                (else (values 'unknown #unspecified)))))
-      (begin (when sys (cdr-cleanup! sys)) (set! *cdr-abort* #f)))))
+      (begin (set! *cdr-statistics-observer* observer) (thunk))
+      (set! *cdr-statistics-observer* previous))))
+
+(define (sal-cdr/reset!)
+  ;; The native front end owns the Yices instance and calls this between
+  ;; batch queries, after printing the previous result and its invariant.
+  (set! *cdr-invariant* #f)
+  (vector-fill! *cdr-statistics* 0)
+  (when *cdr-initialized?* (yices-reset)))
+
+;; Counterexample graph
+
+;; An edge records a symbolic guarantee: every source state has some path
+;; of the given length to the target region. It is not a shortest concrete
+;; witness. Multiple guarantees between the same regions retain the shortest
+;; recorded length; this does not alter the proof search or its witnesses.
+(define (cdr-record-edge! sys from to depth)
+  (when (cdr-option 'cex-graph)
+    (let* ((graph (cdr-system-graph sys))
+           (edges (or (cdr-term-table-ref graph from) '())))
+      (unless (cdr-term-table-ref graph to) (cdr-term-table-set! graph to '()))
+      (let find ((rest edges))
+        (cond
+          ((null? rest) (cdr-term-table-set! graph from (cons (cons to depth) edges)))
+          ((= (caar rest) to)
+           (when (< depth (cdar rest)) (set-cdr! (car rest) depth)))
+          (else (find (cdr rest))))))))
+
+(define (cdr-mark-root! sys region)
+  (when (cdr-option 'cex-graph)
+    (cdr-term-table-set! (cdr-system-roots sys) region #t)
+    (unless (cdr-term-table-ref (cdr-system-graph sys) region)
+      (cdr-term-table-set! (cdr-system-graph sys) region '()))))
+
+(define (cdr-dot-escape text)
+  (let ((port (open-output-string)))
+    (let loop ((i 0))
+      (when (< i (string-length text))
+        (let ((ch (string-ref text i)))
+          (case ch
+            ((#\\) (display "\\\\" port))
+            ((#\") (display "\\\"" port))
+            ((#\newline) (display "\\n" port))
+            ((#\return) (display "\\r" port))
+            ;; DOT accepts literal tabs; \t is not a DOT label escape.
+            (else (write-char ch port))))
+        (loop (+ i 1))))
+    (close-output-port port)))
+
+(define (cdr-write-graph! sys path)
+  (when (cdr-option 'cex-graph)
+    (let* ((graph (cdr-system-graph sys))
+           (nodes (sort (eq-hash-table/fold-keys (lambda (ids id) (cons id ids)) '() graph) <)))
+      (call-with-output-file path
+        (lambda (port)
+          (fprint port "digraph sal_cdr {")
+          (fprint port "  rankdir=LR;")
+          (for-each
+            (lambda (id)
+              (let ((term (fixnum->int32 id)))
+                (fprint port "  n" id
+                  " [shape=" (if (cdr-term-table-ref (cdr-system-roots sys) term) "doublecircle" "box")
+                  ", label=\""
+                  (cdr-dot-escape (yices-term-text term 120))
+                  "\"];")
+                (for-each
+                  (lambda (edge)
+                    (fprint port "  n" id " -> n" (int32->fixnum (car edge))
+                      " [label=\"" (cdr edge) "\"];"))
+                  (sort (append (cdr-term-table-ref graph term) '())
+                        (lambda (a b) (< (car a) (car b)))))))
+            nodes)
+          (fprint port "}"))))))
+
+;; SMT-LIB query logs
+
+;; Yices prints canonical terms as S-expressions, including exact rationals
+;; and polynomial coefficients. Translate that notation for query replay.
+(define (cdr-smt2-protect-integers text)
+  ;; SAL's GMP setup can change how Bigloo reads bignums. Read long decimal
+  ;; literals as strings and write their original digits into the replay.
+  (let ((length (string-length text)))
+    (define (separator? i)
+      (or (< i 0) (= i length)
+          (let ((ch (string-ref text i)))
+            (or (char-whitespace? ch) (char=? ch #\() (char=? ch #\))))))
+    (let loop ((i 0) (start 0) (port #f))
+      (cond
+        ((= i length)
+         (if port
+           (begin (display (substring text start length) port) (close-output-port port))
+           text))
+        ((separator? (- i 1))
+         (let* ((digits (if (char=? (string-ref text i) #\-) (+ i 1) i))
+                (end (let scan ((j digits))
+                       (if (and (< j length) (char-numeric? (string-ref text j))) (scan (+ j 1)) j))))
+           (if (and (>= (- end digits) 10) (separator? end))
+             (let ((output (or port (open-output-string))))
+               (display (substring text start i) output)
+               (write (substring text i end) output)
+               (loop end end output))
+             (loop (max (+ i 1) end) start port))))
+        (else (loop (+ i 1) start port))))))
+
+(define (cdr-smt2-read term)
+  (with-input-from-string
+    (cdr-smt2-protect-integers
+      (yices-term-text term)) read))
+
+(define (cdr-smt2-identifiers sys)
+  (let ((ids (make-hashtable)))
+    (define (register term value)
+      (hashtable-put! ids (cdr-smt2-read term)
+        (cons (cdr-ok (yices-type-of-term term)) value)))
+    (vector/for-each
+      (lambda (step)
+        (unless (eq? step #unspecified)
+          (for-each (lambda (term) (register term #f)) (cdr-step-variables step))))
+      (cdr-system-steps sys))
+    (for-each (lambda (decl) (register (cdr-variable sys decl #f) #f)) (cdr-system-globals sys))
+    (sal-ast-table/for-each
+      (lambda (decl type)
+        (let ((card (uint32->fixnum (yices-scalar-type-card type))))
+          (let loop ((i 0))
+            (when (< i card)
+              (register (cdr-ok (yices-constant type (fixnum->int32 i))) i)
+              (loop (+ i 1))))))
+      (cdr-system-type-map sys))
+    ids))
+
+(define (cdr-smt2-sort type)
+  (cond
+    ((= (yices-type-is-bool type) 1) 'Bool)
+    ((or (= (yices-type-is-int type) 1) (= (yices-type-is-scalar type) 1)) 'Int)
+    ((= (yices-type-is-real type) 1) 'Real)
+    ((= (yices-type-is-bitvector type) 1) (list '_ 'BitVec (uint32->fixnum (yices-bvtype-size type))))
+    (else (sign-error "sal-cdr: cannot export native sort ~a to SMT-LIB." type))))
+
+(define (cdr-smt2-integer value)
+  (if (< value 0) (list '- (- value)) value))
+
+(define (cdr-smt2-decimal text)
+  (if (char=? (string-ref text 0) #\-)
+    (list '- (substring text 1 (string-length text)))
+    text))
+
+(define (cdr-smt2-real operand)
+  (if (eq? (cdr operand) 'Int) (list 'to_real (car operand)) (car operand)))
+
+(define (cdr-smt2-atom atom resolve)
+  (cond
+    ((and (integer? atom) (exact? atom)) (cons (cdr-smt2-integer atom) 'Int))
+    ((string? atom) (cons (cdr-smt2-decimal atom) 'Int))
+    ((memq atom '(true false)) (cons atom 'Bool))
+    ((symbol? atom)
+     (let ((text (symbol->string atom)))
+       (cond
+         ((or (substring=? text "0b" 2) (substring=? text "0x" 2))
+          (cons (string-append "#" (substring text 1 (string-length text))) 'BitVec))
+         ((sal-string-index text #\/) =>
+          (lambda (i)
+            (let ((a (substring text 0 i))
+                  (b (substring text (+ i 1) (string-length text))))
+              (unless (and (> i 0) (> (string-length b) 0)
+                           (or (char-numeric? (string-ref a 0)) (char=? (string-ref a 0) #\-))
+                           (char-numeric? (string-ref b 0)))
+                (sign-error "sal-cdr: malformed native rational ~a." atom))
+              (cons (list '/ (list 'to_real (cdr-smt2-decimal a)) (list 'to_real b)) 'Real))))
+         ((resolve atom) => identity)
+         (else (sign-error "sal-cdr: cannot export native term ~a to SMT-LIB." atom)))))
+    (else (sign-error "sal-cdr: cannot export native term ~a to SMT-LIB." atom))))
+
+(define (cdr-smt2-fold op values)
+  (let loop ((form (car values)) (rest (cdr values)))
+    (if (null? rest) form (loop (list op form (car rest)) (cdr rest)))))
+
+(define (cdr-smt2-power op value degree)
+  (let ((base (gensym 'base!))
+        (degree (if (string? degree) (string->integer degree) degree)))
+    (define (power n)
+      (if (= n 1) base
+        (let* ((half (gensym 'half!))
+               (square (list op half half)))
+          (list 'let (list (list half (power (quotient n 2))))
+                (if (odd? n) (list op base square) square)))))
+    (list 'let (list (list base value)) (power degree))))
+
+(define (cdr-smt2-indexed-root operands resolve)
+  (let* ((op (if (eq? (car operands) '!=) 'distinct (car operands)))
+         (rank (cadr operands))
+         (index (if (string? rank) (string->integer rank) rank))
+         (x (caddr operands))
+         (polynomial (cadddr operands)))
+    (unless (and (integer? index) (>= index 0) (symbol? x))
+      (sign-error "sal-cdr: malformed native root atom ~a." operands))
+    ;; Yices counts distinct real roots from zero. Select index + 1 ordered
+    ;; zeros and require every zero below the last one to appear in the list.
+    (let* ((earlier (generate-list (lambda (i) (gensym 'root!)) index))
+           (last-root (gensym 'root!))
+           (probe (gensym 'root!))
+           (roots (append earlier (list last-root))))
+      (define (zero-at var)
+        (list '= (car (cdr-smt2-form polynomial
+                       (lambda (name) (if (eq? name x) (cons var 'Real) (resolve name))))) 0))
+      (let ((preceding (map (lambda (root) (list '= probe root)) earlier)))
+        (cons
+          (list 'exists (map (lambda (root) (list root 'Real)) roots)
+                (cons 'and
+                      (append (map zero-at roots)
+                        (list (if (null? earlier) 'true (cons '< roots))
+                              (list 'forall (list (list probe 'Real))
+                                    (list '=> (list 'and (list '< probe last-root) (zero-at probe))
+                                          (cond ((null? preceding) 'false)
+                                                ((null? (cdr preceding)) (car preceding))
+                                                (else (cons 'or preceding)))))
+                              (list op (cdr-smt2-real (cdr-smt2-form x resolve)) last-root)))))
+          'Bool)))))
+
+(define (cdr-smt2-apply op args)
+  (let ((terms (map car args))
+        (real? (exists (lambda (arg) (eq? (cdr arg) 'Real)) args)))
+    (case op
+      ((not or and xor =>) (cons (cons op terms) 'Bool))
+      ((= /= distinct < <= >= >)
+       (cons (cons (if (eq? op '/=) 'distinct op)
+                   (if real? (map cdr-smt2-real args) terms)) 'Bool))
+      ((+ - *) (if real?
+                 (cons (cons op (map cdr-smt2-real args)) 'Real)
+                 (cons (cons op terms) 'Int)))
+      ((/) (cons (cons '/ (map cdr-smt2-real args)) 'Real))
+      ((div mod) (cons (cons op terms) 'Int))
+      ((is-int) (cons (list 'is_int (cdr-smt2-real (car args))) 'Bool))
+      ((floor) (cons (list 'to_int (cdr-smt2-real (car args))) 'Int))
+      ((ceil) (cons (list '- (list 'to_int (list '- (cdr-smt2-real (car args))))) 'Int))
+      ((abs)
+       (let ((name (gensym 'abs!)))
+         (cons (list 'let (list (list name (car terms)))
+                     (list 'ite (list '< name 0) (list '- name) name))
+               (cdar args))))
+      ((divides)
+       (cons (list 'is_int (list '/ (cdr-smt2-real (cadr args)) (cdr-smt2-real (car args)))) 'Bool))
+      ((ite)
+       (cons (cons 'ite (if real? (cons (car terms) (map cdr-smt2-real (cdr args))) terms))
+             (if real? 'Real (cdadr args))))
+      ((^ bv-pow)
+       (cons (cdr-smt2-power (if (eq? op '^) '* 'bvmul) (car terms) (cadr terms))
+             (cdar args)))
+      ((bit)
+       (cons (list '= (list (list '_ 'extract (cadr terms) (cadr terms)) (car terms)) "#b1")
+             'Bool))
+      ((bool-to-bv)
+       (cons (cdr-smt2-fold 'concat
+               (map (lambda (value) (list 'ite value "#b1" "#b0")) (reverse terms))) 'BitVec))
+      ((bv-extract)
+       (cons (list (list '_ 'extract (car terms) (cadr terms)) (caddr terms)) 'BitVec))
+      ((bv-sign-extend bv-zero-extend)
+       (cons (list (list '_ (if (eq? op 'bv-sign-extend) 'sign_extend 'zero_extend)
+                         (cadr terms)) (car terms)) 'BitVec))
+      (else
+       (let ((word-op (assq op '((bv-add . bvadd) (bv-mul . bvmul) (bv-concat . concat)
+                                 (bv-div . bvudiv) (bv-rem . bvurem)
+                                 (bv-sdiv . bvsdiv) (bv-srem . bvsrem) (bv-smod . bvsmod)
+                                 (bv-shl . bvshl) (bv-lshr . bvlshr) (bv-ashr . bvashr)
+                                 (bv-ge . bvuge) (bv-lt . bvult) (bv-sge . bvsge) (bv-slt . bvslt)))))
+         (unless word-op (sign-error "sal-cdr: cannot export native operator ~a to SMT-LIB." op))
+         (cons (cdr-smt2-fold (cdr word-op) terms)
+               (if (memq op '(bv-ge bv-lt bv-sge bv-slt)) 'Bool 'BitVec)))))))
+
+(define (cdr-smt2-form form resolve)
+  (cond
+    ((not (pair? form)) (cdr-smt2-atom form resolve))
+    ((eq? (car form) 'arith-root-atom) (cdr-smt2-indexed-root (cdr form) resolve))
+    (else (cdr-smt2-apply (car form) (map (lambda (arg) (cdr-smt2-form arg resolve)) (cdr form))))))
+
+(define (cdr-smt2-native-operators)
+  (list (cons (yices-enum YICES_NOT_TERM) 'not)
+        (cons (yices-enum YICES_OR_TERM) 'or)
+        (cons (yices-enum YICES_XOR_TERM) 'xor)
+        (cons (yices-enum YICES_EQ_TERM) '=)
+        (cons (yices-enum YICES_DISTINCT_TERM) 'distinct)
+        (cons (yices-enum YICES_ITE_TERM) 'ite)
+        (cons (yices-enum YICES_ARITH_GE_ATOM) '>=)
+        (cons (yices-enum YICES_RDIV) '/)
+        (cons (yices-enum YICES_IDIV) 'div)
+        (cons (yices-enum YICES_IMOD) 'mod)
+        (cons (yices-enum YICES_ABS) 'abs)
+        (cons (yices-enum YICES_FLOOR) 'floor)
+        (cons (yices-enum YICES_CEIL) 'ceil)
+        (cons (yices-enum YICES_IS_INT_ATOM) 'is-int)
+        (cons (yices-enum YICES_DIVIDES_ATOM) 'divides)
+        (cons (yices-enum YICES_BV_ARRAY) 'bool-to-bv)
+        (cons (yices-enum YICES_BV_DIV) 'bv-div)
+        (cons (yices-enum YICES_BV_REM) 'bv-rem)
+        (cons (yices-enum YICES_BV_SDIV) 'bv-sdiv)
+        (cons (yices-enum YICES_BV_SREM) 'bv-srem)
+        (cons (yices-enum YICES_BV_SMOD) 'bv-smod)
+        (cons (yices-enum YICES_BV_SHL) 'bv-shl)
+        (cons (yices-enum YICES_BV_LSHR) 'bv-lshr)
+        (cons (yices-enum YICES_BV_ASHR) 'bv-ashr)
+        (cons (yices-enum YICES_BV_GE_ATOM) 'bv-ge)
+        (cons (yices-enum YICES_BV_SGE_ATOM) 'bv-sge)))
+
+(define (cdr-smt2-bv-literal bits::yices-int32-pointer width)
+  (let ((text (make-string (+ width 2) #\0)))
+    (string-set! text 0 #\#)
+    (string-set! text 1 #\b)
+    (let loop ((i::long 0))
+      (when (< i width)
+        (unless (= (yices-int32-array-ref bits i) 0)
+          (string-set! text (- (+ width 1) i) #\1))
+        (loop (+ i 1))))
+    text))
+
+(define (cdr-smt2-bv-sum term encode)
+  (let* ((width (cdr-word-width term))
+         (n (cdr-ok (yices-term-num-children term)))
+         (bits::yices-int32-pointer (make-yices-int32-array width))
+         (component::yices-term-pointer (make-yices-term-array 1)))
+    (let loop ((i 0) (monomials '()))
+      (if (= i n)
+        (cons (cdr-smt2-fold 'bvadd (reverse! monomials)) 'BitVec)
+        (begin
+          (cdr-ok (yices-bvsum-component term (fixnum->int32 i) bits component))
+          (let ((a (cdr-smt2-bv-literal bits width))
+                (x (yices-term-array-ref component 0)))
+            (loop (+ i 1) (cons (if (< x 0) a (list 'bvmul a (car (encode x)))) monomials))))))))
+
+(define (cdr-smt2-product term sort encode)
+  (let* ((op (if (pair? sort) 'bvmul '*))
+         (n (cdr-ok (yices-term-num-children term)))
+         (component::yices-term-pointer (make-yices-term-array 1))
+         (exponent::yices-uint32-pointer (make-yices-uint32-cell)))
+    (let loop ((i 0) (factors '()))
+      (if (= i n)
+        (cons (cdr-smt2-fold op (reverse! factors)) sort)
+        (begin
+          (cdr-ok (yices-product-component term (fixnum->int32 i) component exponent))
+          (let* ((degree (uint32->fixnum (yices-uint32-cell-ref exponent)))
+                 (factor (encode (yices-term-array-ref component 0)))
+                 (value (if (eq? sort 'Real) (cdr-smt2-real factor) (car factor))))
+            (loop (+ i 1)
+              (cons (if (= degree 1) value (cdr-smt2-power op value degree)) factors))))))))
+
+(define (cdr-smt2-write form port)
+  (if (not (pair? form)) (display form port)
+    (begin
+      (display "(" port)
+      (cdr-smt2-write (car form) port)
+      (for-each (lambda (item) (display " " port) (cdr-smt2-write item port)) (cdr form))
+      (display ")" port))))
+
+(define (cdr-open-query-log sys solver goal interpolate?)
+  (let ((ids #f) (used (make-hashtable)) (encoded (make-eq-hash-table))
+        (operators (cdr-smt2-native-operators)) (declarations '()) (definitions '()))
+    (define (declare name type sort)
+      (unless (hashtable-get used name)
+        (hashtable-put! used name #t)
+        (set! declarations (cons (list name type sort) declarations)))
+      (cons name sort))
+    (define (resolve name)
+      (unless ids (set! ids (cdr-smt2-identifiers sys)))
+      (cond
+        ((hashtable-get ids name) =>
+         (lambda (binding)
+           (let ((type (car binding)) (value (cdr binding)))
+             (if value (cons value 'Int)
+               (declare name type (cdr-smt2-sort type))))))
+        (else #f)))
+    (define (encode-arguments term)
+      (generate-list
+        (lambda (i) (encode (cdr-ok (yices-term-child term (fixnum->int32 i)))))
+        (int32->fixnum (cdr-ok (yices-term-num-children term)))))
+    (define (encode-form term kind sort)
+      (cond
+        ((assv kind operators) => (lambda (entry) (cdr-smt2-apply (cdr entry) (encode-arguments term))))
+        ((= kind (yices-enum YICES_BIT_TERM))
+         (cdr-smt2-apply 'bit (list (encode (cdr-ok (yices-proj-arg term)))
+                               (cons (int32->fixnum (cdr-ok (yices-proj-index term))) 'Int))))
+        ((= kind (yices-enum YICES_BV_SUM)) (cdr-smt2-bv-sum term encode))
+        ((= kind (yices-enum YICES_POWER_PRODUCT)) (cdr-smt2-product term sort encode))
+        ;; Use the printed form where the API does not provide the root
+        ;; relation/index or expose rational coefficients as native terms.
+        (else (cdr-smt2-form (cdr-smt2-read term) resolve))))
+    (define (encode term)
+      (or (cdr-term-table-ref encoded term)
+          (let* ((kind (cdr-ok (yices-term-constructor term)))
+                 (type (cdr-ok (yices-type-of-term term)))
+                 (sort (cdr-smt2-sort type))
+                 (result
+                   (cond
+                     ((= kind (yices-enum YICES_UNINTERPRETED_TERM))
+                      (declare (cdr-smt2-read term) type sort))
+                     ((= kind (yices-enum YICES_SCALAR_CONSTANT))
+                      (let ((index::yices-int32-pointer (make-yices-int32-array 1)))
+                        (cdr-ok (yices-scalar-const-value term index))
+                        (cons (int32->fixnum (yices-int32-array-ref index 0)) 'Int)))
+                     (else
+                      (let* ((form (encode-form term kind sort))
+                             (body (if (eq? sort 'Real) (cdr-smt2-real form) (car form))))
+                        (if (= (yices-term-is-atomic term) 1) (cons body sort)
+                          ;; Definitions are emitted in dependency order. A
+                          ;; shared subterm is serialized once per query.
+                          (let ((name (gensym 'term!)))
+                            (set! definitions (cons (list 'define-fun name '() sort body) definitions))
+                            (cons name sort))))))))
+            (cdr-term-table-set! encoded term result)
+            result)))
+    (let ((background (map (lambda (term) (car (encode term))) (reverse (cdr-solver-assertions solver))))
+          (target (car (encode goal))))
+      (set! *cdr-smt2-query-index* (+ *cdr-smt2-query-index* 1))
+      (let* ((path (string-append (cdr-system-smt2-output sys) "."
+                                  (number->string *cdr-smt2-query-index*) ".smt2"))
+             (port (open-output-file path))
+             (ready? #f))
+        (define (command form)
+          (cdr-smt2-write form port)
+          (newline port))
+        (unless (output-port? port) (sign-error "sal-cdr: cannot write SMT-LIB query to ~a." path))
+        (unwind-protect
+          (begin
+            (fprint port "(set-option :produce-models true)")
+            (fprint port "(set-logic ALL)")
+            (for-each
+              (lambda (binding)
+                (let ((name (car binding)) (type (cadr binding)) (sort (caddr binding)))
+                  (command (list 'declare-const name sort))
+                  (when (= (yices-type-is-scalar type) 1)
+                    (command (list 'assert
+                                   (list 'and (list '<= 0 name)
+                                         (list '< name (uint32->fixnum (yices-scalar-type-card type)))))))))
+              (reverse declarations))
+            (for-each command (reverse definitions))
+            (fprint port (if interpolate? "; Interpolation partition A" "; Solver assertions"))
+            (for-each (lambda (form) (command (list 'assert form))) background)
+            (fprint port (if interpolate? "; Interpolation partition B" "; Query goal"))
+            (command (list 'assert target))
+            (fprint port "(check-sat)")
+            (flush-output-port port)
+            (set! ready? #t)
+            port)
+          (unless ready? (close-output-port port)))))))
