@@ -587,7 +587,7 @@ $(OBJ_DIR)/sal-cdr-front-end.o: $(OBJ_DIR)/sal-cdr.o $(SRC_DIR)/sal-script-util.
 
 # Yices2 term/status values are int32 objects, not Bigloo fixnums.
 # Keep generic arithmetic and checked foreign conversions in the FFI client.
-$(OBJ_DIR)/sal-cdr.o: $(SRC_DIR)/sal-cdr.scm
+$(OBJ_DIR)/sal-cdr.o: $(SRC_DIR)/sal-cdr.scm $(SRC_DIR)/sal-cdr-yices2.scm
 	@mkdir -p $(OBJ_DIR)
 	$(BIGLOO) $(filter-out -farithmetic -unsafe,$(BIGLOO_UNSAFE_FLAGS)) -eval '(define-macro (FILE-NAME) "sal-cdr.scm")' $< -o $@
 
